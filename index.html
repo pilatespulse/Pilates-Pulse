@@ -11,16 +11,11 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        /* DECORACIONES DEL LOGIN */
         .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
         .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
         .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
         .shape3 { width: 150px; height: 150px; background: #e0f2f1; top: 40%; right: 10%; animation-delay: -2s; }
-        
-        @keyframes float { 
-            0% { transform: translate(0, 0) scale(1); } 
-            100% { transform: translate(30px, 50px) scale(1.1); } 
-        }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
 
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
         .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 45px 30px; border-radius: 40px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.5); }
@@ -29,30 +24,34 @@
         .logo { width: 70px; height: 70px; background: #fff; border-radius: 50%; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .title { font-family: 'Montserrat', sans-serif; color: var(--primary); letter-spacing: 4px; text-transform: uppercase; font-size: 1.1rem; margin: 0; font-weight: 300; }
+        
         .container { padding: 15px; max-width: 450px; margin: auto; }
         .day-group { margin-bottom: 10px; }
         .day-header { background: var(--white); padding: 18px 25px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.02); cursor: pointer; }
         .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 8px; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
-        .class-item { background: var(--white); padding: 14px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; }
-        .input-row { background: #fff; padding: 15px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 10px; }
-        select, input { border: 1px solid #eee; padding: 10px; border-radius: 10px; font-size: 0.9rem; outline: none; }
-        .btn-row { display: flex; gap: 8px; }
-        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 12px; border-radius: 10px; font-weight: 600; }
-        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 12px; border-radius: 10px; }
+        
+        .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; position: relative; }
+        .class-info { font-size: 0.9rem; color: var(--text); }
+        .class-tag { display: inline-block; font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
+        
+        .input-row { background: #fff; padding: 20px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 12px; }
+        label { font-size: 0.75rem; font-weight: 600; color: var(--primary); margin-bottom: -8px; margin-left: 5px; }
+        select, input { border: 1px solid #eee; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; width: 100%; background: #fdfdfd; }
+        .btn-row { display: flex; gap: 8px; margin-top: 5px; }
+        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 14px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="login" style="display:none;">
-        <div class="decor shape1"></div>
-        <div class="decor shape2"></div>
-        <div class="decor shape3"></div>
+        <div class="decor shape1"></div><div class="decor shape2"></div><div class="decor shape3"></div>
         <div class="login-card">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h2 class="title" style="margin-bottom:25px; font-size: 0.9rem;">Área de Gestión</h2>
-            <input type="text" id="userInput" placeholder="Usuario" style="width:100%; margin-bottom:12px;">
-            <input type="password" id="passInput" placeholder="Contraseña" style="width:100%;">
+            <input type="text" id="userInput" placeholder="Usuario">
+            <input type="password" id="passInput" placeholder="Contraseña" style="margin-top:12px;">
             <button onclick="checkLogin()" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:15px; margin-top:15px; font-weight:600; cursor:pointer;">Entrar</button>
         </div>
     </div>
@@ -61,7 +60,7 @@
         <div class="header">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h1 class="title">Pilates Pulse</h1>
-            <button onclick="logout()" style="background:none; border:none; color:#90a4ae; font-size:0.7rem; cursor:pointer; margin-top:10px;">Cerrar Sesión Manualmente</button>
+            <button onclick="logout()" style="background:none; border:none; color:#90a4ae; font-size:0.7rem; cursor:pointer; margin-top:10px;">Cerrar Sesión</button>
         </div>
         <div class="container" id="mainContainer"></div>
     </div>
@@ -69,26 +68,18 @@
     <script>
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
 
-        // REVISIÓN DE SESIÓN AL CARGAR
         window.onload = function() {
             const sessionTime = localStorage.getItem('pulseSession');
             const now = new Date().getTime();
-            
-            // 4 horas en milisegundos: 4 * 60 * 60 * 1000 = 14,400,000
-            if (sessionTime && (now - sessionTime < 14400000)) {
-                showApp();
-            } else {
-                localStorage.removeItem('pulseSession');
-                document.getElementById('login').style.display = 'flex';
-            }
+            if (sessionTime && (now - sessionTime < 14400000)) { showApp(); } 
+            else { localStorage.removeItem('pulseSession'); document.getElementById('login').style.display = 'flex'; }
         };
 
         function checkLogin() {
             if (document.getElementById('userInput').value === "pilates_pulse" && 
                 document.getElementById('passInput').value === "2026_pilates_Pulse") {
-                
-                // Guardar el momento exacto del login
                 localStorage.setItem('pulseSession', new Date().getTime());
                 showApp();
             } else { alert("Datos incorrectos"); }
@@ -100,12 +91,8 @@
             renderApp(); loadData();
         }
 
-        function logout() {
-            localStorage.removeItem('pulseSession');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
 
-        // --- FUNCIONES DE LA APP ---
         function renderApp() {
             document.getElementById('mainContainer').innerHTML = dias.map(dia => `
                 <div class="day-group">
@@ -133,15 +120,27 @@
         function showForm(dia) {
             document.getElementById(`form-container-${dia}`).innerHTML = `
                 <div class="input-row">
+                    <label>Hora</label>
                     <select id="time-${dia}">
                         ${Array.from({length:14}, (_,i)=> {
                             let h = i+7; let ampm = h>=12?'PM':'AM'; let dh = h>12?h-12:h;
                             return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`;
                         }).join('')}
                     </select>
-                    <input type="text" id="info-${dia}" placeholder="Nombre de clase">
+                    
+                    <label>Tipo de Clase</label>
+                    <select id="type-${dia}">
+                        ${tiposClase.map(t => `<option>${t}</option>`).join('')}
+                    </select>
+
+                    <label>Modalidad</label>
+                    <select id="mod-${dia}">
+                        <option>Grupal</option>
+                        <option>Privada</option>
+                    </select>
+
                     <div class="btn-row">
-                        <button class="btn-save" onclick="saveClass('${dia}')">Guardar</button>
+                        <button class="btn-save" onclick="saveClass('${dia}')">Guardar Clase</button>
                         <button class="btn-cancel" onclick="cancelForm('${dia}')">X</button>
                     </div>
                 </div>`;
@@ -151,9 +150,13 @@
 
         async function saveClass(dia) {
             const time = document.getElementById(`time-${dia}`).value;
-            const info = document.getElementById(`info-${dia}`).value;
-            if(!info) return alert("Escribe algo");
-            const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: `${time}|${info}` }]);
+            const type = document.getElementById(`type-${dia}`).value;
+            const mod = document.getElementById(`mod-${dia}`).value;
+            
+            // Guardamos todo unido por un separador "|"
+            const fullContent = `${time}|${type}|${mod}`;
+            
+            const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: fullContent }]);
             if(!error) { cancelForm(dia); loadData(); } else { alert("Error: " + error.message); }
         }
 
@@ -164,13 +167,25 @@
                 data.forEach(item => {
                     const list = document.getElementById('list-'+item.celda_id);
                     if(list) {
-                        const [hora, texto] = item.contenido.split('|');
+                        const parts = item.contenido.split('|');
+                        const hora = parts[0];
+                        const tipo = parts[1] || "Clase";
+                        const mod = parts[2] || "Grupal";
+
                         const div = document.createElement('div');
                         div.className = 'class-item';
-                        div.innerHTML = `<div><b>${hora}</b> ${texto}</div>
-                            <div style="display:flex;gap:12px;font-size:1rem;">
-                                <span onclick="editItem('${item.id}','${texto}')" style="cursor:pointer">✏️</span>
-                                <span onclick="deleteItem('${item.id}')" style="cursor:pointer">🗑️</span>
+                        div.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <div style="font-weight:600; color:var(--primary);">${hora}</div>
+                                    <div class="class-info">${tipo}</div>
+                                    <div style="margin-top:4px;">
+                                        <span class="class-tag">${mod}</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:15px; font-size:1.1rem; padding-top:5px;">
+                                    <span onclick="deleteItem('${item.id}')" style="cursor:pointer; opacity:0.6;">🗑️</span>
+                                </div>
                             </div>`;
                         list.appendChild(div);
                     }
@@ -179,16 +194,7 @@
         }
 
         async function deleteItem(id) {
-            if(confirm("¿Borrar?")) { await _supabase.from('horarios').delete().eq('id', id); loadData(); }
-        }
-
-        async function editItem(id, txt) {
-            const n = prompt("Nuevo nombre:", txt);
-            if(n) { 
-                const {data} = await _supabase.from('horarios').select('contenido').eq('id',id).single();
-                await _supabase.from('horarios').update({ contenido: `${data.contenido.split('|')[0]}|${n}` }).eq('id',id);
-                loadData(); 
-            }
+            if(confirm("¿Borrar esta clase?")) { await _supabase.from('horarios').delete().eq('id', id); loadData(); }
         }
     </script>
 </body>
