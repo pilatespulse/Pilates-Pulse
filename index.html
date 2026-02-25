@@ -11,7 +11,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        /* --- DECORACIONES DEL LOGIN --- */
+        /* DECORACIONES DEL LOGIN */
         .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
         .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
         .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
@@ -24,7 +24,6 @@
 
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
         .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 45px 30px; border-radius: 40px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.5); }
-        /* ------------------------------ */
 
         .header { padding: 30px 20px 10px; text-align: center; }
         .logo { width: 70px; height: 70px; background: #fff; border-radius: 50%; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -45,11 +44,10 @@
 </head>
 <body>
 
-    <div id="login">
+    <div id="login" style="display:none;">
         <div class="decor shape1"></div>
         <div class="decor shape2"></div>
         <div class="decor shape3"></div>
-        
         <div class="login-card">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h2 class="title" style="margin-bottom:25px; font-size: 0.9rem;">Área de Gestión</h2>
@@ -63,6 +61,7 @@
         <div class="header">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h1 class="title">Pilates Pulse</h1>
+            <button onclick="logout()" style="background:none; border:none; color:#90a4ae; font-size:0.7rem; cursor:pointer; margin-top:10px;">Cerrar Sesión Manualmente</button>
         </div>
         <div class="container" id="mainContainer"></div>
     </div>
@@ -71,15 +70,42 @@
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
+        // REVISIÓN DE SESIÓN AL CARGAR
+        window.onload = function() {
+            const sessionTime = localStorage.getItem('pulseSession');
+            const now = new Date().getTime();
+            
+            // 4 horas en milisegundos: 4 * 60 * 60 * 1000 = 14,400,000
+            if (sessionTime && (now - sessionTime < 14400000)) {
+                showApp();
+            } else {
+                localStorage.removeItem('pulseSession');
+                document.getElementById('login').style.display = 'flex';
+            }
+        };
+
         function checkLogin() {
             if (document.getElementById('userInput').value === "pilates_pulse" && 
                 document.getElementById('passInput').value === "2026_pilates_Pulse") {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('app').style.display = 'block';
-                renderApp(); loadData();
+                
+                // Guardar el momento exacto del login
+                localStorage.setItem('pulseSession', new Date().getTime());
+                showApp();
             } else { alert("Datos incorrectos"); }
         }
 
+        function showApp() {
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            renderApp(); loadData();
+        }
+
+        function logout() {
+            localStorage.removeItem('pulseSession');
+            location.reload();
+        }
+
+        // --- FUNCIONES DE LA APP ---
         function renderApp() {
             document.getElementById('mainContainer').innerHTML = dias.map(dia => `
                 <div class="day-group">
@@ -133,10 +159,10 @@
 
         async function loadData() {
             const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
-            dias.forEach(d => document.getElementById(`list-${d}`).innerHTML = '');
+            dias.forEach(d => document.getElementById('list-'+d).innerHTML = '');
             if (data) {
                 data.forEach(item => {
-                    const list = document.getElementById(`list-${item.celda_id}`);
+                    const list = document.getElementById('list-'+item.celda_id);
                     if(list) {
                         const [hora, texto] = item.contenido.split('|');
                         const div = document.createElement('div');
