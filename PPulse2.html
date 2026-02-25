@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pilates Pulse | Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00796b; --bg: #f4f7f8; --white: #ffffff; --text: #37474f; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+        .header { padding: 30px 20px 10px; text-align: center; }
+        .logo { width: 70px; height: 70px; background: #fff; border-radius: 50%; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .title { font-family: 'Montserrat', sans-serif; color: var(--primary); letter-spacing: 4px; text-transform: uppercase; font-size: 1.1rem; margin: 0; font-weight: 300; }
+        .container { padding: 15px; max-width: 450px; margin: auto; }
+        .day-group { margin-bottom: 10px; }
+        .day-header { background: var(--white); padding: 18px 25px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.02); cursor: pointer; }
+        .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 8px; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
+        .class-item { background: var(--white); padding: 14px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; }
+        .input-row { background: #fff; padding: 15px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 10px; }
+        select, input { border: 1px solid #eee; padding: 10px; border-radius: 10px; font-size: 0.9rem; outline: none; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 12px; border-radius: 10px; font-weight: 600; }
+        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 12px; border-radius: 10px; }
+        #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { background: #fff; padding: 40px 30px; border-radius: 30px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <div id="login">
+        <div class="login-card">
+            <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <h2 class="title" style="margin-bottom:20px;">Acceso</h2>
+            <input type="text" id="userInput" placeholder="Usuario" style="width:100%; margin-bottom:10px;">
+            <input type="password" id="passInput" placeholder="Contraseña" style="width:100%;">
+            <button onclick="checkLogin()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; margin-top:10px; font-weight:600;">Entrar</button>
+        </div>
+    </div>
+
+    <div id="app" style="display:none;">
+        <div class="header">
+            <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <h1 class="title">Pilates Pulse</h1>
+        </div>
+        <div class="container" id="mainContainer"></div>
+    </div>
+
+    <script>
+        const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+        const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+        function checkLogin() {
+            if (document.getElementById('userInput').value === "pilates_pulse" && 
+                document.getElementById('passInput').value === "2026_pilates_Pulse") {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                renderApp(); loadData();
+            } else { alert("Datos incorrectos"); }
+        }
+
+        function renderApp() {
+            document.getElementById('mainContainer').innerHTML = dias.map(dia => `
+                <div class="day-group">
+                    <div class="day-header" onclick="toggleDay('${dia}')">
+                        <span class="day-name">${dia}</span>
+                        <span id="icon-${dia}">▼</span>
+                    </div>
+                    <div class="day-content" id="content-${dia}">
+                        <button class="btn-add" onclick="showForm('${dia}')">+ Agregar Clase</button>
+                        <div id="form-container-${dia}"></div>
+                        <div id="list-${dia}"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDay(dia) {
+            const content = document.getElementById(`content-${dia}`);
+            const isVisible = content.style.display === 'flex';
+            document.querySelectorAll('.day-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('[id^="icon-"]').forEach(el => el.innerText = '▼');
+            if (!isVisible) { content.style.display = 'flex'; document.getElementById(`icon-${dia}`).innerText = '▲'; }
+        }
+
+        function showForm(dia) {
+            document.getElementById(`form-container-${dia}`).innerHTML = `
+                <div class="input-row">
+                    <select id="time-${dia}">
+                        ${Array.from({length:14}, (_,i)=> {
+                            let h = i+7; let ampm = h>=12?'PM':'AM'; let dh = h>12?h-12:h;
+                            return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`;
+                        }).join('')}
+                    </select>
+                    <input type="text" id="info-${dia}" placeholder="Nombre de clase">
+                    <div class="btn-row">
+                        <button class="btn-save" onclick="saveClass('${dia}')">Guardar</button>
+                        <button class="btn-cancel" onclick="cancelForm('${dia}')">X</button>
+                    </div>
+                </div>`;
+        }
+
+        function cancelForm(dia) { document.getElementById(`form-container-${dia}`).innerHTML = ''; }
+
+        async function saveClass(dia) {
+            const time = document.getElementById(`time-${dia}`).value;
+            const info = document.getElementById(`info-${dia}`).value;
+            if(!info) return alert("Escribe algo");
+            
+            const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: `${time}|${info}` }]);
+            if(!error) { cancelForm(dia); loadData(); } else { alert("Error: " + error.message); }
+        }
+
+        async function loadData() {
+            const { data } = await _supabase.from('horarios').select('*');
+            dias.forEach(d => document.getElementById(`list-${d}`).innerHTML = '');
+            if (data) {
+                data.forEach(item => {
+                    const list = document.getElementById(`list-${item.celda_id}`);
+                    if(list) {
+                        const [hora, texto] = item.contenido.split('|');
+                        const div = document.createElement('div');
+                        div.className = 'class-item';
+                        div.innerHTML = `<div><b>${hora}</b> ${texto}</div>
+                            <div style="display:flex;gap:10px;">
+                                <span onclick="editItem('${item.id}','${texto}')">✏️</span>
+                                <span onclick="deleteItem('${item.id}')">🗑️</span>
+                            </div>`;
+                        list.appendChild(div);
+                    }
+                });
+            }
+        }
+
+        async function deleteItem(id) {
+            if(confirm("¿Borrar?")) { await _supabase.from('horarios').delete().eq('id', id); loadData(); }
+        }
+
+        async function editItem(id, txt) {
+            const n = prompt("Nuevo nombre:", txt);
+            if(n) { 
+                const {data} = await _supabase.from('horarios').select('contenido').eq('id',id).single();
+                await _supabase.from('horarios').update({ contenido: `${data.contenido.split('|')[0]}|${n}` }).eq('id',id);
+                loadData(); 
+            }
+        }
+    </script>
+</body>
+</html>
