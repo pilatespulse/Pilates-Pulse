@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00796b; --bg: #f4f7f8; --white: #ffffff; --text: #37474f; }
+        :root { --primary: #00796b; --bg: #f4f7f8; --white: #ffffff; --text: #37474f; --accent: #80cbc4; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
@@ -32,12 +32,14 @@
         .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
         
         .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; position: relative; }
-        .class-info { font-size: 0.9rem; color: var(--text); }
-        .class-tag { display: inline-block; font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
+        .class-info { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+        .class-names { font-size: 0.8rem; color: #78909c; margin-top: 5px; padding-top: 5px; border-top: 1px solid #f5f5f5; font-style: italic; }
+        .class-tag { display: inline-block; font-size: 0.65rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
         
         .input-row { background: #fff; padding: 20px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 12px; }
-        label { font-size: 0.75rem; font-weight: 600; color: var(--primary); margin-bottom: -8px; margin-left: 5px; }
-        select, input { border: 1px solid #eee; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; width: 100%; background: #fdfdfd; }
+        label { font-size: 0.75rem; font-weight: 600; color: var(--primary); margin-bottom: -8px; margin-left: 5px; text-transform: uppercase; }
+        select, input { border: 1px solid #eee; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; width: 100%; background: #fdfdfd; font-family: 'Inter', sans-serif; }
+        input:focus { border-color: var(--primary); }
         .btn-row { display: flex; gap: 8px; margin-top: 5px; }
         .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
         .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 14px; border-radius: 10px; cursor: pointer; }
@@ -139,6 +141,9 @@
                         <option>Privada</option>
                     </select>
 
+                    <label>Nombres</label>
+                    <input type="text" id="names-${dia}" placeholder="Ej: Ana, Luis...">
+
                     <div class="btn-row">
                         <button class="btn-save" onclick="saveClass('${dia}')">Guardar Clase</button>
                         <button class="btn-cancel" onclick="cancelForm('${dia}')">X</button>
@@ -152,9 +157,10 @@
             const time = document.getElementById(`time-${dia}`).value;
             const type = document.getElementById(`type-${dia}`).value;
             const mod = document.getElementById(`mod-${dia}`).value;
+            const names = document.getElementById(`names-${dia}`).value || "Sin nombres";
             
-            // Guardamos todo unido por un separador "|"
-            const fullContent = `${time}|${type}|${mod}`;
+            // Estructura: Hora | Tipo | Modalidad | Nombres
+            const fullContent = `${time}|${type}|${mod}|${names}`;
             
             const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: fullContent }]);
             if(!error) { cancelForm(dia); loadData(); } else { alert("Error: " + error.message); }
@@ -171,20 +177,22 @@
                         const hora = parts[0];
                         const tipo = parts[1] || "Clase";
                         const mod = parts[2] || "Grupal";
+                        const nombres = parts[3] || "";
 
                         const div = document.createElement('div');
                         div.className = 'class-item';
                         div.innerHTML = `
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div>
+                                <div style="flex:1;">
                                     <div style="font-weight:600; color:var(--primary);">${hora}</div>
                                     <div class="class-info">${tipo}</div>
-                                    <div style="margin-top:4px;">
+                                    <div style="margin: 4px 0;">
                                         <span class="class-tag">${mod}</span>
                                     </div>
+                                    ${nombres ? `<div class="class-names">👤 ${nombres}</div>` : ''}
                                 </div>
-                                <div style="display:flex; gap:15px; font-size:1.1rem; padding-top:5px;">
-                                    <span onclick="deleteItem('${item.id}')" style="cursor:pointer; opacity:0.6;">🗑️</span>
+                                <div style="display:flex; gap:15px; font-size:1.1rem; padding-top:5px; margin-left:10px;">
+                                    <span onclick="deleteItem('${item.id}')" style="cursor:pointer; opacity:0.4;">🗑️</span>
                                 </div>
                             </div>`;
                         list.appendChild(div);
