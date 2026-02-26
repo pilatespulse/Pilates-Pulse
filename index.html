@@ -15,7 +15,6 @@
         .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
         .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
         .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
-        .shape3 { width: 150px; height: 150px; background: #e0f2f1; top: 40%; right: 10%; animation-delay: -2s; }
         @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
 
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
@@ -30,25 +29,28 @@
         .day-group { margin-bottom: 10px; }
         .day-header { background: var(--white); padding: 18px 25px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.02); cursor: pointer; }
         .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 8px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
         
-        .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; }
-        .class-info { font-size: 0.9rem; color: var(--text); font-weight: 500; }
-        .class-names { font-size: 0.8rem; color: #78909c; margin-top: 5px; padding-top: 5px; border-top: 1px solid #f5f5f5; font-style: italic; }
+        /* SECCIÓN BASE DE DATOS */
+        .db-section { margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 30px; }
+        .db-header { background: #37474f; color: white; padding: 18px 25px; border-radius: 18px; text-align: center; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
+        .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; margin-bottom: 8px; }
+        .class-info { font-size: 0.9rem; font-weight: 500; }
         .class-tag { display: inline-block; font-size: 0.65rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
         
         .input-row { background: #fff; padding: 20px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 12px; }
         label { font-size: 0.75rem; font-weight: 600; color: var(--primary); margin-bottom: -8px; margin-left: 5px; text-transform: uppercase; }
         select, input { border: 1px solid #eee; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; width: 100%; background: #fdfdfd; font-family: 'Inter', sans-serif; }
         .btn-row { display: flex; gap: 8px; margin-top: 5px; }
-        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 14px; border-radius: 10px; cursor: pointer; }
+        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; }
+        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 14px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div id="login" style="display:none;">
-        <div class="decor shape1"></div><div class="decor shape2"></div><div class="decor shape3"></div>
+        <div class="decor shape1"></div><div class="decor shape2"></div>
         <div class="login-card">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h2 class="title" style="margin-bottom:25px; font-size: 0.9rem;">Área de Gestión</h2>
@@ -64,57 +66,58 @@
             <h1 class="title">Pilates Pulse</h1>
             <button onclick="logout()" style="background:none; border:none; color:#90a4ae; font-size:0.7rem; cursor:pointer; margin-top:10px;">Cerrar Sesión</button>
         </div>
-        <div class="container" id="mainContainer"></div>
+        
+        <div class="container">
+            <div id="mainCalendar"></div>
+
+            <div class="db-section">
+                <div class="db-header" onclick="toggleDB()">Base de Datos y Planes/Tarifas</div>
+                <div id="db-content" style="display:none; flex-direction:column; padding-top:15px;">
+                    <button class="btn-add" onclick="showDBForm()">+ Nuevo Registro de Alumno</button>
+                    <div id="db-form-container"></div>
+                    <div id="db-list" style="margin-top:15px;"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const modalidades = ["Grupales", "Privadas", "Cumpleaños", "Masaje"];
 
         window.onload = function() {
-            const sessionTime = localStorage.getItem('pulseSession');
-            const now = new Date().getTime();
-            if (sessionTime && (now - sessionTime < 14400000)) { showApp(); } 
-            else { localStorage.removeItem('pulseSession'); document.getElementById('login').style.display = 'flex'; }
+            const st = localStorage.getItem('pulseSession');
+            if (st && (new Date().getTime() - st < 14400000)) { showApp(); } 
+            else { document.getElementById('login').style.display = 'flex'; }
         };
 
         async function checkLogin() {
-            const user = document.getElementById('userInput').value;
-            const pass = document.getElementById('passInput').value;
-
-            // Validación segura contra Supabase
-            const { data, error } = await _supabase
-                .from('usuarios_admin')
-                .select('*')
-                .eq('usuario', user)
-                .eq('password', pass)
-                .maybeSingle();
-
-            if (data) {
-                localStorage.setItem('pulseSession', new Date().getTime());
-                showApp();
-            } else { alert("Acceso denegado."); }
+            const u = document.getElementById('userInput').value;
+            const p = document.getElementById('passInput').value;
+            const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
+            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } else { alert("Error."); }
         }
 
         function showApp() {
             document.getElementById('login').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            renderApp(); loadData();
+            renderCalendar(); loadCalendarData(); loadDBData();
         }
 
         function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
 
-        function renderApp() {
-            document.getElementById('mainContainer').innerHTML = dias.map(dia => `
+        // --- CALENDARIO SEMANAL ---
+        function renderCalendar() {
+            document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
                 <div class="day-group">
                     <div class="day-header" onclick="toggleDay('${dia}')">
-                        <span class="day-name">${dia}</span>
-                        <span id="icon-${dia}">▼</span>
+                        <span>${dia}</span><span id="icon-${dia}">▼</span>
                     </div>
                     <div class="day-content" id="content-${dia}">
-                        <button class="btn-add" onclick="showForm('${dia}')">+ Agregar Clase</button>
-                        <div id="form-container-${dia}"></div>
+                        <button class="btn-add" onclick="showCalendarForm('${dia}')">+ Agregar Clase</button>
+                        <div id="form-cal-${dia}"></div>
                         <div id="list-${dia}"></div>
                     </div>
                 </div>
@@ -122,75 +125,85 @@
         }
 
         function toggleDay(dia) {
-            const content = document.getElementById(`content-${dia}`);
-            const isVisible = content.style.display === 'flex';
+            const c = document.getElementById(`content-${dia}`);
+            const isVisible = c.style.display === 'flex';
             document.querySelectorAll('.day-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('[id^="icon-"]').forEach(el => el.innerText = '▼');
-            if (!isVisible) { content.style.display = 'flex'; document.getElementById(`icon-${dia}`).innerText = '▲'; }
+            if (!isVisible) c.style.display = 'flex';
         }
 
-        function showForm(dia) {
-            document.getElementById(`form-container-${dia}`).innerHTML = `
+        function showCalendarForm(dia) {
+            document.getElementById(`form-cal-${dia}`).innerHTML = `
                 <div class="input-row">
-                    <label>Hora</label>
-                    <select id="time-${dia}">
-                        ${Array.from({length:14}, (_,i)=> {
-                            let h = i+7; let ampm = h>=12?'PM':'AM'; let dh = h>12?h-12:h;
-                            return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`;
-                        }).join('')}
-                    </select>
-                    <label>Tipo de Clase</label>
-                    <select id="type-${dia}">${tiposClase.map(t => `<option>${t}</option>`).join('')}</select>
-                    <label>Modalidad</label>
-                    <select id="mod-${dia}"><option>Grupales</option><option>Privadas</option><option>Cumpleaños</option></select>
-                    <label>Nombres</label>
-                    <input type="text" id="names-${dia}" placeholder="Ej: Ana, Luis...">
-                    <div class="btn-row">
-                        <button class="btn-save" onclick="saveClass('${dia}')">Guardar Clase</button>
-                        <button class="btn-cancel" onclick="cancelForm('${dia}')">X</button>
-                    </div>
+                    <label>Hora</label><select id="time-${dia}">${Array.from({length:14}, (_,i)=> { let h=i+7; let ampm=h>=12?'PM':'AM'; let dh=h>12?h-12:h; return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`; }).join('')}</select>
+                    <label>Tipo</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
+                    <label>Modalidad</label><select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>Nombres</label><input type="text" id="names-${dia}" placeholder="Alumnos...">
+                    <div class="btn-row"><button class="btn-save" onclick="saveCalendar('${dia}')">Guardar</button><button class="btn-cancel" onclick="document.getElementById('form-cal-${dia}').innerHTML=''">X</button></div>
                 </div>`;
         }
 
-        function cancelForm(dia) { document.getElementById(`form-container-${dia}`).innerHTML = ''; }
-
-        async function saveClass(dia) {
-            const fullContent = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-'+dia).value}|${document.getElementById('names-'+dia).value || "Sin nombres"}`;
-            const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: fullContent }]);
-            if(!error) { cancelForm(dia); loadData(); } else { alert("Error al guardar."); }
+        async function saveCalendar(dia) {
+            const content = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-'+dia).value}|${document.getElementById('names-'+dia).value}`;
+            await _supabase.from('horarios').insert([{ celda_id: dia, contenido: content }]);
+            loadCalendarData();
         }
 
-        async function loadData() {
+        async function loadCalendarData() {
             const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
             dias.forEach(d => document.getElementById('list-'+d).innerHTML = '');
-            if (data) {
-                data.forEach(item => {
-                    const list = document.getElementById('list-'+item.celda_id);
-                    if(list) {
-                        const p = item.contenido.split('|');
-                        const div = document.createElement('div');
-                        div.className = 'class-item';
-                        div.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div style="flex:1;">
-                                    <div style="font-weight:600; color:var(--primary);">${p[0]}</div>
-                                    <div class="class-info">${p[1] || "Clase"}</div>
-                                    <div style="margin: 4px 0;"><span class="class-tag">${p[2] || "Grupales"}</span></div>
-                                    ${p[3] ? `<div class="class-names">👤 ${p[3]}</div>` : ''}
-                                </div>
-                                <div style="display:flex; gap:15px; font-size:1.1rem; padding-top:5px; margin-left:10px;">
-                                    <span onclick="deleteItem('${item.id}')" style="cursor:pointer; opacity:0.3;">🗑️</span>
-                                </div>
-                            </div>`;
-                        list.appendChild(div);
-                    }
-                });
-            }
+            data?.forEach(item => {
+                const list = document.getElementById('list-'+item.celda_id);
+                if (list && item.celda_id !== 'DB_ENTRY') {
+                    const p = item.contenido.split('|');
+                    list.innerHTML += `<div class="class-item"><b>${p[0]}</b> ${p[1]}<br><span class="class-tag">${p[2]}</span><div style="font-size:0.7rem;color:#78909c">👤 ${p[3]}</div><span onclick="deleteItem('${item.id}')" style="align-self:flex-end;cursor:pointer;opacity:0.3">🗑️</span></div>`;
+                }
+            });
         }
 
-        async function deleteItem(id) {
-            if(confirm("¿Borrar esta clase?")) { await _supabase.from('horarios').delete().eq('id', id); loadData(); }
+        // --- BASE DE DATOS DE ALUMNOS ---
+        function toggleDB() {
+            const c = document.getElementById('db-content');
+            c.style.display = (c.style.display === 'none') ? 'flex' : 'none';
         }
+
+        function showDBForm() {
+            document.getElementById('db-form-container').innerHTML = `
+                <div class="input-row">
+                    <label>Nombre</label><input type="text" id="db-name">
+                    <label>Teléfono</label><input type="text" id="db-phone">
+                    <label>Paquete</label><select id="db-pkg"><option>1 vez por semana</option><option>2 veces por semana</option><option>3 veces por semana</option></select>
+                    <label>Modalidad</label><select id="db-mod"><option>Grupal</option><option>Privada</option><option>Clase suelta</option><option>Masaje</option></select>
+                    <label>Horarios</label><input type="text" id="db-hours" placeholder="Ej: Lunes 10am">
+                    <label>Primer Pago</label><input type="text" id="db-pay">
+                    <label>Vencimiento</label><input type="text" id="db-exp">
+                    <div class="btn-row"><button class="btn-save" onclick="saveDB()">Guardar en Base de Datos</button><button class="btn-cancel" onclick="document.getElementById('db-form-container').innerHTML=''">X</button></div>
+                </div>`;
+        }
+
+        async function saveDB() {
+            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|${document.getElementById('db-pkg').value}|${document.getElementById('db-mod').value}|${document.getElementById('db-hours').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
+            await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            document.getElementById('db-form-container').innerHTML = '';
+            loadDBData();
+        }
+
+        async function loadDBData() {
+            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
+            const list = document.getElementById('db-list');
+            list.innerHTML = '';
+            data?.forEach(item => {
+                const p = item.contenido.split('|');
+                list.innerHTML += `<div class="class-item" style="border-left:4px solid var(--primary)">
+                    <div style="font-weight:600">${p[1]}</div>
+                    <div style="font-size:0.8rem">📞 ${p[2]} | 🏷️ ${p[3]}</div>
+                    <div style="font-size:0.8rem">🧘 ${p[4]} | ⏰ ${p[5]}</div>
+                    <div style="font-size:0.75rem; margin-top:5px; color:var(--primary)">PAGO: ${p[6]} | VENCE: ${p[7]}</div>
+                    <span onclick="deleteItem('${item.id}')" style="align-self:flex-end;cursor:pointer;opacity:0.3">🗑️</span>
+                </div>`;
+            });
+        }
+
+        async function deleteItem(id) { if(confirm("¿Eliminar?")) { await _supabase.from('horarios').delete().eq('id', id); loadCalendarData(); loadDBData(); } }
     </script>
 </body>
 </html>
