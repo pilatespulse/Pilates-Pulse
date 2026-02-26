@@ -42,126 +42,73 @@
 
         .fade-in { animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
 
-        /* --- LOGIN ESTILO MODERN --- */
+        /* --- CONTENEDORES --- */
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .login-card { 
-            background: white;
-            padding: 40px; 
-            border-radius: 30px; 
-            width: 100%; max-width: 380px; 
-            text-align: center; 
+            background: white; padding: 40px; border-radius: 30px; 
+            width: 100%; max-width: 380px; text-align: center; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            animation: fadeInUp 0.8s ease;
         }
 
-        /* --- HEADER & LOGO --- */
         .header { padding: 50px 20px 30px; text-align: center; }
         .logo-container {
-            position: relative;
-            width: 90px; height: 90px;
-            margin: 0 auto 20px;
+            position: relative; width: 90px; height: 90px; margin: 0 auto 20px;
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .logo-container:hover { transform: scale(1.1) rotate(5deg); }
         .logo { 
-            width: 100%; height: 100%; 
-            background: white; border-radius: 50%; 
+            width: 100%; height: 100%; background: white; border-radius: 50%; 
             display: flex; justify-content: center; align-items: center; 
-            box-shadow: var(--shadow); border: 2px solid white;
-            overflow: hidden;
+            box-shadow: var(--shadow); border: 2px solid white; overflow: hidden;
         }
         .logo img { width: 100%; height: 100%; object-fit: cover; }
         
         .title { 
-            font-family: 'Montserrat', sans-serif; 
-            color: var(--primary); 
-            letter-spacing: 5px; 
-            text-transform: uppercase; 
-            font-size: 1.1rem; font-weight: 600; 
-            margin: 0;
+            font-family: 'Montserrat', sans-serif; color: var(--primary); 
+            letter-spacing: 5px; text-transform: uppercase; 
+            font-size: 1.1rem; font-weight: 600; margin: 0;
         }
 
-        /* --- BOTONES PREMIUM --- */
+        .container { padding: 0 20px 100px; max-width: 500px; margin: auto; }
+
+        /* --- BOTONES --- */
         .btn-export {
-            background: white; color: var(--primary);
-            border: 1px solid var(--accent);
-            padding: 10px 20px; border-radius: 50px;
-            font-size: 0.75rem; font-weight: 600;
-            cursor: pointer; transition: all 0.3s;
-            margin-bottom: 30px; display: inline-flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,121,107,0.1);
+            background: white; color: var(--primary); border: 1px solid var(--accent);
+            padding: 10px 20px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s; margin-bottom: 30px; display: inline-flex; align-items: center; gap: 8px;
         }
         .btn-export:hover { background: var(--primary); color: white; transform: translateY(-2px); }
 
         .btn-save { 
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white; border: none; padding: 16px; border-radius: 15px; 
-            font-weight: 600; width: 100%; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600; width: 100%; cursor: pointer; transition: transform 0.2s;
         }
         .btn-save:active { transform: scale(0.98); }
 
-        /* --- CALENDARIO & DÍAS --- */
-        .container { padding: 0 20px 100px; max-width: 500px; margin: auto; }
-        
+        /* --- ELEMENTOS DE LISTA --- */
         .day-group { margin-bottom: 15px; opacity: 0; animation: slideIn 0.5s forwards; }
-        .day-group:nth-child(1) { animation-delay: 0.1s; }
-        .day-group:nth-child(2) { animation-delay: 0.2s; }
-        .day-group:nth-child(3) { animation-delay: 0.3s; }
-        .day-group:nth-child(4) { animation-delay: 0.4s; }
-        .day-group:nth-child(5) { animation-delay: 0.5s; }
-        .day-group:nth-child(6) { animation-delay: 0.6s; }
-
         .day-header { 
-            background: var(--card-bg); 
-            padding: 22px 25px; border-radius: var(--radius); 
+            background: var(--card-bg); padding: 22px 25px; border-radius: var(--radius); 
             display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
+            cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: var(--shadow); backdrop-filter: blur(10px);
         }
-        .day-header:hover { background: white; transform: translateX(5px); }
-        .day-name { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+        .day-content { display: none; flex-direction: column; padding: 15px 5px; gap: 12px; animation: fadeInUp 0.4s ease; }
 
-        .day-content { 
-            display: none; flex-direction: column; padding: 15px 5px; gap: 12px; 
-            animation: fadeInUp 0.4s ease;
-        }
-
-        /* --- CARDS DE CLASE --- */
         .class-item { 
             background: white; padding: 20px; border-radius: var(--radius); 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
-            border-left: 4px solid var(--primary);
-            transition: transform 0.3s;
-        }
-        .class-item:hover { transform: scale(1.02); }
-
-        .class-tag { 
-            background: #e0f2f1; color: var(--primary);
-            font-size: 0.65rem; padding: 5px 12px; border-radius: 20px;
-            font-weight: 600; text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02); border-left: 4px solid var(--primary); margin-bottom: 10px;
         }
 
-        /* --- INPUTS --- */
         .input-row { 
             background: white; padding: 25px; border-radius: 25px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;
         }
-        input, select { 
-            border: 1px solid #edf2f7; padding: 14px; border-radius: 12px; 
-            background: #f8fafc; font-size: 0.95rem; transition: all 0.3s;
-        }
-        input:focus { border-color: var(--primary); background: white; }
+        label { font-size: 0.65rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-left: 5px; }
+        input, select { border: 1px solid #edf2f7; padding: 14px; border-radius: 12px; background: #f8fafc; font-size: 0.95rem; }
 
-        .delete-btn { 
-            width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;
-            border-radius: 50%; color: #fab1a0; cursor: pointer; transition: all 0.2s;
-        }
-        .delete-btn:hover { background: #fff5f5; color: #ff7675; }
-
+        .delete-btn { color: #fab1a0; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -169,11 +116,11 @@
     <div id="login" style="display:none;">
         <div class="login-card">
             <div class="logo-container"><div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
-            <h2 class="title" style="letter-spacing: 2px;">Admin Pulse</h2>
+            <h2 class="title">Admin Access</h2>
             <div style="margin-top:30px;">
                 <input type="text" id="userInput" placeholder="Usuario" style="width:100%; margin-bottom:15px;">
                 <input type="password" id="passInput" placeholder="Contraseña" style="width:100%;">
-                <button onclick="checkLogin()" class="btn-save" style="margin-top:20px;">Acceder al Panel</button>
+                <button onclick="checkLogin()" class="btn-save" style="margin-top:20px;">Entrar</button>
             </div>
         </div>
     </div>
@@ -182,22 +129,20 @@
         <div class="header fade-in">
             <div class="logo-container"><div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
             <h1 class="title">Pilates Pulse</h1>
-            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); letter-spacing:2px; margin-top:15px; cursor:pointer; font-weight:600;">LOGOUT</p>
+            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); letter-spacing:2px; margin-top:15px; cursor:pointer;">CERRAR SESIÓN</p>
         </div>
         
         <div class="container" style="text-align: center;">
-            <button class="btn-export fade-in" onclick="descargarReportes()">
-                <span style="font-size: 1.2rem;">📊</span> EXPORTAR BACKUP DATA
-            </button>
+            <button class="btn-export fade-in" onclick="descargarReportes()">📊 EXPORTAR BACKUP</button>
             
             <div id="mainCalendar"></div>
 
             <div class="db-section fade-in" style="margin-top: 40px;">
                 <div class="db-header" style="cursor:pointer; background: var(--text-main); color: white; padding: 20px; border-radius: 20px;" onclick="toggleDB()">
-                    Base de Datos de Alumnos
+                    Base de Datos y Alumnos
                 </div>
                 <div id="db-content" style="display:none; flex-direction:column; padding-top:20px;">
-                    <button class="btn-add" style="width:100%; border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; color: var(--primary); background: transparent; cursor: pointer; margin-bottom: 15px;" onclick="showDBForm()">+ Agregar Alumno</button>
+                    <button class="btn-save" style="background:transparent; color:var(--primary); border:1px dashed var(--accent); margin-bottom:15px;" onclick="showDBForm()">+ Agregar Nuevo Alumno</button>
                     <div id="db-form-container"></div>
                     <div id="db-list"></div>
                 </div>
@@ -210,7 +155,8 @@
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const modalidades = ["Privada", "Grupal", "Cumpleaños", "Masaje"];
-        
+        const modDB = ["Grupal", "Privada", "Clase suelta", "Masaje"];
+
         const generarHoras = () => {
             let options = "";
             for(let h = 8; h <= 21; h++){
@@ -232,7 +178,7 @@
             const p = document.getElementById('passInput').value;
             const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
             if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } 
-            else { alert("Acceso denegado"); }
+            else { alert("Datos incorrectos"); }
         }
 
         function showApp() {
@@ -244,14 +190,14 @@
         function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
 
         function renderCalendar() {
-            document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
-                <div class="day-group">
+            document.getElementById('mainCalendar').innerHTML = dias.map((dia, idx) => `
+                <div class="day-group" style="animation-delay: ${idx * 0.1}s">
                     <div class="day-header" onclick="toggleDay('${dia}')">
                         <span class="day-name">${dia}</span>
-                        <span id="icon-${dia}" style="transition: transform 0.3s; color: var(--accent);">▼</span>
+                        <span id="icon-${dia}">▼</span>
                     </div>
                     <div class="day-content" id="content-${dia}">
-                        <button onclick="showCalendarForm('${dia}')" style="border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; color: var(--primary); background: transparent; cursor: pointer; font-size: 0.8rem; font-weight: 600;">+ Nueva Sesión</button>
+                        <button onclick="showCalendarForm('${dia}')" style="border:1px dashed var(--accent); padding:10px; border-radius:10px; color:var(--primary); background:transparent; cursor:pointer;">+ Nueva Clase</button>
                         <div id="form-cal-${dia}"></div>
                         <div id="list-${dia}"></div>
                     </div>
@@ -261,26 +207,19 @@
 
         function toggleDay(dia) {
             const c = document.getElementById(`content-${dia}`);
-            const icon = document.getElementById(`icon-${dia}`);
             const isVisible = c.style.display === 'flex';
-            
             document.querySelectorAll('.day-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.day-header span[id^="icon"]').forEach(i => i.style.transform = 'rotate(0deg)');
-            
-            if (!isVisible) {
-                c.style.display = 'flex';
-                icon.style.transform = 'rotate(180deg)';
-            }
+            if (!isVisible) c.style.display = 'flex';
         }
 
         function showCalendarForm(dia) {
             document.getElementById(`form-cal-${dia}`).innerHTML = `
                 <div class="input-row fade-in">
-                    <select id="time-${dia}">${generarHoras()}</select>
-                    <select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
-                    <select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <input type="text" id="names-${dia}" placeholder="Nombre del alumno...">
-                    <button class="btn-save" onclick="saveCalendar('${dia}')">Confirmar Clase</button>
+                    <label>Hora</label><select id="time-${dia}">${generarHoras()}</select>
+                    <label>Tipo</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
+                    <label>Modalidad</label><select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>Alumnos</label><input type="text" id="names-${dia}" placeholder="Nombres...">
+                    <button class="btn-save" onclick="saveCalendar('${dia}')">Guardar</button>
                 </div>`;
         }
 
@@ -299,51 +238,79 @@
                 if (list && item.celda_id !== 'DB_ENTRY') {
                     const p = item.contenido.split('|');
                     list.innerHTML += `<div class="class-item fade-in">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                            <span style="font-weight:600; color:var(--primary);">${p[0]}</span>
+                        <div style="display:flex; justify-content:space-between;">
+                            <b>${p[0]} - ${p[1]}</b>
                             <span class="delete-btn" onclick="deleteItem('${item.id}')">×</span>
                         </div>
-                        <div style="font-weight: 500; font-size: 0.9rem; margin-bottom: 10px;">${p[1]}</div>
-                        <span class="class-tag">${p[2]}</span>
-                        <div style="margin-top:12px; font-size:0.8rem; color:var(--text-light); display:flex; align-items:center; gap:5px;">
-                            <span>👤</span> ${p[3] || 'Sin asignar'}
-                        </div>
+                        <div style="font-size:0.8rem; color:var(--primary); margin-top:5px;">${p[2]}</div>
+                        <div style="font-size:0.75rem; color:var(--text-light); margin-top:5px; border-top:1px solid #eee; padding-top:5px;">👤 ${p[3] || 'N/A'}</div>
                     </div>`;
                 }
             });
         }
 
-        async function descargarReportes() {
-            const { data } = await _supabase.from('horarios').select('*');
-            const fecha = new Date().toLocaleDateString().replace(/\//g, '-');
-            
-            // JSON
-            const jsonBlob = new Blob([JSON.stringify(data, null, 4)], {type: "application/json"});
-            downloadBlob(jsonBlob, `backup_pulse_${fecha}.json`);
-
-            // CSV
-            let csv = "ID,Dia,Contenido,Fecha\n";
-            data.forEach(r => csv += `${r.id},${r.celda_id},"${r.contenido}",${r.created_at}\n`);
-            const csvBlob = new Blob([csv], {type: "text/csv"});
-            downloadBlob(csvBlob, `backup_pulse_${fecha}.csv`);
+        // --- SECCIÓN BASE DE DATOS (FIXED) ---
+        function toggleDB() {
+            const c = document.getElementById('db-content');
+            c.style.display = (c.style.display === 'none') ? 'flex' : 'none';
         }
 
-        function downloadBlob(blob, name) {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = name;
-            a.click();
+        function showDBForm() {
+            document.getElementById('db-form-container').innerHTML = `
+                <div class="input-row fade-in">
+                    <label>Nombre</label><input type="text" id="db-name">
+                    <label>Teléfono</label><input type="text" id="db-phone">
+                    <label>Paquete</label><select id="db-pkg"><option>1 vez/semana</option><option>2 veces/semana</option><option>3 veces/semana</option></select>
+                    <label>Modalidad</label><select id="db-mod">${modDB.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>Horario</label><select id="db-hours">${generarHoras()}</select>
+                    <label>Pago/Vencimiento</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="db-pay" placeholder="Pago" style="width:50%">
+                        <input type="text" id="db-exp" placeholder="Vence" style="width:50%">
+                    </div>
+                    <button class="btn-save" onclick="saveDB()">Guardar Alumno</button>
+                </div>`;
+        }
+
+        async function saveDB() {
+            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|${document.getElementById('db-pkg').value}|${document.getElementById('db-mod').value}|${document.getElementById('db-hours').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
+            await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            document.getElementById('db-form-container').innerHTML = '';
+            loadDBData();
+        }
+
+        async function loadDBData() {
+            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
+            const list = document.getElementById('db-list');
+            list.innerHTML = '';
+            data?.forEach(item => {
+                const p = item.contenido.split('|');
+                list.innerHTML += `<div class="class-item fade-in" style="border-left-color: var(--accent);">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>${p[1]}</b>
+                        <span class="delete-btn" onclick="deleteItem('${item.id}')">×</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-light);">📞 ${p[2]} | ${p[3]}</div>
+                    <div style="font-size:0.75rem; margin-top:5px; font-weight:600; color:var(--primary);">PAGO: ${p[6]} | VENCE: ${p[7]}</div>
+                </div>`;
+            });
         }
 
         async function deleteItem(id) {
-            if(confirm("¿Eliminar este registro?")) {
+            if(confirm("¿Eliminar registro?")) {
                 await _supabase.from('horarios').delete().eq('id', id);
                 loadCalendarData(); loadDBData();
             }
         }
 
-        function toggleDB() { const c = document.getElementById('db-content'); c.style.display = (c.style.display === 'none') ? 'flex' : 'none'; }
-        function loadDBData() { /* Similar a loadCalendar pero filtrando celda_id === 'DB_ENTRY' */ }
+        async function descargarReportes() {
+            const { data } = await _supabase.from('horarios').select('*');
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `backup_pilates_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
     </script>
 </body>
 </html>
