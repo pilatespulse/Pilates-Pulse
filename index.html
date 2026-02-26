@@ -110,6 +110,7 @@
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const opcionesModalidad = ["Grupal", "Privada", "Masaje", "Cumpleaños"];
+        const opcionesPaquete = ["1/semana", "2/semana", "3/semana"];
 
         const generarHoras = () => {
             let options = "";
@@ -194,6 +195,8 @@
                 <div class="input-row">
                     <label>Nombre Completo</label><input type="text" id="db-name">
                     <label>Teléfono</label><input type="text" id="db-phone">
+                    <label>Tipo de paquete</label>
+                    <select id="db-pkg">${opcionesPaquete.map(p=>`<option>${p}</option>`).join('')}</select>
                     <label>Modalidad</label>
                     <select id="db-mod">${opcionesModalidad.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label>Hora</label>
@@ -213,7 +216,7 @@
         }
 
         async function saveDB() {
-            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|N/A|${document.getElementById('db-mod').value}|${document.getElementById('db-time').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
+            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|${document.getElementById('db-pkg').value}|${document.getElementById('db-mod').value}|${document.getElementById('db-time').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
             await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
             hideDBForm();
             loadDBData();
@@ -243,7 +246,7 @@
                 const p = item.contenido.split('|');
                 list.innerHTML += `<div class="class-item">
                     <div><b style="font-size:0.9rem;">${p[1]}</b><br>
-                    <span style="font-size:0.75rem; color:var(--text-light);">${p[4]} - ${p[5]} • Vence: ${p[7]}</span></div>
+                    <span style="font-size:0.75rem; color:var(--text-light);">${p[3]} • ${p[4]} • ${p[5]} • Vence: ${p[7]}</span></div>
                     <span class="delete-btn" onclick="deleteItem('${item.id}', true)">×</span>
                 </div>`;
             });
