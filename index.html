@@ -11,7 +11,6 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        /* DECORACIONES */
         .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
         .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
         .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
@@ -30,13 +29,11 @@
         .day-header { background: var(--white); padding: 18px 25px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.02); cursor: pointer; }
         .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 8px; }
         
-        /* SECCIÓN BASE DE DATOS */
-        .db-section { margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 30px; }
+        .db-section { margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 30px; margin-bottom: 50px; }
         .db-header { background: #37474f; color: white; padding: 18px 25px; border-radius: 18px; text-align: center; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
         .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; margin-bottom: 8px; }
-        .class-info { font-size: 0.9rem; font-weight: 500; }
         .class-tag { display: inline-block; font-size: 0.65rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
         
         .input-row { background: #fff; padding: 20px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 12px; }
@@ -85,7 +82,19 @@
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        const modalidades = ["Grupales", "Privadas", "Cumpleaños", "Masaje"];
+        const modalidades = ["Privada", "Grupal", "Cumpleaños", "Masaje"];
+        
+        // Generador de horas de 8am a 9pm
+        const generarHoras = () => {
+            let options = "";
+            for(let h = 8; h <= 21; h++){
+                let ampm = h >= 12 ? 'PM' : 'AM';
+                let displayH = h > 12 ? h - 12 : h;
+                options += `<option>${displayH}:00 ${ampm}</option>`;
+                if(h < 21) options += `<option>${displayH}:30 ${ampm}</option>`;
+            }
+            return options;
+        };
 
         window.onload = function() {
             const st = localStorage.getItem('pulseSession');
@@ -97,7 +106,7 @@
             const u = document.getElementById('userInput').value;
             const p = document.getElementById('passInput').value;
             const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } else { alert("Error."); }
+            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } else { alert("Acceso denegado."); }
         }
 
         function showApp() {
@@ -108,7 +117,6 @@
 
         function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
 
-        // --- CALENDARIO SEMANAL ---
         function renderCalendar() {
             document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
                 <div class="day-group">
@@ -134,7 +142,7 @@
         function showCalendarForm(dia) {
             document.getElementById(`form-cal-${dia}`).innerHTML = `
                 <div class="input-row">
-                    <label>Hora</label><select id="time-${dia}">${Array.from({length:14}, (_,i)=> { let h=i+7; let ampm=h>=12?'PM':'AM'; let dh=h>12?h-12:h; return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`; }).join('')}</select>
+                    <label>Hora</label><select id="time-${dia}">${generarHoras()}</select>
                     <label>Tipo</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
                     <label>Modalidad</label><select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label>Nombres</label><input type="text" id="names-${dia}" placeholder="Alumnos...">
@@ -160,7 +168,6 @@
             });
         }
 
-        // --- BASE DE DATOS DE ALUMNOS ---
         function toggleDB() {
             const c = document.getElementById('db-content');
             c.style.display = (c.style.display === 'none') ? 'flex' : 'none';
@@ -173,7 +180,7 @@
                     <label>Teléfono</label><input type="text" id="db-phone">
                     <label>Paquete</label><select id="db-pkg"><option>1 vez por semana</option><option>2 veces por semana</option><option>3 veces por semana</option></select>
                     <label>Modalidad</label><select id="db-mod"><option>Grupal</option><option>Privada</option><option>Clase suelta</option><option>Masaje</option></select>
-                    <label>Horarios</label><input type="text" id="db-hours" placeholder="Ej: Lunes 10am">
+                    <label>Horarios</label><select id="db-hours">${generarHoras()}</select>
                     <label>Primer Pago</label><input type="text" id="db-pay">
                     <label>Vencimiento</label><input type="text" id="db-exp">
                     <div class="btn-row"><button class="btn-save" onclick="saveDB()">Guardar en Base de Datos</button><button class="btn-cancel" onclick="document.getElementById('db-form-container').innerHTML=''">X</button></div>
