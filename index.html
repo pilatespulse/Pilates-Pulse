@@ -5,55 +5,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pilates Pulse | Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00796b; --bg: #f4f7f8; --white: #ffffff; --text: #37474f; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        /* --- DISEÑO MINIMALISTA --- */
+        :root { 
+            --primary: #00796b; 
+            --primary-light: #b2dfdb;
+            --bg: #f8fafb; 
+            --white: #ffffff; 
+            --text: #2c3e50; 
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --glass: rgba(255, 255, 255, 0.8);
+        }
 
-        .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
-        .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
-        .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
-        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(178, 223, 219, 0.2) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(128, 203, 204, 0.1) 0%, transparent 40%);
+        }
 
-        #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
-        .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 45px 30px; border-radius: 40px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.5); }
+        /* --- LOGIN DECORADO (GLASSMORPHISM) --- */
+        #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { 
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            padding: 50px 35px; 
+            border-radius: 40px; 
+            width: 100%; 
+            max-width: 360px; 
+            text-align: center; 
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
 
-        .header { padding: 30px 20px 10px; text-align: center; }
-        .logo { width: 70px; height: 70px; background: #fff; border-radius: 50%; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { padding: 40px 20px 20px; text-align: center; }
+        .logo { 
+            width: 85px; height: 85px; 
+            background: #fff; border-radius: 50%; 
+            margin: 0 auto 15px; display: flex; 
+            justify-content: center; align-items: center; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border: 2px solid var(--primary-light);
+        }
         .logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .title { font-family: 'Montserrat', sans-serif; color: var(--primary); letter-spacing: 4px; text-transform: uppercase; font-size: 1.1rem; margin: 0; font-weight: 300; }
         
-        .container { padding: 15px; max-width: 450px; margin: auto; }
-        .day-group { margin-bottom: 10px; }
-        .day-header { background: var(--white); padding: 18px 25px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.02); cursor: pointer; }
-        .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 8px; }
+        .title { 
+            font-family: 'Montserrat', sans-serif; 
+            color: var(--primary); 
+            letter-spacing: 5px; 
+            text-transform: uppercase; 
+            font-size: 1.2rem; 
+            margin: 0; 
+            font-weight: 300; 
+        }
+
+        /* --- CONTENEDORES Y TARJETAS --- */
+        .container { padding: 15px; max-width: 500px; margin: auto; }
         
-        .db-section { margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 30px; margin-bottom: 50px; }
-        .db-header { background: #37474f; color: white; padding: 18px 25px; border-radius: 18px; text-align: center; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .day-group { margin-bottom: 12px; }
         
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
-        .class-item { background: var(--white); padding: 16px; border-radius: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; margin-bottom: 8px; }
-        .class-tag { display: inline-block; font-size: 0.65rem; padding: 3px 8px; border-radius: 5px; background: #e0f2f1; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-right: 5px; }
+        .day-header { 
+            background: var(--white); 
+            padding: 20px 25px; 
+            border-radius: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .day-header:active { transform: scale(0.98); }
+        .day-name { font-weight: 600; font-size: 1rem; color: #444; }
+
+        .day-content { display: none; flex-direction: column; padding: 15px 5px; gap: 10px; }
+
+        /* --- BASE DE DATOS DECORADA --- */
+        .db-section { margin: 50px 0; padding-top: 20px; }
+        .db-header { 
+            background: #2c3e50; 
+            color: #fff; 
+            padding: 22px; 
+            border-radius: 25px; 
+            text-align: center; 
+            font-weight: 500; 
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        /* --- ELEMENTOS DE FORMULARIO --- */
+        .input-row { 
+            background: var(--white); 
+            padding: 25px; 
+            border-radius: 25px; 
+            box-shadow: var(--shadow);
+            border: 1px solid var(--primary-light);
+            display: flex; flex-direction: column; gap: 15px; 
+        }
         
-        .input-row { background: #fff; padding: 20px; border-radius: 18px; border: 2px dashed var(--primary); display: flex; flex-direction: column; gap: 12px; }
-        label { font-size: 0.75rem; font-weight: 600; color: var(--primary); margin-bottom: -8px; margin-left: 5px; text-transform: uppercase; }
-        select, input { border: 1px solid #eee; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; width: 100%; background: #fdfdfd; font-family: 'Inter', sans-serif; }
-        .btn-row { display: flex; gap: 8px; margin-top: 5px; }
-        .btn-save { background: var(--primary); color: white; border: none; flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; }
-        .btn-cancel { background: #90a4ae; color: white; border: none; flex: 1; padding: 14px; border-radius: 10px; }
+        label { 
+            font-size: 0.7rem; 
+            font-weight: 600; 
+            color: var(--primary); 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-left: 5px;
+        }
+
+        select, input { 
+            border: 1px solid #edf2f7; 
+            padding: 14px; 
+            border-radius: 12px; 
+            font-size: 0.95rem; 
+            background: #fdfdfd; 
+            transition: all 0.3s;
+        }
+        select:focus, input:focus { border-color: var(--primary); background: #fff; }
+
+        .btn-add { 
+            background: var(--primary); 
+            color: white; border: none; 
+            padding: 14px; border-radius: 15px; 
+            font-weight: 600; cursor: pointer; 
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 121, 107, 0.2);
+        }
+
+        .class-item { 
+            background: var(--white); 
+            padding: 18px; 
+            border-radius: 20px; 
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary);
+            position: relative;
+        }
+
+        .class-tag { 
+            display: inline-block; 
+            font-size: 0.65rem; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            background: #e0f2f1; 
+            color: var(--primary); 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            margin-top: 5px;
+        }
+
+        .delete-icon { opacity: 0.2; transition: opacity 0.3s; cursor: pointer; }
+        .class-item:hover .delete-icon { opacity: 1; }
+
     </style>
 </head>
 <body>
 
     <div id="login" style="display:none;">
-        <div class="decor shape1"></div><div class="decor shape2"></div>
         <div class="login-card">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <h2 class="title" style="margin-bottom:25px; font-size: 0.9rem;">Área de Gestión</h2>
-            <input type="text" id="userInput" placeholder="Usuario">
-            <input type="password" id="passInput" placeholder="Contraseña" style="margin-top:12px;">
-            <button onclick="checkLogin()" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:15px; margin-top:15px; font-weight:600; cursor:pointer;">Entrar</button>
+            <h2 class="title" style="margin-bottom:30px;">Admin Access</h2>
+            <input type="text" id="userInput" placeholder="Usuario" style="margin-bottom:15px;">
+            <input type="password" id="passInput" placeholder="Contraseña">
+            <button onclick="checkLogin()" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:15px; margin-top:25px; font-weight:600; cursor:pointer;">Entrar al Sistema</button>
         </div>
     </div>
 
@@ -61,18 +181,18 @@
         <div class="header">
             <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h1 class="title">Pilates Pulse</h1>
-            <button onclick="logout()" style="background:none; border:none; color:#90a4ae; font-size:0.7rem; cursor:pointer; margin-top:10px;">Cerrar Sesión</button>
+            <p style="font-size:0.7rem; color:#90a4ae; margin-top:5px; cursor:pointer" onclick="logout()">CERRAR SESIÓN</p>
         </div>
         
         <div class="container">
             <div id="mainCalendar"></div>
 
             <div class="db-section">
-                <div class="db-header" onclick="toggleDB()">Base de Datos y Planes/Tarifas</div>
-                <div id="db-content" style="display:none; flex-direction:column; padding-top:15px;">
-                    <button class="btn-add" onclick="showDBForm()">+ Nuevo Registro de Alumno</button>
+                <div class="db-header" onclick="toggleDB()">Base de Datos y Tarifas</div>
+                <div id="db-content" style="display:none; flex-direction:column; padding-top:20px;">
+                    <button class="btn-add" onclick="showDBForm()">+ Nuevo Alumno</button>
                     <div id="db-form-container"></div>
-                    <div id="db-list" style="margin-top:15px;"></div>
+                    <div id="db-list" style="margin-top:10px;"></div>
                 </div>
             </div>
         </div>
@@ -84,14 +204,12 @@
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const modalidades = ["Privada", "Grupal", "Cumpleaños", "Masaje"];
         
-        // Generador de horas de 8am a 9pm
         const generarHoras = () => {
             let options = "";
             for(let h = 8; h <= 21; h++){
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h > 12 ? h - 12 : h;
-                options += `<option>${displayH}:00 ${ampm}</option>`;
-                if(h < 21) options += `<option>${displayH}:30 ${ampm}</option>`;
+                options += `<option>${displayH}:00 ${ampm}</option><option>${displayH}:30 ${ampm}</option>`;
             }
             return options;
         };
@@ -106,7 +224,8 @@
             const u = document.getElementById('userInput').value;
             const p = document.getElementById('passInput').value;
             const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } else { alert("Acceso denegado."); }
+            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } 
+            else { alert("Acceso Incorrecto."); }
         }
 
         function showApp() {
@@ -121,10 +240,10 @@
             document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
                 <div class="day-group">
                     <div class="day-header" onclick="toggleDay('${dia}')">
-                        <span>${dia}</span><span id="icon-${dia}">▼</span>
+                        <span class="day-name">${dia}</span><span id="icon-${dia}" style="font-size:0.8rem">▼</span>
                     </div>
                     <div class="day-content" id="content-${dia}">
-                        <button class="btn-add" onclick="showCalendarForm('${dia}')">+ Agregar Clase</button>
+                        <button class="btn-add" onclick="showCalendarForm('${dia}')">+ Nueva Clase</button>
                         <div id="form-cal-${dia}"></div>
                         <div id="list-${dia}"></div>
                     </div>
@@ -142,11 +261,14 @@
         function showCalendarForm(dia) {
             document.getElementById(`form-cal-${dia}`).innerHTML = `
                 <div class="input-row">
-                    <label>Hora</label><select id="time-${dia}">${generarHoras()}</select>
-                    <label>Tipo</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
+                    <label>Horario</label><select id="time-${dia}">${generarHoras()}</select>
+                    <label>Clase</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
                     <label>Modalidad</label><select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label>Nombres</label><input type="text" id="names-${dia}" placeholder="Alumnos...">
-                    <div class="btn-row"><button class="btn-save" onclick="saveCalendar('${dia}')">Guardar</button><button class="btn-cancel" onclick="document.getElementById('form-cal-${dia}').innerHTML=''">X</button></div>
+                    <label>Nombre Alumno</label><input type="text" id="names-${dia}">
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-save" style="background:var(--primary); color:white; border:none; padding:12px; border-radius:10px; flex:1" onclick="saveCalendar('${dia}')">Guardar</button>
+                        <button style="background:#eee; border:none; padding:12px; border-radius:10px;" onclick="document.getElementById('form-cal-${dia}').innerHTML=''">Cancelar</button>
+                    </div>
                 </div>`;
         }
 
@@ -163,7 +285,15 @@
                 const list = document.getElementById('list-'+item.celda_id);
                 if (list && item.celda_id !== 'DB_ENTRY') {
                     const p = item.contenido.split('|');
-                    list.innerHTML += `<div class="class-item"><b>${p[0]}</b> ${p[1]}<br><span class="class-tag">${p[2]}</span><div style="font-size:0.7rem;color:#78909c">👤 ${p[3]}</div><span onclick="deleteItem('${item.id}')" style="align-self:flex-end;cursor:pointer;opacity:0.3">🗑️</span></div>`;
+                    list.innerHTML += `<div class="class-item">
+                        <div style="display:flex; justify-content:space-between">
+                            <span style="font-weight:600; color:var(--primary)">${p[0]}</span>
+                            <span class="delete-icon" onclick="deleteItem('${item.id}')">🗑️</span>
+                        </div>
+                        <div style="font-size:0.9rem; margin:2px 0">${p[1]}</div>
+                        <span class="class-tag">${p[2]}</span>
+                        <div style="font-size:0.75rem; color:#999; margin-top:8px;">👤 ${p[3] || 'Sin nombre'}</div>
+                    </div>`;
                 }
             });
         }
@@ -180,10 +310,10 @@
                     <label>Teléfono</label><input type="text" id="db-phone">
                     <label>Paquete</label><select id="db-pkg"><option>1 vez por semana</option><option>2 veces por semana</option><option>3 veces por semana</option></select>
                     <label>Modalidad</label><select id="db-mod"><option>Grupal</option><option>Privada</option><option>Clase suelta</option><option>Masaje</option></select>
-                    <label>Horarios</label><select id="db-hours">${generarHoras()}</select>
-                    <label>Primer Pago</label><input type="text" id="db-pay">
-                    <label>Vencimiento</label><input type="text" id="db-exp">
-                    <div class="btn-row"><button class="btn-save" onclick="saveDB()">Guardar en Base de Datos</button><button class="btn-cancel" onclick="document.getElementById('db-form-container').innerHTML=''">X</button></div>
+                    <label>Horario Fijo</label><select id="db-hours">${generarHoras()}</select>
+                    <label>Fecha de Pago</label><input type="text" id="db-pay" placeholder="Ej: 05/03">
+                    <label>Vencimiento</label><input type="text" id="db-exp" placeholder="Ej: 05/04">
+                    <div class="btn-row"><button class="btn-save" onclick="saveDB()">Registrar Alumno</button></div>
                 </div>`;
         }
 
@@ -200,12 +330,16 @@
             list.innerHTML = '';
             data?.forEach(item => {
                 const p = item.contenido.split('|');
-                list.innerHTML += `<div class="class-item" style="border-left:4px solid var(--primary)">
-                    <div style="font-weight:600">${p[1]}</div>
-                    <div style="font-size:0.8rem">📞 ${p[2]} | 🏷️ ${p[3]}</div>
-                    <div style="font-size:0.8rem">🧘 ${p[4]} | ⏰ ${p[5]}</div>
-                    <div style="font-size:0.75rem; margin-top:5px; color:var(--primary)">PAGO: ${p[6]} | VENCE: ${p[7]}</div>
-                    <span onclick="deleteItem('${item.id}')" style="align-self:flex-end;cursor:pointer;opacity:0.3">🗑️</span>
+                list.innerHTML += `<div class="class-item" style="border-left-color:#34495e">
+                    <div style="display:flex; justify-content:space-between">
+                        <b style="font-size:1rem">${p[1]}</b>
+                        <span class="delete-icon" onclick="deleteItem('${item.id}')">🗑️</span>
+                    </div>
+                    <div style="font-size:0.85rem; color:#666">📞 ${p[2]} | 🏷️ ${p[3]}</div>
+                    <div style="font-size:0.85rem; color:#666">🧘 ${p[4]} | ⏰ ${p[5]}</div>
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px solid #eee; font-size:0.8rem; font-weight:600; color:var(--primary)">
+                        PAGÓ: ${p[6]} • VENCE: ${p[7]}
+                    </div>
                 </div>`;
             });
         }
