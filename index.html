@@ -11,6 +11,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
+        /* DECORACIONES */
         .decor { position: absolute; border-radius: 50%; filter: blur(40px); z-index: -1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
         .shape1 { width: 300px; height: 300px; background: #b2dfdb; top: -100px; left: -100px; }
         .shape2 { width: 250px; height: 250px; background: #80cbc4; bottom: -50px; right: -50px; animation-delay: -5s; }
@@ -78,12 +79,22 @@
             else { localStorage.removeItem('pulseSession'); document.getElementById('login').style.display = 'flex'; }
         };
 
-        function checkLogin() {
-            if (document.getElementById('userInput').value === "pilates_pulse" && 
-                document.getElementById('passInput').value === "2026_pilates_Pulse") {
+        async function checkLogin() {
+            const user = document.getElementById('userInput').value;
+            const pass = document.getElementById('passInput').value;
+
+            // Validación segura contra Supabase
+            const { data, error } = await _supabase
+                .from('usuarios_admin')
+                .select('*')
+                .eq('usuario', user)
+                .eq('password', pass)
+                .maybeSingle();
+
+            if (data) {
                 localStorage.setItem('pulseSession', new Date().getTime());
                 showApp();
-            } else { alert("Datos incorrectos"); }
+            } else { alert("Acceso denegado."); }
         }
 
         function showApp() {
@@ -128,22 +139,12 @@
                             return `<option>${dh}:00 ${ampm}</option><option>${dh}:30 ${ampm}</option>`;
                         }).join('')}
                     </select>
-                    
                     <label>Tipo de Clase</label>
-                    <select id="type-${dia}">
-                        ${tiposClase.map(t => `<option>${t}</option>`).join('')}
-                    </select>
-
+                    <select id="type-${dia}">${tiposClase.map(t => `<option>${t}</option>`).join('')}</select>
                     <label>Modalidad</label>
-                    <select id="mod-${dia}">
-                        <option>Grupales</option>
-                        <option>Privadas</option>
-                        <option>Cumpleaños</option>
-                    </select>
-
+                    <select id="mod-${dia}"><option>Grupales</option><option>Privadas</option><option>Cumpleaños</option></select>
                     <label>Nombres</label>
                     <input type="text" id="names-${dia}" placeholder="Ej: Ana, Luis...">
-
                     <div class="btn-row">
                         <button class="btn-save" onclick="saveClass('${dia}')">Guardar Clase</button>
                         <button class="btn-cancel" onclick="cancelForm('${dia}')">X</button>
@@ -154,13 +155,9 @@
         function cancelForm(dia) { document.getElementById(`form-container-${dia}`).innerHTML = ''; }
 
         async function saveClass(dia) {
-            const time = document.getElementById(`time-${dia}`).value;
-            const type = document.getElementById(`type-${dia}`).value;
-            const mod = document.getElementById(`mod-${dia}`).value;
-            const names = document.getElementById(`names-${dia}`).value || "Sin nombres";
-            const fullContent = `${time}|${type}|${mod}|${names}`;
+            const fullContent = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-'+dia).value}|${document.getElementById('names-'+dia).value || "Sin nombres"}`;
             const { error } = await _supabase.from('horarios').insert([{ celda_id: dia, contenido: fullContent }]);
-            if(!error) { cancelForm(dia); loadData(); } else { alert("Error: " + error.message); }
+            if(!error) { cancelForm(dia); loadData(); } else { alert("Error al guardar."); }
         }
 
         async function loadData() {
@@ -170,17 +167,16 @@
                 data.forEach(item => {
                     const list = document.getElementById('list-'+item.celda_id);
                     if(list) {
-                        const parts = item.contenido.split('|');
-                        const hora = parts[0], tipo = parts[1] || "Clase", mod = parts[2] || "Grupales", nombres = parts[3] || "";
+                        const p = item.contenido.split('|');
                         const div = document.createElement('div');
                         div.className = 'class-item';
                         div.innerHTML = `
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="flex:1;">
-                                    <div style="font-weight:600; color:var(--primary);">${hora}</div>
-                                    <div class="class-info">${tipo}</div>
-                                    <div style="margin: 4px 0;"><span class="class-tag">${mod}</span></div>
-                                    ${nombres ? `<div class="class-names">👤 ${nombres}</div>` : ''}
+                                    <div style="font-weight:600; color:var(--primary);">${p[0]}</div>
+                                    <div class="class-info">${p[1] || "Clase"}</div>
+                                    <div style="margin: 4px 0;"><span class="class-tag">${p[2] || "Grupales"}</span></div>
+                                    ${p[3] ? `<div class="class-names">👤 ${p[3]}</div>` : ''}
                                 </div>
                                 <div style="display:flex; gap:15px; font-size:1.1rem; padding-top:5px; margin-left:10px;">
                                     <span onclick="deleteItem('${item.id}')" style="cursor:pointer; opacity:0.3;">🗑️</span>
