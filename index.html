@@ -21,7 +21,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        /* --- LOGIN COMPACTO (Como en la imagen A32628C8) --- */
+        /* --- LOGIN --- */
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .login-card { background: white; padding: 40px; border-radius: 30px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
 
@@ -32,7 +32,7 @@
         .logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .title { font-family: 'Montserrat', sans-serif; color: var(--primary); letter-spacing: 4px; text-transform: uppercase; font-size: 1rem; font-weight: 600; margin: 0; }
 
-        /* --- DÍAS Y SECCIONES --- */
+        /* --- ESTRUCTURA --- */
         .day-group { margin-bottom: 12px; width: 100%; }
         .day-header { 
             background: white; padding: 18px 20px; border-radius: var(--radius); 
@@ -50,7 +50,7 @@
         .btn-save { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 600; width: 100%; cursor: pointer; }
         .btn-cancel { background: #f1f3f4; color: #7f8c8d; border: none; padding: 14px; border-radius: 15px; font-weight: 500; width: 100%; cursor: pointer; margin-top: 10px; }
 
-        /* --- FORMULARIOS (Cuadros blancos que no sobrepasan el margen) --- */
+        /* --- FORMULARIOS --- */
         .input-row { 
             background: white; padding: 20px; border-radius: 25px; 
             box-shadow: 0 15px 40px rgba(0,0,0,0.05); display: flex; 
@@ -81,16 +81,18 @@
         <div class="header">
             <div class="logo-container"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <h1 class="title">Pilates Pulse</h1>
-            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); cursor:pointer; margin-top:10px; text-transform:uppercase; letter-spacing:2px;">Cerrar Sesión</p>
+            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); cursor:pointer; margin-top:10px; text-transform:uppercase;">Cerrar Sesión</p>
         </div>
         
         <div class="container">
             <div id="mainCalendar"></div>
             
-            <button style="margin-top:30px; background:#2c3e50; color:white; padding:20px; border-radius:20px; border:none; width:100%; font-weight:600; font-size:0.8rem; letter-spacing:1px;" onclick="toggleDB()">
+            <button style="margin-top:30px; background:#2c3e50; color:white; padding:20px; border-radius:20px; border:none; width:100%; font-weight:600; font-size:0.8rem;" onclick="toggleDB()">
                 BASE DE DATOS DE ALUMNOS
             </button>
             <div id="db-content" style="display:none; padding-top:15px;">
+                <button id="btnAddDB" class="btn-add-inline" onclick="showDBForm()">+ Agregar Nuevo Alumno</button>
+                <div id="db-form-container"></div>
                 <div id="db-list"></div>
             </div>
         </div>
@@ -100,8 +102,8 @@
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        // Modalidades pedidas
-        const modalidades = ["Privada", "Grupal", "Masaje", "Cumpleaños"];
+        // Modalidades unificadas para ambos formularios
+        const opcionesModalidad = ["Grupal", "Privada", "Masaje", "Cumpleaños"];
 
         const generarHoras = () => {
             let options = "";
@@ -130,11 +132,12 @@
         function showApp() {
             document.getElementById('login').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            renderCalendar(); loadCalendarData();
+            renderCalendar(); loadCalendarData(); loadDBData();
         }
 
         function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
 
+        /* --- LÓGICA CALENDARIO DIARIO --- */
         function renderCalendar() {
             document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
                 <div class="day-group">
@@ -166,9 +169,7 @@
                     <label>Hora</label><select id="time-${dia}">${generarHoras()}</select>
                     <label>Tipo de Clase</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
                     <label>Modalidad</label>
-                    <select id="mod-${dia}">
-                        ${modalidades.map(m=>`<option>${m}</option>`).join('')}
-                    </select>
+                    <select id="mod-cal-${dia}">${opcionesModalidad.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label>Nombre Alumno</label><input type="text" id="names-${dia}" placeholder="...">
                     <button class="btn-save" onclick="saveCalendar('${dia}')">Guardar</button>
                     <button class="btn-cancel" onclick="document.getElementById('form-cal-${dia}').innerHTML=''">Cancelar</button>
@@ -176,10 +177,45 @@
         }
 
         async function saveCalendar(dia) {
-            const content = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-'+dia).value}|${document.getElementById('names-'+dia).value}`;
+            const content = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-cal-'+dia).value}|${document.getElementById('names-'+dia).value}`;
             await _supabase.from('horarios').insert([{ celda_id: dia, contenido: content }]);
             loadCalendarData();
             document.getElementById(`form-cal-${dia}`).innerHTML = '';
+        }
+
+        /* --- LÓGICA BASE DE DATOS ALUMNOS --- */
+        function toggleDB() {
+            const c = document.getElementById('db-content');
+            c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+        }
+
+        function showDBForm() {
+            document.getElementById('btnAddDB').style.display = 'none';
+            document.getElementById('db-form-container').innerHTML = `
+                <div class="input-row">
+                    <label>Nombre Completo</label><input type="text" id="db-name">
+                    <label>Teléfono</label><input type="text" id="db-phone">
+                    <label>Modalidad</label>
+                    <select id="db-mod">${opcionesModalidad.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1"><label>Pago</label><input type="text" id="db-pay" placeholder="dd/mm"></div>
+                        <div style="flex:1"><label>Vence</label><input type="text" id="db-exp" placeholder="dd/mm"></div>
+                    </div>
+                    <button class="btn-save" onclick="saveDB()">Guardar Alumno</button>
+                    <button class="btn-cancel" onclick="hideDBForm()">Cancelar</button>
+                </div>`;
+        }
+
+        function hideDBForm() {
+            document.getElementById('db-form-container').innerHTML = '';
+            document.getElementById('btnAddDB').style.display = 'block';
+        }
+
+        async function saveDB() {
+            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|N/A|${document.getElementById('db-mod').value}|8:00 AM|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
+            await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            hideDBForm();
+            loadDBData();
         }
 
         async function loadCalendarData() {
@@ -190,26 +226,33 @@
                 if (list && item.celda_id !== 'DB_ENTRY') {
                     const p = item.contenido.split('|');
                     list.innerHTML += `<div class="class-item">
-                        <div>
-                            <b style="color:var(--primary); font-size:0.85rem;">${p[0]} - ${p[1]}</b><br>
-                            <span style="font-size:0.75rem; color:var(--text-light);">${p[2]} • 👤 ${p[3] || 'N/A'}</span>
-                        </div>
+                        <div><b style="color:var(--primary); font-size:0.85rem;">${p[0]} - ${p[1]}</b><br>
+                        <span style="font-size:0.75rem; color:var(--text-light);">${p[2]} • 👤 ${p[3] || 'N/A'}</span></div>
                         <span class="delete-btn" onclick="deleteItem('${item.id}')">×</span>
                     </div>`;
                 }
             });
         }
 
-        async function deleteItem(id) {
-            if(confirm("¿Eliminar clase?")) {
-                await _supabase.from('horarios').delete().eq('id', id);
-                loadCalendarData();
-            }
+        async function loadDBData() {
+            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
+            const list = document.getElementById('db-list');
+            list.innerHTML = '';
+            data?.forEach(item => {
+                const p = item.contenido.split('|');
+                list.innerHTML += `<div class="class-item">
+                    <div><b style="font-size:0.9rem;">${p[1]}</b><br>
+                    <span style="font-size:0.75rem; color:var(--text-light);">${p[4]} • Vence: ${p[7]}</span></div>
+                    <span class="delete-btn" onclick="deleteItem('${item.id}', true)">×</span>
+                </div>`;
+            });
         }
 
-        function toggleDB() {
-            const c = document.getElementById('db-content');
-            c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+        async function deleteItem(id, isDB = false) {
+            if(confirm("¿Eliminar registro?")) {
+                await _supabase.from('horarios').delete().eq('id', id);
+                if(isDB) loadDBData(); else loadCalendarData();
+            }
         }
     </script>
 </body>
