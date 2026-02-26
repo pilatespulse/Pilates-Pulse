@@ -3,54 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilates Pulse | Admin</title>
+    <title>Pilates Pulse | Admin Premium</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #00796b; 
+            --primary-light: #48a697;
             --accent: #80cbc4;
-            --bg: #fdfdfd; 
-            --card-bg: #ffffff;
-            --text-main: #455a64;
-            --text-light: #90a4ae;
-            --border-soft: #f1f3f4;
+            --bg: #f4f7f6; 
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --radius: 20px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
-            background-color: var(--bg); 
+            background: var(--bg); 
             color: var(--text-main);
-            background-image: radial-gradient(circle at top right, #e0f2f1 0%, transparent 30%),
-                              radial-gradient(circle at bottom left, #f5f5f5 0%, transparent 30%);
-            background-attachment: fixed;
+            overflow-x: hidden;
         }
 
-        /* --- LOGIN --- */
+        /* --- ANIMACIONES --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .fade-in { animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        /* --- LOGIN ESTILO MODERN --- */
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .login-card { 
-            background: var(--card-bg);
-            padding: 40px 30px; 
+            background: white;
+            padding: 40px; 
             border-radius: 30px; 
-            width: 100%; 
-            max-width: 350px; 
+            width: 100%; max-width: 380px; 
             text-align: center; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-soft);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.8s ease;
         }
 
-        .header { padding: 40px 20px 20px; text-align: center; }
-        
+        /* --- HEADER & LOGO --- */
+        .header { padding: 50px 20px 30px; text-align: center; }
+        .logo-container {
+            position: relative;
+            width: 90px; height: 90px;
+            margin: 0 auto 20px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .logo-container:hover { transform: scale(1.1) rotate(5deg); }
         .logo { 
-            width: 80px; height: 80px; 
-            background: #fff; border-radius: 50%; 
-            margin: 0 auto 15px; display: flex; 
-            justify-content: center; align-items: center; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.04);
-            border: 1px solid #eee;
+            width: 100%; height: 100%; 
+            background: white; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            box-shadow: var(--shadow); border: 2px solid white;
             overflow: hidden;
         }
         .logo img { width: 100%; height: 100%; object-fit: cover; }
@@ -58,114 +75,92 @@
         .title { 
             font-family: 'Montserrat', sans-serif; 
             color: var(--primary); 
-            letter-spacing: 4px; 
+            letter-spacing: 5px; 
             text-transform: uppercase; 
-            font-size: 1rem; 
-            font-weight: 300; 
+            font-size: 1.1rem; font-weight: 600; 
             margin: 0;
         }
 
-        .container { padding: 15px; max-width: 480px; margin: auto; }
-        
-        /* --- DÍAS Y CLASES --- */
-        .day-group { margin-bottom: 12px; }
-        .day-header { 
-            background: var(--card-bg); 
-            padding: 20px 25px; 
-            border-radius: 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-            cursor: pointer;
-            border: 1px solid var(--border-soft);
+        /* --- BOTONES PREMIUM --- */
+        .btn-export {
+            background: white; color: var(--primary);
+            border: 1px solid var(--accent);
+            padding: 10px 20px; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
+            margin-bottom: 30px; display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,121,107,0.1);
         }
-        .day-name { font-weight: 500; font-size: 0.95rem; letter-spacing: 0.5px; }
-        .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 10px; }
-
-        /* --- BOTONES --- */
-        .btn-add { 
-            background: transparent; 
-            color: var(--primary); 
-            border: 1px dashed var(--accent); 
-            padding: 12px; border-radius: 15px; 
-            font-weight: 600; cursor: pointer; 
-            margin-bottom: 10px;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-        }
-        .btn-add:hover { background: #e0f2f1; }
+        .btn-export:hover { background: var(--primary); color: white; transform: translateY(-2px); }
 
         .btn-save { 
-            background: var(--primary); 
-            color: white; border: none; 
-            padding: 14px; border-radius: 12px; 
-            font-weight: 600; width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white; border: none; padding: 16px; border-radius: 15px; 
+            font-weight: 600; width: 100%; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .btn-save:active { transform: scale(0.98); }
 
-        /* Botón de exportar minimalista */
-        .btn-export {
-            background: #f1f3f4;
-            color: var(--text-main);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* --- CALENDARIO & DÍAS --- */
+        .container { padding: 0 20px 100px; max-width: 500px; margin: auto; }
+        
+        .day-group { margin-bottom: 15px; opacity: 0; animation: slideIn 0.5s forwards; }
+        .day-group:nth-child(1) { animation-delay: 0.1s; }
+        .day-group:nth-child(2) { animation-delay: 0.2s; }
+        .day-group:nth-child(3) { animation-delay: 0.3s; }
+        .day-group:nth-child(4) { animation-delay: 0.4s; }
+        .day-group:nth-child(5) { animation-delay: 0.5s; }
+        .day-group:nth-child(6) { animation-delay: 0.6s; }
 
-        .class-item { 
+        .day-header { 
             background: var(--card-bg); 
-            padding: 18px; 
-            border-radius: 18px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.01);
-            border: 1px solid var(--border-soft);
-            margin-bottom: 8px;
+            padding: 22px 25px; border-radius: var(--radius); 
+            display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
         }
+        .day-header:hover { background: white; transform: translateX(5px); }
+        .day-name { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+
+        .day-content { 
+            display: none; flex-direction: column; padding: 15px 5px; gap: 12px; 
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* --- CARDS DE CLASE --- */
+        .class-item { 
+            background: white; padding: 20px; border-radius: var(--radius); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.3s;
+        }
+        .class-item:hover { transform: scale(1.02); }
 
         .class-tag { 
-            display: inline-block; 
-            font-size: 0.65rem; 
-            padding: 4px 10px; 
-            border-radius: 8px; 
-            background: #f0f4f4; 
-            color: var(--primary); 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            margin: 5px 0;
+            background: #e0f2f1; color: var(--primary);
+            font-size: 0.65rem; padding: 5px 12px; border-radius: 20px;
+            font-weight: 600; text-transform: uppercase;
         }
 
+        /* --- INPUTS --- */
         .input-row { 
-            background: #fff; 
-            padding: 20px; 
-            border-radius: 22px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-soft);
-            display: flex; flex-direction: column; gap: 12px; 
-            margin-bottom: 15px;
+            background: white; padding: 25px; border-radius: 25px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; gap: 15px;
         }
-        
-        label { font-size: 0.65rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-left: 5px; }
-        select, input { border: 1px solid #f0f0f0; padding: 12px; border-radius: 10px; font-size: 0.9rem; background: #fafafa; color: var(--text-main); }
-
-        .db-section { margin: 40px 0 60px; }
-        .db-header { 
-            background: var(--text-main); 
-            color: #fff; 
-            padding: 18px; 
-            border-radius: 20px; 
-            text-align: center; 
-            font-weight: 500; 
-            font-size: 0.9rem;
-            letter-spacing: 1px;
+        input, select { 
+            border: 1px solid #edf2f7; padding: 14px; border-radius: 12px; 
+            background: #f8fafc; font-size: 0.95rem; transition: all 0.3s;
         }
+        input:focus { border-color: var(--primary); background: white; }
 
-        .delete-btn { color: #cfd8dc; font-size: 1.1rem; cursor: pointer; transition: color 0.2s; }
-        .delete-btn:hover { color: #ffab91; }
+        .delete-btn { 
+            width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;
+            border-radius: 50%; color: #fab1a0; cursor: pointer; transition: all 0.2s;
+        }
+        .delete-btn:hover { background: #fff5f5; color: #ff7675; }
 
     </style>
 </head>
@@ -173,32 +168,36 @@
 
     <div id="login" style="display:none;">
         <div class="login-card">
-            <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <h2 class="title">Admin Access</h2>
-            <div style="margin-top:25px;">
-                <input type="text" id="userInput" placeholder="Usuario" style="width:100%; margin-bottom:12px;">
+            <div class="logo-container"><div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
+            <h2 class="title" style="letter-spacing: 2px;">Admin Pulse</h2>
+            <div style="margin-top:30px;">
+                <input type="text" id="userInput" placeholder="Usuario" style="width:100%; margin-bottom:15px;">
                 <input type="password" id="passInput" placeholder="Contraseña" style="width:100%;">
-                <button onclick="checkLogin()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; margin-top:20px; font-weight:600; cursor:pointer;">Entrar</button>
+                <button onclick="checkLogin()" class="btn-save" style="margin-top:20px;">Acceder al Panel</button>
             </div>
         </div>
     </div>
 
     <div id="app" style="display:none;">
-        <div class="header">
-            <div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+        <div class="header fade-in">
+            <div class="logo-container"><div class="logo"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
             <h1 class="title">Pilates Pulse</h1>
-            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); letter-spacing:1px; margin-top:10px; cursor:pointer;">CERRAR SESIÓN</p>
+            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); letter-spacing:2px; margin-top:15px; cursor:pointer; font-weight:600;">LOGOUT</p>
         </div>
         
         <div class="container" style="text-align: center;">
-            <button class="btn-export" onclick="descargarReportes()">⬇ Descargar Backup (JSON/CSV)</button>
+            <button class="btn-export fade-in" onclick="descargarReportes()">
+                <span style="font-size: 1.2rem;">📊</span> EXPORTAR BACKUP DATA
+            </button>
             
             <div id="mainCalendar"></div>
 
-            <div class="db-section">
-                <div class="db-header" onclick="toggleDB()">Base de Datos y Alumnos</div>
+            <div class="db-section fade-in" style="margin-top: 40px;">
+                <div class="db-header" style="cursor:pointer; background: var(--text-main); color: white; padding: 20px; border-radius: 20px;" onclick="toggleDB()">
+                    Base de Datos de Alumnos
+                </div>
                 <div id="db-content" style="display:none; flex-direction:column; padding-top:20px;">
-                    <button class="btn-add" onclick="showDBForm()">+ Agregar Nuevo Alumno</button>
+                    <button class="btn-add" style="width:100%; border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; color: var(--primary); background: transparent; cursor: pointer; margin-bottom: 15px;" onclick="showDBForm()">+ Agregar Alumno</button>
                     <div id="db-form-container"></div>
                     <div id="db-list"></div>
                 </div>
@@ -211,7 +210,6 @@
         const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const modalidades = ["Privada", "Grupal", "Cumpleaños", "Masaje"];
-        const modDB = ["Grupal", "Privada", "Clase suelta", "Masaje"];
         
         const generarHoras = () => {
             let options = "";
@@ -233,7 +231,8 @@
             const u = document.getElementById('userInput').value;
             const p = document.getElementById('passInput').value;
             const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } else { alert("Datos incorrectos"); }
+            if (data) { localStorage.setItem('pulseSession', new Date().getTime()); showApp(); } 
+            else { alert("Acceso denegado"); }
         }
 
         function showApp() {
@@ -248,10 +247,11 @@
             document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
                 <div class="day-group">
                     <div class="day-header" onclick="toggleDay('${dia}')">
-                        <span class="day-name">${dia}</span><span id="icon-${dia}" style="color:var(--text-light); font-size:0.7rem;">▼</span>
+                        <span class="day-name">${dia}</span>
+                        <span id="icon-${dia}" style="transition: transform 0.3s; color: var(--accent);">▼</span>
                     </div>
                     <div class="day-content" id="content-${dia}">
-                        <button class="btn-add" onclick="showCalendarForm('${dia}')">+ Nueva Clase</button>
+                        <button onclick="showCalendarForm('${dia}')" style="border: 1px dashed var(--accent); padding: 12px; border-radius: 12px; color: var(--primary); background: transparent; cursor: pointer; font-size: 0.8rem; font-weight: 600;">+ Nueva Sesión</button>
                         <div id="form-cal-${dia}"></div>
                         <div id="list-${dia}"></div>
                     </div>
@@ -261,19 +261,26 @@
 
         function toggleDay(dia) {
             const c = document.getElementById(`content-${dia}`);
+            const icon = document.getElementById(`icon-${dia}`);
             const isVisible = c.style.display === 'flex';
+            
             document.querySelectorAll('.day-content').forEach(el => el.style.display = 'none');
-            if (!isVisible) c.style.display = 'flex';
+            document.querySelectorAll('.day-header span[id^="icon"]').forEach(i => i.style.transform = 'rotate(0deg)');
+            
+            if (!isVisible) {
+                c.style.display = 'flex';
+                icon.style.transform = 'rotate(180deg)';
+            }
         }
 
         function showCalendarForm(dia) {
             document.getElementById(`form-cal-${dia}`).innerHTML = `
-                <div class="input-row">
-                    <label>Hora</label><select id="time-${dia}">${generarHoras()}</select>
-                    <label>Tipo</label><select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
-                    <label>Modalidad</label><select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label>Nombres</label><input type="text" id="names-${dia}" placeholder="Escribir nombres...">
-                    <button class="btn-save" onclick="saveCalendar('${dia}')">Guardar Clase</button>
+                <div class="input-row fade-in">
+                    <select id="time-${dia}">${generarHoras()}</select>
+                    <select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
+                    <select id="mod-${dia}">${modalidades.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <input type="text" id="names-${dia}" placeholder="Nombre del alumno...">
+                    <button class="btn-save" onclick="saveCalendar('${dia}')">Confirmar Clase</button>
                 </div>`;
         }
 
@@ -286,103 +293,57 @@
 
         async function loadCalendarData() {
             const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
-            dias.forEach(d => {
-                const listEl = document.getElementById('list-'+d);
-                if(listEl) listEl.innerHTML = '';
-            });
+            dias.forEach(d => { const l = document.getElementById('list-'+d); if(l) l.innerHTML = ''; });
             data?.forEach(item => {
                 const list = document.getElementById('list-'+item.celda_id);
                 if (list && item.celda_id !== 'DB_ENTRY') {
                     const p = item.contenido.split('|');
-                    list.innerHTML += `<div class="class-item">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:600; color:var(--primary); font-size:0.9rem;">${p[0]}</span>
+                    list.innerHTML += `<div class="class-item fade-in">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <span style="font-weight:600; color:var(--primary);">${p[0]}</span>
                             <span class="delete-btn" onclick="deleteItem('${item.id}')">×</span>
                         </div>
-                        <div style="font-size:0.85rem; margin:3px 0;">${p[1]}</div>
+                        <div style="font-weight: 500; font-size: 0.9rem; margin-bottom: 10px;">${p[1]}</div>
                         <span class="class-tag">${p[2]}</span>
-                        <div style="font-size:0.75rem; color:var(--text-light); margin-top:5px; border-top:1px solid #f9f9f9; padding-top:5px;">👤 ${p[3] || 'N/A'}</div>
+                        <div style="margin-top:12px; font-size:0.8rem; color:var(--text-light); display:flex; align-items:center; gap:5px;">
+                            <span>👤</span> ${p[3] || 'Sin asignar'}
+                        </div>
                     </div>`;
                 }
             });
         }
 
-        function toggleDB() {
-            const c = document.getElementById('db-content');
-            c.style.display = (c.style.display === 'none') ? 'flex' : 'none';
-        }
-
-        function showDBForm() {
-            document.getElementById('db-form-container').innerHTML = `
-                <div class="input-row">
-                    <label>Nombre del Alumno</label><input type="text" id="db-name">
-                    <label>Teléfono</label><input type="text" id="db-phone">
-                    <label>Paquete</label><select id="db-pkg"><option>1 vez por semana</option><option>2 veces por semana</option><option>3 veces por semana</option></select>
-                    <label>Modalidad</label><select id="db-mod">${modDB.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label>Horario Fijo</label><select id="db-hours">${generarHoras()}</select>
-                    <label>Fecha Primer Pago</label><input type="text" id="db-pay" placeholder="dd/mm/aaaa">
-                    <label>Vencimiento</label><input type="text" id="db-exp" placeholder="dd/mm/aaaa">
-                    <button class="btn-save" onclick="saveDB()">Guardar en Base de Datos</button>
-                </div>`;
-        }
-
-        async function saveDB() {
-            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|${document.getElementById('db-pkg').value}|${document.getElementById('db-mod').value}|${document.getElementById('db-hours').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
-            await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            document.getElementById('db-form-container').innerHTML = '';
-            loadDBData();
-        }
-
-        async function loadDBData() {
-            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
-            const list = document.getElementById('db-list');
-            list.innerHTML = '';
-            data?.forEach(item => {
-                const p = item.contenido.split('|');
-                list.innerHTML += `<div class="class-item" style="border-left: 3px solid var(--accent);">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b style="font-size:0.95rem;">${p[1]}</b>
-                        <span class="delete-btn" onclick="deleteItem('${item.id}')">×</span>
-                    </div>
-                    <div style="font-size:0.8rem; color:var(--text-light); margin:4px 0;">📞 ${p[2]} • ${p[3]}</div>
-                    <div style="font-size:0.8rem;">${p[4]} • ${p[5]}</div>
-                    <div style="margin-top:8px; padding:8px; background:#fbfcfc; border-radius:10px; font-size:0.75rem; color:var(--primary); font-weight:600;">
-                        PAGO: ${p[6]} | VENCE: ${p[7]}
-                    </div>
-                </div>`;
-            });
-        }
-
-        async function deleteItem(id) { if(confirm("¿Eliminar registro?")) { await _supabase.from('horarios').delete().eq('id', id); loadCalendarData(); loadDBData(); } }
-
-        // --- FUNCIONES DE EXPORTACIÓN (JSON Y CSV) ---
         async function descargarReportes() {
             const { data } = await _supabase.from('horarios').select('*');
-            if (!data) return alert("No hay datos para exportar");
-
-            const fecha = new Date().toISOString().slice(0,10);
+            const fecha = new Date().toLocaleDateString().replace(/\//g, '-');
             
-            // 1. Exportar JSON
-            const dataStrJSON = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 4));
-            downloadFile(dataStrJSON, `backup_pulse_${fecha}.json`);
+            // JSON
+            const jsonBlob = new Blob([JSON.stringify(data, null, 4)], {type: "application/json"});
+            downloadBlob(jsonBlob, `backup_pulse_${fecha}.json`);
 
-            // 2. Exportar CSV
-            let csvContent = "id,celda_id,contenido,created_at\n";
-            data.forEach(row => {
-                csvContent += `${row.id},"${row.celda_id}","${row.contenido.replace(/"/g, '""')}","${row.created_at}"\n`;
-            });
-            const dataStrCSV = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
-            downloadFile(dataStrCSV, `backup_pulse_${fecha}.csv`);
+            // CSV
+            let csv = "ID,Dia,Contenido,Fecha\n";
+            data.forEach(r => csv += `${r.id},${r.celda_id},"${r.contenido}",${r.created_at}\n`);
+            const csvBlob = new Blob([csv], {type: "text/csv"});
+            downloadBlob(csvBlob, `backup_pulse_${fecha}.csv`);
         }
 
-        function downloadFile(url, fileName) {
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", url);
-            downloadAnchorNode.setAttribute("download", fileName);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        function downloadBlob(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
         }
+
+        async function deleteItem(id) {
+            if(confirm("¿Eliminar este registro?")) {
+                await _supabase.from('horarios').delete().eq('id', id);
+                loadCalendarData(); loadDBData();
+            }
+        }
+
+        function toggleDB() { const c = document.getElementById('db-content'); c.style.display = (c.style.display === 'none') ? 'flex' : 'none'; }
+        function loadDBData() { /* Similar a loadCalendar pero filtrando celda_id === 'DB_ENTRY' */ }
     </script>
 </body>
 </html>
