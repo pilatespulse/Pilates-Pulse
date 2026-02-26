@@ -24,13 +24,12 @@
             margin: 0; 
             background-color: var(--bg); 
             color: var(--text-main);
-            /* Sutil decoración de fondo */
             background-image: radial-gradient(circle at top right, #e0f2f1 0%, transparent 30%),
                               radial-gradient(circle at bottom left, #f5f5f5 0%, transparent 30%);
             background-attachment: fixed;
         }
 
-        /* --- LOGIN MINIMALISTA --- */
+        /* --- LOGIN --- */
         #login { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .login-card { 
             background: var(--card-bg);
@@ -45,7 +44,6 @@
 
         .header { padding: 40px 20px 20px; text-align: center; }
         
-        /* Contenedor del Logo igual al original */
         .logo { 
             width: 80px; height: 80px; 
             background: #fff; border-radius: 50%; 
@@ -67,11 +65,10 @@
             margin: 0;
         }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
         .container { padding: 15px; max-width: 480px; margin: auto; }
         
+        /* --- DÍAS Y CLASES --- */
         .day-group { margin-bottom: 12px; }
-        
         .day-header { 
             background: var(--card-bg); 
             padding: 20px 25px; 
@@ -84,7 +81,6 @@
             border: 1px solid var(--border-soft);
         }
         .day-name { font-weight: 500; font-size: 0.95rem; letter-spacing: 0.5px; }
-
         .day-content { display: none; flex-direction: column; padding: 10px 5px; gap: 10px; }
 
         /* --- BOTONES --- */
@@ -107,7 +103,21 @@
             font-weight: 600; width: 100%;
         }
 
-        /* --- TARJETAS DE CLASE Y ALUMNOS --- */
+        /* Botón de exportar minimalista */
+        .btn-export {
+            background: #f1f3f4;
+            color: var(--text-main);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .class-item { 
             background: var(--card-bg); 
             padding: 18px; 
@@ -129,7 +139,6 @@
             margin: 5px 0;
         }
 
-        /* --- FORMULARIOS --- */
         .input-row { 
             background: #fff; 
             padding: 20px; 
@@ -141,17 +150,8 @@
         }
         
         label { font-size: 0.65rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-left: 5px; }
-        
-        select, input { 
-            border: 1px solid #f0f0f0; 
-            padding: 12px; 
-            border-radius: 10px; 
-            font-size: 0.9rem; 
-            background: #fafafa;
-            color: var(--text-main);
-        }
+        select, input { border: 1px solid #f0f0f0; padding: 12px; border-radius: 10px; font-size: 0.9rem; background: #fafafa; color: var(--text-main); }
 
-        /* --- SECCIÓN BASE DE DATOS --- */
         .db-section { margin: 40px 0 60px; }
         .db-header { 
             background: var(--text-main); 
@@ -190,7 +190,9 @@
             <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); letter-spacing:1px; margin-top:10px; cursor:pointer;">CERRAR SESIÓN</p>
         </div>
         
-        <div class="container">
+        <div class="container" style="text-align: center;">
+            <button class="btn-export" onclick="descargarReportes()">⬇ Descargar Backup (JSON/CSV)</button>
+            
             <div id="mainCalendar"></div>
 
             <div class="db-section">
@@ -284,7 +286,10 @@
 
         async function loadCalendarData() {
             const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
-            dias.forEach(d => document.getElementById('list-'+d).innerHTML = '');
+            dias.forEach(d => {
+                const listEl = document.getElementById('list-'+d);
+                if(listEl) listEl.innerHTML = '';
+            });
             data?.forEach(item => {
                 const list = document.getElementById('list-'+item.celda_id);
                 if (list && item.celda_id !== 'DB_ENTRY') {
@@ -349,6 +354,35 @@
         }
 
         async function deleteItem(id) { if(confirm("¿Eliminar registro?")) { await _supabase.from('horarios').delete().eq('id', id); loadCalendarData(); loadDBData(); } }
+
+        // --- FUNCIONES DE EXPORTACIÓN (JSON Y CSV) ---
+        async function descargarReportes() {
+            const { data } = await _supabase.from('horarios').select('*');
+            if (!data) return alert("No hay datos para exportar");
+
+            const fecha = new Date().toISOString().slice(0,10);
+            
+            // 1. Exportar JSON
+            const dataStrJSON = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 4));
+            downloadFile(dataStrJSON, `backup_pulse_${fecha}.json`);
+
+            // 2. Exportar CSV
+            let csvContent = "id,celda_id,contenido,created_at\n";
+            data.forEach(row => {
+                csvContent += `${row.id},"${row.celda_id}","${row.contenido.replace(/"/g, '""')}","${row.created_at}"\n`;
+            });
+            const dataStrCSV = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+            downloadFile(dataStrCSV, `backup_pulse_${fecha}.csv`);
+        }
+
+        function downloadFile(url, fileName) {
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
     </script>
 </body>
 </html>
