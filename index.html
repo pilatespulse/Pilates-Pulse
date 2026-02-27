@@ -25,94 +25,43 @@
             overflow-x: hidden; letter-spacing: -0.02em; line-height: 1.4;
         }
 
-        /* --- LOGO & BRANDING --- */
-        .branding-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 20px 0;
-        }
+        /* --- BRANDING --- */
+        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
         .logo-pulse-circle { 
-            width: 100px; height: 100px; background: #fff; border-radius: 50%; 
-            overflow: hidden; border: 3px solid #1a1a1c;
-            box-shadow: 0 0 30px rgba(255,255,255,0.05);
+            width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; 
+            border: 3px solid #1a1a1c; box-shadow: 0 0 30px rgba(255,255,255,0.05);
             animation: pulse-glow 3s infinite ease-in-out;
         }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes pulse-glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
 
-        @keyframes pulse-glow {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,255,255,0.05); }
-            50% { transform: scale(1.03); box-shadow: 0 0 40px rgba(255,255,255,0.15); }
+        /* --- BUSCADOR --- */
+        .search-container { margin-bottom: 20px; position: relative; }
+        .search-input {
+            background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px;
+            border-radius: 20px; color: #fff; font-size: 0.8rem; width: 100%; transition: 0.3s;
         }
+        .search-input:focus { border-color: #fff; background: #222; }
+        .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; font-size: 1rem; }
 
-        .brand-text {
-            font-weight: 900; letter-spacing: 6px; margin-top: 20px;
-            font-size: 1.4rem; color: #fff; text-transform: uppercase;
-        }
-
-        /* --- NOTIFICACIONES --- */
-        #top-alert {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 380px; background: #fff; color: #000;
-            padding: 18px; border-radius: 22px; font-weight: 900; font-size: 0.7rem;
-            z-index: 10000; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-            display: none; transition: all 1.2s var(--ease);
-        }
-        .traveling { transform: translate(120px, 800px) scale(0) rotate(30deg) !important; opacity: 0 !important; filter: blur(20px); }
-
-        /* --- ANIMACIONES --- */
-        .anim-up { animation: slideUp 0.8s var(--ease) forwards; }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-
-        /* --- FORMS & INPUTS --- */
-        input, select, textarea { 
-            width: 100%; background: #1a1a1c; border: 1px solid var(--border); 
-            padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit;
-        }
-
-        .btn-principal { 
-            background: #fff; color: #000; border: none; padding: 20px; 
-            border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
-        }
-        .btn-principal:active { transform: scale(0.96); }
-
-        .btn-cancelar {
-            background: #1a1a1c; color: #777; border: 1px solid var(--border);
-            padding: 15px; border-radius: 20px; font-weight: 800; width: 100%;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            margin-top: 10px; transition: 0.3s;
-        }
-
+        /* --- FORMS & UI --- */
+        input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
+        .btn-principal { background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+        
         /* --- DASHBOARD --- */
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
-        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 35px; border: 1px solid var(--border); overflow: hidden; }
-        .dia-header { padding: 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .clase-box { background: rgba(255,255,255,0.03); padding: 22px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
+        .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.4); border-radius: 20px; font-size: 0.8rem; }
 
-        .footer-nav { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 450px; z-index: 999;
-        }
-        .nav-btn { 
-            background: rgba(15, 15, 15, 0.85); color: #fff; padding: 22px; border-radius: 28px; 
-            border: 1px solid var(--border); font-weight: 800; font-size: 0.7rem; 
-            cursor: pointer; backdrop-filter: blur(20px); transition: 0.4s;
-        }
+        .footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 999; }
+        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 20px; border-radius: 25px; border: 1px solid var(--border); font-weight: 800; font-size: 0.7rem; cursor: pointer; backdrop-filter: blur(20px); }
         .nav-btn.active-btn { background: #fff; color: #000; }
-        
-        .dot-notif { position: absolute; top: 15px; right: 20px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; }
-        
-        label { display: block; font-size: 0.55rem; color: #555; margin-bottom: 6px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-left: 5px; }
-
-        .ficha-detalles {
-            display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.4); 
-            border-radius: 20px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05);
-        }
-        .ficha-detalles p { margin: 8px 0; color: #aaa; }
-        .ficha-detalles b { color: #fff; font-size: 0.75rem; }
+        .dot-notif { position: absolute; top: 15px; right: 20px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; }
+        label { display: block; font-size: 0.55rem; color: #555; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -124,7 +73,7 @@
             <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text">PILATES PULSE</div>
         </div>
-        <div class="card-login" style="margin: 0 auto; width: 90%; max-width: 380px;">
+        <div style="margin: 0 auto; width: 90%; max-width: 380px; padding-top: 20px;">
             <input type="text" id="adminUser" placeholder="ADMIN ID">
             <input type="password" id="adminPass" placeholder="PASSWORD">
             <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
@@ -133,20 +82,26 @@
 
     <div id="app-content" style="display:none;">
         <div class="branding-container">
-            <div class="logo-pulse-circle" style="width: 70px; height: 70px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <div class="brand-text" style="font-size: 0.9rem;">PILATES PULSE</div>
-            <p onclick="logout()" style="font-size: 0.5rem; color: #444; cursor: pointer; margin-top: 10px;">[ CERRAR SESIÓN ]</p>
+            <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
+            <p onclick="logout()" style="font-size: 0.5rem; color: #444; cursor: pointer; margin-top: 5px;">[ CERRAR SESIÓN ]</p>
         </div>
 
         <div class="main-container" id="listaDias"></div>
 
         <div class="main-container">
             <div id="modulo-notificaciones" style="display:none;">
+                <h3 style="font-size:0.6rem; color:#555; letter-spacing:2px; text-align:center;">VENCIMIENTOS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
 
             <div id="modulo-alumnos" style="display:none;">
-                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:30px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno por nombre..." onkeyup="filtrarAlumnos()">
+                </div>
+                
+                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem; padding:15px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
@@ -154,7 +109,7 @@
             <div class="footer-nav">
                 <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DE DATOS</button>
                 <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
-                    NOTIFICACIONES <div class="dot-notif" id="active-dot"></div>
+                    NOTIF. <div class="dot-notif" id="active-dot"></div>
                 </button>
             </div>
         </div>
@@ -166,6 +121,7 @@
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
+        let CACHE_ALUMNOS = [];
 
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
@@ -177,7 +133,7 @@
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
             if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); }
-            else alert("Error de acceso");
+            else alert("Acceso denegado");
         }
 
         function startApp() {
@@ -185,20 +141,19 @@
             document.getElementById('app-content').style.display = 'block';
             renderEstructura();
             updateAll();
-            setInterval(syncTimers, 1000);
         }
 
         function renderEstructura() {
             document.getElementById('listaDias').innerHTML = DIAS.map(d => `
                 <div class="dia-item">
                     <div class="dia-header" onclick="toggleDia('${d}')">
-                        <span style="font-weight:900;">${d.toUpperCase()}</span>
-                        <span id="badge-${d}" style="font-size:0.55rem; color:#444;">0 ACTIVIDADES</span>
+                        <span style="font-weight:900; font-size:0.75rem;">${d.toUpperCase()}</span>
+                        <span id="badge-${d}" style="font-size:0.5rem; opacity:0.5;">0</span>
                     </div>
-                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 25px 25px 25px;">
+                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
                         <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.6rem; background:#1a1a1c; color:#fff;" onclick="addClasePopup('${d}')">+ AÑADIR CLASE</button>
-                        <div id="clases-${d}" style="margin-top:20px;"></div>
+                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
+                        <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
         }
@@ -212,140 +167,67 @@
 
         function addClasePopup(dia) {
             document.getElementById(`clase-form-${dia}`).innerHTML = `
-                <div style="background:#000; padding:20px; border-radius:25px; margin-bottom:20px; border:1px solid #222;">
+                <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222;">
                     <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
-                    <label>TIPO</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label>ALUMNO</label><input type="text" id="n-${dia}">
-                    <button class="btn-principal" style="padding:15px; font-size:0.65rem;" onclick="pushClase('${dia}')">GUARDAR</button>
-                    <button class="btn-cancelar" onclick="cerrarClaseForm('${dia}')">CANCELAR</button>
+                    <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}')">GUARDAR</button>
                 </div>`;
-            document.getElementById(`btn-add-${dia}`).style.display = 'none';
-        }
-
-        function cerrarClaseForm(dia) {
-            document.getElementById(`clase-form-${dia}`).innerHTML = '';
-            document.getElementById(`btn-add-${dia}`).style.display = 'block';
         }
 
         function generarHoras() {
-            let res = ""; 
-            for(let i=7; i<=22; i++) {
+            let res = ""; for(let i=7; i<=21; i++) {
                 let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
-                res += `<option>${h}:00 ${ampm}</option>`;
-                if (i < 22) res += `<option>${h}:30 ${ampm}</option>`;
-            } 
-            return res;
+                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
+            } return res;
         }
 
         async function pushClase(dia) {
             const h = document.getElementById('h-'+dia).value;
-            const t = document.getElementById('t-'+dia).value;
-            const m = document.getElementById('m-'+dia).value;
             const n = document.getElementById('n-'+dia).value;
-            await _sp.from('horarios').insert([{ celda_id: dia, contenido: `${h}|${t}|${m}|${n}` }]);
-            cerrarClaseForm(dia);
+            await _sp.from('horarios').insert([{ celda_id: dia, contenido: `${h}|CLASE|MOD|${n}` }]);
             updateAll();
         }
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
+            CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
             DIAS.forEach(d => {
                 const filtrados = data.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = `${filtrados.length} ACTIVIDADES`;
+                document.getElementById(`badge-${d}`).innerText = filtrados.length;
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <div><b>${p[0]} — ${p[1]}</b><br><small style="color:#555;">${p[2]} / ${p[3]}</small></div>
-                        <span style="color:#333; cursor:pointer;" onclick="borrar('${i.id}')">×</span>
+                        <span style="font-size:0.75rem;"><b>${p[0]}</b> ${p[3]}</span>
+                        <span onclick="borrar('${i.id}')" style="opacity:0.2;">×</span>
                     </div>`;
                 }).join('');
             });
-            renderAlumnos(data);
+            renderAlumnosList(CACHE_ALUMNOS);
             processVencimientos(data);
         }
 
-        function switchModulo(id) {
-            document.getElementById('modulo-alumnos').style.display = 'none';
-            document.getElementById('modulo-notificaciones').style.display = 'none';
-            document.getElementById(id).style.display = 'block';
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+        function filtrarAlumnos() {
+            const term = document.getElementById('buscadorAlumnos').value.toLowerCase();
+            const filtrados = CACHE_ALUMNOS.filter(a => {
+                const nombre = a.contenido.split('|')[1].toLowerCase();
+                return nombre.includes(term);
+            });
+            renderAlumnosList(filtrados);
         }
 
-        function abrirFormNuevoAlumno(editId = null, existingData = null) {
-            let opcionesEdad = "";
-            for(let i=1; i<=100; i++) opcionesEdad += `<option value="${i}">${i} años</option>`;
-
-            const p = existingData ? existingData.split('|') : Array(12).fill('');
-            const isEdit = editId !== null;
-
-            document.getElementById('btn-abrir-registro').style.display = 'none';
-            document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div class="anim-up" style="background:#111; padding:25px; border-radius:35px; margin-bottom:35px; border:1px solid #222;">
-                    <h3 style="font-size:0.7rem; color:#fff; margin-bottom:20px;">${isEdit ? 'EDITAR' : 'NUEVO'} ALUMNO</h3>
-                    <label>Nombre Completo</label><input type="text" id="db-nom" value="${p[1]}">
-                    <label>Edad</label><select id="db-edad">${opcionesEdad}</select>
-                    <label>Teléfono</label><input type="text" id="db-tel" value="${p[2]}">
-                    <label>Tipo de Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select>
-                    <label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select>
-                    <label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select>
-                    <label>Vencimiento Pago</label><input type="date" id="db-vence" value="${p[10]}">
-                    <label>Condición Salud</label><textarea id="db-salud">${p[6]}</textarea>
-                    <label>Razón Visita</label><textarea id="db-visita">${p[7]}</textarea>
-                    <label>¿Cómo supo?</label><textarea id="db-fuente">${p[8]}</textarea>
-                    <label>Referido especialista</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select>
-                    
-                    <button class="btn-principal" onclick="saveAlumno('${editId}')">${isEdit ? 'ACTUALIZAR' : 'REGISTRAR'}</button>
-                    <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
-                </div>`;
-            if(isEdit) document.getElementById('db-edad').value = p[11];
-        }
-
-        function cerrarFormAlumno() {
-            document.getElementById('form-alumno-nuevo').innerHTML = '';
-            document.getElementById('btn-abrir-registro').style.display = 'block';
-        }
-
-        async function saveAlumno(editId = "null") {
-            const n = document.getElementById('db-nom').value;
-            const e = document.getElementById('db-edad').value;
-            const t = document.getElementById('db-tel').value;
-            const c = document.getElementById('db-clase').value;
-            const m = document.getElementById('db-mod').value;
-            const f = document.getElementById('db-frec').value;
-            const v = document.getElementById('db-vence').value;
-            const s = document.getElementById('db-salud').value;
-            const r = document.getElementById('db-visita').value;
-            const fu = document.getElementById('db-fuente').value;
-            const ref = document.getElementById('db-ref').value;
-
-            const content = `DB|${n}|${t}|${c}|${f}|${m}|${s}|${r}|${fu}|${ref}|${v}|${e}`;
-            
-            if (editId !== "null") {
-                await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            } else {
-                await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            }
-            cerrarFormAlumno();
-            updateAll();
-        }
-
-        function renderAlumnos(data) {
-            const alums = data.filter(x => x.celda_id === 'DB_ENTRY');
-            document.getElementById('render-alumnos').innerHTML = alums.map(a => {
+        function renderAlumnosList(lista) {
+            document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
-                return `<div class="clase-box anim-up">
-                    <b>${p[1]}</b><br><small style="color:#666;">${p[3]} — ${p[4]}</small>
+                return `<div class="clase-box">
+                    <b style="font-size:0.85rem;">${p[1]}</b><br><small style="opacity:0.5; text-transform:uppercase;">${p[3]} — ${p[4]}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
-                        <p><b>EDAD:</b> ${p[11]} AÑOS</p><p><b>TEL:</b> ${p[2]}</p>
-                        <p><b>MODALIDAD:</b> ${p[5]}</p><p><b>VENCE:</b> ${p[10] || '---'}</p>
-                        <p><b>SALUD:</b> ${p[6]}</p><p><b>REFERIDO:</b> ${p[9]}</p>
-                        <button class="btn-principal" style="background:#fff; color:#000; padding:10px; font-size:0.6rem; margin-top:10px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR FICHA</button>
+                        <p><b>EDAD:</b> ${p[11]} años</p><p><b>TEL:</b> ${p[2]}</p>
+                        <p><b>PAGO:</b> ${p[10] || '---'}</p><p><b>SALUD:</b> ${p[6]}</p>
+                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:10px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="btn-principal" style="width:auto; font-size:0.5rem; padding:10px 15px; background:#222; color:#fff;" onclick="toggleExtra('${a.id}')">VER FICHA</button>
-                        <button class="btn-cancelar" style="width:auto; margin:0; font-size:0.5rem; padding:10px 15px;" onclick="borrar('${a.id}')">ELIMINAR</button>
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <button class="nav-btn" style="padding:8px 15px; font-size:0.5rem;" onclick="toggleExtra('${a.id}')">DETALLES</button>
+                        <button class="nav-btn" style="padding:8px 15px; font-size:0.5rem; background:transparent; border:none; color:red;" onclick="borrar('${a.id}')">BORRAR</button>
                     </div>
                 </div>`;
             }).join('');
@@ -356,35 +238,6 @@
             el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
 
-        function processVencimientos(data) {
-            const hoy = new Date();
-            const alumnos = data.filter(x => x.celda_id === 'DB_ENTRY');
-            let html = ""; let count = 0;
-            alumnos.forEach(a => {
-                const p = a.contenido.split('|');
-                if(p[10]) {
-                    const venc = new Date(p[10] + "T23:59:59"); 
-                    const diff = venc - hoy;
-                    const horas = diff / (1000 * 60 * 60);
-                    if(diff > 0 && horas <= 48) {
-                        count++;
-                        html += `<div class="clase-box" style="border-left:4px solid var(--danger);"><b>${p[1]}</b><br><small>VENCIMIENTO PRÓXIMO</small></div>`;
-                    }
-                }
-            });
-            document.getElementById('active-dot').style.display = count > 0 ? 'block' : 'none';
-            document.getElementById('lista-notificaciones').innerHTML = count > 0 ? html : "<p style='text-align:center; color:#444; font-size:0.6rem;'>PAGOS AL DÍA</p>";
-        }
-
-        function syncTimers() {
-            document.querySelectorAll('.countdown-live').forEach(t => {
-                const diff = parseInt(t.getAttribute('data-expire')) - new Date().getTime();
-                if(diff <= 0) t.innerText = "EXPIRADO";
-            });
-        }
-
-        async function borrar(id) { if(confirm("¿Eliminar alumno?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
-        function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
-    </script>
-</body>
-</html>
+        function abrirFormNuevoAlumno(editId = null, existingData = null) {
+            const p = existingData ? existingData.split('|') : Array(12).fill('');
+            let edades = ""; for
