@@ -6,8 +6,10 @@
     <title>Pilates Pulse | Luxury Admin</title>
     
     <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
-    <link rel="shortcut icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
+    <meta name="apple-mobile-web-app-title" content="PP Admin">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
@@ -25,40 +27,40 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
 
-        /* --- SECCIÓN LOGIN --- */
+        /* --- LOGIN SECTION --- */
         #login-section {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 10000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* --- INTERFAZ --- */
-        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
-        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
+        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
+        .logo-pulse-circle { width: 90px; height: 90px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
+        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1.1rem; text-transform: uppercase; }
 
-        .search-container { margin-bottom: 20px; position: relative; }
-        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; }
-        .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; }
+        /* Botón Logout */
+        .btn-logout {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.05); color: #777;
+            border: 1px solid var(--border); padding: 8px 12px;
+            border-radius: 12px; font-size: 0.5rem; font-weight: 900;
+            cursor: pointer; text-transform: uppercase;
+        }
 
         input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
         .btn-principal { background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
-        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
-        .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
-        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
-
+        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); }
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
         .footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 999; }
         .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 20px; border-radius: 25px; border: 1px solid var(--border); font-weight: 800; font-size: 0.7rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; }
         .nav-btn.active-btn { background: #fff; color: #000; }
-        .dot-notif { position: absolute; top: 15px; right: 20px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
-        label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
+        .dot-notif { position: absolute; top: 15px; right: 20px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; }
+        label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -68,7 +70,7 @@
             <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text">PILATES PULSE</div>
         </div>
-        <div style="width: 90%; max-width: 380px;">
+        <div style="width: 85%; max-width: 350px; margin-top: 20px;">
             <input type="text" id="adminUser" placeholder="ADMIN ID">
             <input type="password" id="adminPass" placeholder="PASSWORD">
             <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
@@ -76,25 +78,21 @@
     </div>
 
     <div id="app-content" style="display:none;">
-        <div class="branding-container" onclick="location.reload()" style="cursor:pointer">
-            <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
-        </div>
-
-        <div class="main-container" id="listaDias"></div>
+        <header class="branding-container">
+            <button class="btn-logout" onclick="handleLogout()">SALIR</button>
+            <div class="logo-pulse-circle" style="width: 50px; height: 50px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <div class="brand-text" style="font-size: 0.7rem;">ADMIN PANEL</div>
+        </header>
 
         <div class="main-container">
             <div id="modulo-notificaciones" style="display:none;">
-                <h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3>
+                <h3 style="font-size:0.7rem; text-align:center; margin-bottom:20px;">VENCIMIENTOS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
 
             <div id="modulo-alumnos" style="display:none;">
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()">
-                </div>
-                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <input type="text" id="buscadorAlumnos" placeholder="Buscar..." onkeyup="filtrarAlumnos()">
+                <button class="btn-principal" style="font-size: 0.7rem; margin-bottom: 20px;" onclick="abrirFormNuevoAlumno()">+ NUEVO ALUMNO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
@@ -102,7 +100,7 @@
             <div class="footer-nav">
                 <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DE DATOS</button>
                 <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
-                    NOTIF. <div class="dot-notif" id="active-dot"></div>
+                    PLANES <div class="dot-notif" id="active-dot"></div>
                 </button>
             </div>
         </div>
@@ -110,10 +108,6 @@
 
     <script>
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
-        const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
-        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
 
         window.onload = () => {
@@ -128,78 +122,26 @@
             if (data) { 
                 localStorage.setItem('studio_auth', 'true'); 
                 startApp(); 
-            } else alert("Acceso denegado");
+            } else alert("Acceso Incorrecto");
+        }
+
+        function handleLogout() {
+            if(confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem('studio_auth');
+                location.reload();
+            }
         }
 
         function startApp() {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            renderEstructura();
             updateAll();
-        }
-
-        function renderEstructura() {
-            document.getElementById('listaDias').innerHTML = DIAS.map(d => `
-                <div class="dia-item">
-                    <div class="dia-header" onclick="toggleDia('${d}')">
-                        <span style="font-weight:900; font-size:0.75rem;">${d.toUpperCase()}</span>
-                        <span id="badge-${d}" style="font-size:0.5rem; opacity:0.5;">0</span>
-                    </div>
-                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
-                        <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
-                        <div id="clases-${d}" style="margin-top:15px;"></div>
-                    </div>
-                </div>`).join('');
-        }
-
-        function toggleDia(d) {
-            const el = document.getElementById(`cont-${d}`);
-            const vis = el.style.display === 'block';
-            document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
-            el.style.display = vis ? 'none' : 'block';
-        }
-
-        function addClasePopup(dia) {
-            document.getElementById(`clase-form-${dia}`).innerHTML = `
-                <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222;">
-                    <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
-                    <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label>ALUMNO</label><input type="text" id="n-${dia}">
-                    <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}')">GUARDAR</button>
-                    <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('clase-form-${dia}').innerHTML=''">CANCELAR</button>
-                </div>`;
-        }
-
-        function generarHoras() {
-            let res = ""; for(let i=7; i<=21; i++) {
-                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
-                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
-            } return res;
-        }
-
-        async function pushClase(dia) {
-            const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
-            await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
-            updateAll();
+            switchModulo('modulo-alumnos');
         }
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
-            
-            DIAS.forEach(d => {
-                const filtrados = data.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = filtrados.length;
-                document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
-                    const p = i.contenido.split('|');
-                    return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]} / ${p[3]}</small></span>
-                        <span onclick="borrar('${i.id}')" style="opacity:0.2; cursor:pointer;">×</span>
-                    </div>`;
-                }).join('');
-            });
             renderAlumnosList(CACHE_ALUMNOS);
             processVencimientos();
         }
@@ -208,34 +150,23 @@
             if (!fechaStr) return false;
             const hoy = new Date();
             const venc = new Date(fechaStr + "T23:59:59");
-            const diff = (venc - hoy) / (1000 * 60 * 60); 
-            return diff <= 48; 
+            return (venc - hoy) / (1000 * 60 * 60) <= 48;
         }
 
         function renderAlumnosList(lista) {
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
-                const estaVencido = checkVencimiento(p[10]);
+                const vencido = checkVencimiento(p[10]);
                 return `<div class="clase-box">
-                    <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b>
-                    <br><small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
-                    
+                    <b style="font-size:0.85rem;" class="${vencido ? 'vence-alerta' : ''}">${p[1]}</b>
+                    <br><small style="opacity:0.5;">Vence: ${p[10] || 'N/A'}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
-                        <p><b>EDAD:</b> ${p[11]} años</p>
-                        <p><b>TELÉFONO:</b> ${p[2]}</p>
-                        <p><b>MODALIDAD:</b> ${p[5]}</p>
-                        <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p>
-                        <hr style="opacity:0.1; margin:10px 0;">
-                        <p><b>SALUD:</b> ${p[6] || 'Ninguna'}</p>
-                        <p><b>VISITA:</b> ${p[7] || 'N/A'}</p>
-                        <p><b>ORIGEN:</b> ${p[8] || 'N/A'}</p>
-                        <p><b>REFERIDO:</b> ${p[9]}</p>
-                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
+                        <p>TEL: ${p[2]}</p>
+                        <button class="btn-principal" style="padding:10px; font-size:0.5rem;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
-
-                    <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between; align-items:center;">
-                        <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem;" onclick="toggleExtra('${a.id}')">DETALLES</button>
-                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900; cursor:pointer;" onclick="borrar('${a.id}')">BORRAR</button>
+                    <div style="display:flex; justify-content:space-between; margin-top:15px;">
+                        <button class="nav-btn" style="padding:10px; font-size:0.5rem;" onclick="toggleExtra('${a.id}')">DETALLES</button>
+                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.6rem;" onclick="borrar('${a.id}')">BORRAR</button>
                     </div>
                 </div>`;
             }).join('');
@@ -245,23 +176,15 @@
             const listaNotif = document.getElementById('lista-notificaciones');
             let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
             document.getElementById('active-dot').style.display = alertas.length > 0 ? 'block' : 'none';
-            if (alertas.length === 0) {
-                listaNotif.innerHTML = `<p style="text-align:center; opacity:0.3; font-size:0.7rem;">No hay vencimientos próximos.</p>`;
-            } else {
-                listaNotif.innerHTML = alertas.map(a => {
-                    const p = a.contenido.split('|');
-                    return `<div class="clase-box" style="border-left: 4px solid var(--danger);">
-                        <b style="color:var(--danger)">${p[1]}</b><br>
-                        <small>Vence: <b>${p[10]}</b></small>
-                    </div>`;
-                }).join('');
-            }
+            listaNotif.innerHTML = alertas.length === 0 ? '<p style="text-align:center; opacity:0.3;">Sin vencimientos</p>' : 
+                alertas.map(a => `<div class="clase-box" style="border-left: 3px solid var(--danger);"><b style="color:var(--danger)">${a.contenido.split('|')[1]}</b><br><small>Vence: ${a.contenido.split('|')[10]}</small></div>`).join('');
         }
 
-        function filtrarAlumnos() {
-            const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
-            const f = CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q));
-            renderAlumnosList(f);
+        function switchModulo(id) {
+            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
         }
 
         function toggleExtra(id) {
@@ -271,46 +194,29 @@
 
         function abrirFormNuevoAlumno(editId = null, existingData = null) {
             const p = existingData ? existingData.split('|') : Array(12).fill('');
-            let edades = ""; for(let i=1; i<=100; i++) edades += `<option value="${i}">${i}</option>`;
-            document.getElementById('btn-abrir-registro').style.display = 'none';
             document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div style="background:#111; padding:20px; border-radius:30px; border:1px solid #222; margin-bottom:20px;">
+                <div style="background:#111; padding:20px; border-radius:20px; border:1px solid #222; margin-bottom:20px;">
                     <label>Nombre</label><input type="text" id="db-nom" value="${p[1]}">
-                    <label>Edad</label><select id="db-edad">${edades}</select>
                     <label>Teléfono</label><input type="text" id="db-tel" value="${p[2]}">
-                    <label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select>
-                    <label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select>
-                    <label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select>
                     <label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}">
-                    <label>Salud</label><textarea id="db-salud">${p[6]}</textarea>
-                    <label>Visita</label><textarea id="db-visita">${p[7]}</textarea>
-                    <label>Origen</label><textarea id="db-fuente">${p[8]}</textarea>
-                    <label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select>
                     <button class="btn-principal" onclick="saveAlumno('${editId}')">GUARDAR</button>
-                    <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
+                    <button style="background:transparent; border:none; color:#777; width:100%; margin-top:10px;" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</button>
                 </div>`;
-            if(editId) document.getElementById('db-edad').value = p[11];
         }
 
         async function saveAlumno(editId = "null") {
             const d = (id) => document.getElementById(id).value;
-            const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;
+            const content = `DB|${d('db-nom')}|${d('db-tel')}|Align Flow|1/semana|Grupales|N/A|N/A|N/A|No|${d('db-vence')}|25`;
             if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
             else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            cerrarFormAlumno(); updateAll();
+            document.getElementById('form-alumno-nuevo').innerHTML=''; updateAll();
         }
 
-        function cerrarFormAlumno() { document.getElementById('form-alumno-nuevo').innerHTML = ''; document.getElementById('btn-abrir-registro').style.display = 'block'; }
-        
-        function switchModulo(id) {
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
-            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
-            document.getElementById('listaDias').style.display = (id !== 'modulo-alumnos' && id !== 'modulo-notificaciones') ? 'block' : 'none';
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+        async function borrar(id) { if(confirm("¿Eliminar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        function filtrarAlumnos() {
+            const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
+            renderAlumnosList(CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q)));
         }
-
-        async function borrar(id) { if(confirm("¿Borrar definitivamente?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
     </script>
 </body>
 </html>
