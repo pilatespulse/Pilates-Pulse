@@ -26,7 +26,6 @@
             overflow-x: hidden; letter-spacing: -0.02em;
         }
 
-        /* BANNER FUTURISTA */
         #top-alert {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
@@ -51,7 +50,6 @@
             to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        /* --- LOGIN --- */
         #login-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .card-login { 
             background: var(--card); padding: 50px 30px; border-radius: 40px; 
@@ -72,7 +70,6 @@
             text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* --- DASHBOARD --- */
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
         .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); }
         .dia-header { padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
@@ -101,9 +98,6 @@
         }
 
         .info-extra-db { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #222; font-size: 0.75rem; color: #8e8e93; }
-        .info-extra-db p { margin: 5px 0; }
-        .info-extra-db b { color: #fff; }
-
         .btn-more { background: #222; color: #fff; border: none; padding: 8px 15px; border-radius: 10px; font-size: 0.6rem; font-weight: 800; margin-top: 10px; cursor: pointer; }
         .countdown-live { color: var(--danger); font-family: monospace; font-weight: 900; background: rgba(255,45,85,0.1); padding: 2px 6px; border-radius: 4px; }
     </style>
@@ -123,24 +117,20 @@
 
     <div id="app-content" style="display:none;">
         <div class="main-container" id="listaDias"></div>
-
         <div class="main-container">
             <div id="modulo-notificaciones" style="display:none;" class="anim-up">
                 <h3 style="font-size:0.7rem; color:#555; margin-bottom:20px;">ALERTAS ACTIVAS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
-
             <div id="modulo-alumnos" style="display:none;" class="anim-up">
                 <button class="btn-principal" style="margin-bottom:25px;" onclick="abrirFormNuevoAlumno()">+ NUEVO REGISTRO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
-
             <div class="footer-nav">
                 <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DE DATOS</button>
                 <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
-                    NOTIFICACIONES
-                    <div class="dot-notif" id="active-dot"></div>
+                    NOTIFICACIONES <div class="dot-notif" id="active-dot"></div>
                 </button>
             </div>
         </div>
@@ -163,7 +153,7 @@
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
             if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); }
-            else alert("Acceso Incorrecto");
+            else alert("Error");
         }
 
         function startApp() {
@@ -179,11 +169,11 @@
                 <div class="dia-item anim-up">
                     <div class="dia-header" onclick="toggleDia('${d}')">
                         <span style="font-weight:900;">${d.toUpperCase()}</span>
-                        <span id="badge-${d}" style="font-size:0.6rem; color:#555">0</span>
+                        <span id="badge-${d}" style="font-size:0.6rem; color:#555">0 ACTIVIDADES</span>
                     </div>
                     <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 30px 25px 30px;">
                         <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" style="font-size:0.6rem; padding:12px; background:#1a1a1c; color:#fff;" onclick="addClasePopup('${d}')">+ AÑADIR CLASE</button>
+                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.6rem; padding:12px; background:#1a1a1c; color:#fff;" onclick="addClasePopup('${d}')">+ AÑADIR CLASE</button>
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
@@ -205,6 +195,7 @@
                     <label>Alumnos</label><input type="text" id="n-${dia}" placeholder="Nombre(s)...">
                     <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
                 </div>`;
+            document.getElementById(`btn-add-${dia}`).style.display = 'none';
         }
 
         function generarHoras() {
@@ -216,8 +207,12 @@
 
         async function pushClase(dia) {
             const payload = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
-            await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
-            updateAll();
+            const { error } = await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
+            if(!error) {
+                document.getElementById(`clase-form-${dia}`).innerHTML = '';
+                document.getElementById(`btn-add-${dia}`).style.display = 'block';
+                updateAll();
+            }
         }
 
         async function updateAll() {
@@ -261,11 +256,13 @@
         }
 
         async function saveAlumno() {
-            const vals = ['db-nom','db-tel','db-tipo-clase','db-frecuencia','0','db-salud','db-razon','db-fuente','No','db-vence'].map(id => document.getElementById(id).value);
-            const content = `DB|${vals[0]}|${vals[1]}|${vals[2]}|${vals[3]}|0|${vals[5]}|${vals[6]}|${vals[7]}|No|${vals[9]}`;
-            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            document.getElementById('form-alumno-nuevo').innerHTML = '';
-            updateAll();
+            const vals = ['db-nom','db-tel','db-tipo-clase','db-frecuencia','db-salud','db-razon','db-fuente','db-vence'].map(id => document.getElementById(id).value);
+            const content = `DB|${vals[0]}|${vals[1]}|${vals[2]}|${vals[3]}|0|${vals[4]}|${vals[5]}|${vals[6]}|No|${vals[7]}`;
+            const { error } = await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            if(!error) {
+                document.getElementById('form-alumno-nuevo').innerHTML = '';
+                updateAll();
+            }
         }
 
         function renderAlumnos(data) {
@@ -283,7 +280,7 @@
                             <p><b>Razón:</b> ${p[7] || 'N/A'}</p>
                             <p><b>Referido:</b> ${p[8] || 'N/A'}</p>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <button class="btn-more" onclick="toggleExtra('${a.id}')">VER DETALLES</button>
                             <span style="color:#333; font-size:1.2rem; cursor:pointer;" onclick="borrar('${a.id}')">×</span>
                         </div>
@@ -301,36 +298,29 @@
             const hoy = new Date();
             const alumnos = data.filter(x => x.celda_id === 'DB_ENTRY');
             let html = ""; let count = 0;
-
             alumnos.forEach(a => {
                 const p = a.contenido.split('|');
                 if(p[10]) {
                     const venc = new Date(p[10] + "T23:59:59"); 
                     const diff = venc - hoy;
                     const horas = diff / (1000 * 60 * 60);
-
                     if(diff > 0 && horas <= 48) {
                         count++;
-                        let timeTxt = horas > 24 
-                            ? `${Math.floor(horas/24)} DÍAS` 
-                            : `<span class="countdown-live" data-expire="${venc.getTime()}">--:--:--</span>`;
-                        html += `<div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:10px; border-left:4px solid var(--danger);">
-                            <b>${p[1]}</b><br><small>VENCIMIENTO EN: ${timeTxt}</small>
-                        </div>`;
+                        let timeTxt = horas > 24 ? `${Math.floor(horas/24)} DÍAS` : `<span class="countdown-live" data-expire="${venc.getTime()}">--:--:--</span>`;
+                        html += `<div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:10px; border-left:4px solid var(--danger);"><b>${p[1]}</b><br><small>VENCE EN: ${timeTxt}</small></div>`;
                     }
                 }
             });
-
             if(count > 0) {
                 document.getElementById('lista-notificaciones').innerHTML = html;
                 document.getElementById('active-dot').style.display = 'block';
                 const banner = document.getElementById('top-alert');
                 banner.innerText = `${count} VENCIMIENTOS PRÓXIMOS`;
                 banner.style.display = 'block';
-                setTimeout(() => {
-                    banner.classList.add('traveling');
-                    setTimeout(() => banner.style.display = 'none', 1200);
-                }, 4000);
+                setTimeout(() => { banner.classList.add('traveling'); setTimeout(() => banner.style.display = 'none', 1200); }, 4000);
+            } else {
+                document.getElementById('active-dot').style.display = 'none';
+                document.getElementById('lista-notificaciones').innerHTML = "<p style='color:#555; font-size:0.7rem;'>TODO AL DÍA</p>";
             }
         }
 
@@ -345,7 +335,7 @@
             });
         }
 
-        async function borrar(id) { if(confirm("¿Eliminar registro?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        async function borrar(id) { if(confirm("¿Eliminar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
         function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
     </script>
 </body>
