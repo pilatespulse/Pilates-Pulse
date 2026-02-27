@@ -3,318 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilates Pulse | Studio Admin</title>
+    <title>Pilates Pulse Admin</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --bg-dark: #000000;
-            --card-dark: #1c1c1e; /* Gris grafito estilo iOS */
-            --accent: #ffffff;
-            --text-silver: #a1a1a6;
-            --danger: #ff453a;
-            --radius-main: 22px;
-            /* Curva de animación ultra smooth */
-            --bezier: cubic-bezier(0.4, 0, 0.2, 1);
+            --negro-puro: #000000;
+            --gris-card: #1c1c1e;
+            --blanco: #ffffff;
+            --texto-secundario: #8e8e93;
+            --borde: rgba(255,255,255,0.1);
+            --smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; background-color: var(--bg-dark); color: #fff; 
+            font-family: 'Montserrat', sans-serif; 
+            margin: 0; background: var(--negro-puro); color: var(--blanco); 
             overflow-x: hidden;
         }
 
-        /* --- ANIMACIONES DE ENTRADA --- */
-        @keyframes revealUp {
-            0% { opacity: 0; transform: translateY(30px); filter: blur(10px); }
-            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        /* --- EFECTOS DE MOVIMIENTO --- */
+        @keyframes entradaSuave {
+            from { opacity: 0; transform: translateY(15px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        .smooth-entry { animation: revealUp 0.8s var(--bezier) forwards; }
+        .anim-up { animation: entradaSuave 0.7s var(--smooth) forwards; }
 
         /* --- LOGIN --- */
-        #login { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
-        .login-box { 
-            background: var(--card-dark); padding: 40px 30px; border-radius: 30px; 
-            width: 100%; max-width: 380px; text-align: center;
+        #login-section { 
+            height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+        }
+        .card-login { 
+            background: var(--gris-card); padding: 40px 25px; border-radius: 28px; 
+            width: 100%; max-width: 360px; text-align: center;
         }
 
-        /* --- HEADER --- */
-        .header { padding: 60px 20px 20px; text-align: center; }
-        .logo-box { 
-            width: 90px; height: 90px; margin: 0 auto 20px; 
-            border-radius: 50%; background: #fff; padding: 2px;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
-        }
-        .logo-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        
-        .studio-title { 
-            font-family: 'Montserrat', sans-serif; font-weight: 700; 
-            font-size: 1.4rem; letter-spacing: -0.5px; margin: 0;
-        }
+        /* --- APP LAYOUT --- */
+        .main-container { padding: 20px; max-width: 480px; margin: 0 auto; }
+        .branding { text-align: center; padding: 40px 0 20px; }
+        .logo-pulse { width: 85px; height: 85px; background: #fff; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; }
+        .logo-pulse img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- INTERFAZ DE DÍAS (ESTILO REFERENCIA) --- */
-        .container { padding: 20px; max-width: 500px; margin: auto; }
-        
-        .day-tile { 
-            background: var(--card-dark); margin-bottom: 12px; border-radius: var(--radius-main);
-            overflow: hidden; transition: all 0.4s var(--bezier);
-            border: 1px solid rgba(255,255,255,0.05);
+        /* --- INTERFAZ DE DIAS (ESTILO IMAGEN) --- */
+        .dia-item { 
+            background: var(--gris-card); margin-bottom: 12px; border-radius: 24px;
+            border: 1px solid var(--borde); transition: transform 0.3s var(--smooth);
         }
-        .day-tile:active { transform: scale(0.96); }
+        .dia-item:active { transform: scale(0.97); }
 
-        .day-trigger { 
-            padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        .dia-header { 
+            padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
-        .day-name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.2rem; }
-        .day-counter { font-size: 0.75rem; color: var(--text-silver); text-transform: uppercase; letter-spacing: 1px; }
+        .nombre-dia { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.3px; }
+        .conteo-clases { font-size: 0.7rem; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; }
 
-        .day-body { 
+        .dia-content { 
             max-height: 0; opacity: 0; overflow: hidden;
-            transition: max-height 0.5s var(--bezier), opacity 0.3s ease;
+            transition: max-height 0.6s var(--smooth), opacity 0.4s ease;
             padding: 0 20px;
         }
-        .day-body.active { max-height: 1500px; opacity: 1; padding-bottom: 25px; }
+        .dia-content.abierto { max-height: 2000px; opacity: 1; padding-bottom: 25px; }
 
-        /* --- ELEMENTOS DE LISTA --- */
-        .class-card { 
-            background: rgba(255,255,255,0.03); padding: 18px; border-radius: 18px; 
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-            border-left: 4px solid var(--accent);
-        }
-        .class-info b { display: block; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
-        .class-info span { font-size: 0.75rem; color: var(--text-silver); }
-
-        /* --- BOTONES E INPUTS --- */
-        input, select { 
-            width: 100%; background: #2c2c2e; border: none; padding: 16px; 
-            border-radius: 14px; color: #fff; margin-bottom: 10px; font-family: inherit;
+        /* --- FORMULARIOS --- */
+        .clase-box { 
+            background: rgba(255,255,255,0.04); padding: 18px; border-radius: 18px; 
+            margin-bottom: 10px; border-left: 3px solid #fff;
         }
         
-        .btn-action { 
-            background: var(--accent); color: #000; border: none; padding: 18px; 
-            border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer;
-            font-family: 'Montserrat', sans-serif; transition: 0.3s;
-        }
-        .btn-add-dash { 
-            background: transparent; border: 1px dashed #3a3a3c; color: var(--text-silver);
-            padding: 15px; border-radius: 14px; width: 100%; margin-bottom: 15px; cursor: pointer;
+        select, input { 
+            width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; padding: 15px; 
+            border-radius: 12px; color: #fff; margin-bottom: 12px; font-family: inherit; font-size: 0.9rem;
         }
 
-        .db-btn {
-            background: #fff; color: #000; padding: 22px; border-radius: 20px;
-            width: 100%; border: none; font-weight: 700; margin-top: 40px;
-            letter-spacing: 1px;
+        .btn-principal { 
+            background: var(--blanco); color: #000; border: none; padding: 16px; 
+            border-radius: 14px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s;
+        }
+        .btn-cancelar { 
+            display: block; text-align: center; color: var(--texto-secundario); 
+            font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: none; font-weight: 600;
         }
 
-        .del-x { color: #3a3a3c; font-size: 1.4rem; cursor: pointer; transition: 0.2s; }
-        .del-x:hover { color: var(--danger); }
+        .btn-dashed { 
+            background: transparent; border: 1px dashed #444; color: #888;
+            padding: 14px; border-radius: 12px; width: 100%; margin: 10px 0; cursor: pointer;
+        }
+
+        .db-footer-btn {
+            background: var(--blanco); color: #000; padding: 20px; border-radius: 20px;
+            width: 100%; border: none; font-weight: 800; margin-top: 30px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="login" style="display:none;">
-        <div class="logo-box"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-        <div class="login-box smooth-entry">
-            <h2 class="studio-title" style="margin-bottom:30px">STUDIO LOGIN</h2>
-            <input type="text" id="userInput" placeholder="Usuario">
-            <input type="password" id="passInput" placeholder="Password">
-            <button onclick="intentarAcceso()" class="btn-action" style="margin-top:10px">ENTRAR</button>
+    <div id="login-section" style="display:none;">
+        <div class="card-login anim-up">
+            <h2 style="font-weight:800; margin-bottom:25px;">STUDIO ADMIN</h2>
+            <input type="text" id="adminUser" placeholder="Usuario">
+            <input type="password" id="adminPass" placeholder="Password">
+            <button onclick="handleLogin()" class="btn-principal">INGRESAR</button>
         </div>
     </div>
 
-    <div id="app" style="display:none;">
-        <div class="header smooth-entry">
-            <div class="logo-box"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <h1 class="studio-title">PILATES PULSE</h1>
-            <p onclick="logoutUser()" style="color:var(--text-silver); font-size:0.65rem; cursor:pointer; margin-top:15px; letter-spacing:2px">LOGOUT SYSTEM</p>
+    <div id="app-content" style="display:none;">
+        <div class="branding anim-up">
+            <div class="logo-pulse"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <h1 style="font-size: 1.2rem; font-weight: 800; letter-spacing: 2px;">PILATES PULSE</h1>
         </div>
         
-        <div class="container" id="calendarWrapper">
+        <div class="main-container" id="listaDias">
             </div>
 
-        <div class="container">
-            <button class="db-btn" onclick="gestionarDB()">BASE DE DATOS ALUMNOS</button>
-            <div id="db-section" style="display:none; padding-top:20px;">
-                <button id="btnNewStudent" class="btn-add-dash" onclick="formNuevoAlumno()">+ REGISTRAR ALUMNO</button>
-                <div id="student-form"></div>
-                <div id="student-list"></div>
+        <div class="main-container">
+            <button class="db-footer-btn" onclick="toggleSeccionAlumnos()">BASE DE DATOS ALUMNOS</button>
+            
+            <div id="modulo-alumnos" style="display:none; padding-top:20px;">
+                <button class="btn-dashed" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <div id="form-alumno-nuevo"></div>
+                <div id="render-alumnos"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuración cliente
-        const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+        // CLIENTE SUPABASE
+        const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         
-        const SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        const CLASES_TIPO = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
 
-        // Verificar sesión inicial
-        window.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('pulseSession');
-            if (token && (new Date().getTime() - token < 14400000)) {
-                lanzarApp();
-            } else {
-                document.getElementById('login').style.display = 'flex';
-            }
-        });
+        // CONTROL DE SESION
+        window.onload = () => {
+            if (localStorage.getItem('studio_auth')) { startApp(); } 
+            else { document.getElementById('login-section').style.display = 'flex'; }
+        };
 
-        async function intentarAcceso() {
-            const u = document.getElementById('userInput').value;
-            const p = document.getElementById('passInput').value;
-            
-            const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            
-            if (data) {
-                localStorage.setItem('pulseSession', new Date().getTime());
-                lanzarApp();
-            } else {
-                alert("Datos incorrectos");
-            }
+        async function handleLogin() {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
+            if (data) { 
+                localStorage.setItem('studio_auth', 'true'); 
+                startApp(); 
+            } else { alert("Error de acceso"); }
         }
 
-        function lanzarApp() {
-            document.getElementById('login').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            dibujarCalendario();
-            refrescarDatos();
-            refrescarAlumnos();
+        function startApp() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            renderizarEstructura();
+            actualizarTodo();
         }
 
-        function dibujarCalendario() {
-            const contenedor = document.getElementById('calendarWrapper');
-            contenedor.innerHTML = SEMANA.map((dia, index) => `
-                <div class="day-tile smooth-entry" style="animation-delay: ${index * 0.1}s">
-                    <div class="day-trigger" onclick="toggleAcordeon('${dia}')">
-                        <span class="day-name">${dia}</span>
-                        <span class="day-counter" id="count-${dia}">(0 clases)</span>
+        // DIBUJAR LA WEB
+        function renderizarEstructura() {
+            const container = document.getElementById('listaDias');
+            container.innerHTML = DIAS.map(d => `
+                <div class="dia-item anim-up">
+                    <div class="dia-header" onclick="clickDia('${d}')">
+                        <span class="nombre-dia">${d}</span>
+                        <span class="conteo-clases" id="badge-${d}">0 Ejercicios</span>
                     </div>
-                    <div class="day-body" id="body-${dia}">
-                        <div id="form-container-${dia}"></div>
-                        <button class="btn-add-dash" onclick="abrirFormClase('${dia}')">+ AÑADIR CLASE</button>
-                        <div id="listado-${dia}"></div>
+                    <div class="dia-content" id="cont-${d}">
+                        <div id="clase-form-spot-${d}"></div>
+                        <button class="btn-dashed" onclick="abrirPopupClase('${d}')">+ AÑADIR CLASE</button>
+                        <div id="clases-realtime-${d}"></div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function toggleAcordeon(id) {
-            const body = document.getElementById(`body-${id}`);
-            const isAbierto = body.classList.contains('active');
-            
-            // Cerrar todos antes (opcional, para look más limpio)
-            document.querySelectorAll('.day-body').forEach(b => b.classList.remove('active'));
-            
-            if (!isAbierto) body.classList.add('active');
+        function clickDia(id) {
+            const el = document.getElementById(`cont-${id}`);
+            const estaAbierto = el.classList.contains('abierto');
+            document.querySelectorAll('.dia-content').forEach(c => c.classList.remove('abierto'));
+            if (!estaAbierto) el.classList.add('abierto');
         }
 
-        async function refrescarDatos() {
-            const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
-            
-            // Limpiar y Contar
-            const contadores = {};
-            SEMANA.forEach(d => {
-                const lista = document.getElementById('listado-'+d);
-                if(lista) lista.innerHTML = '';
-                contadores[d] = 0;
-            });
-
-            data?.forEach(item => {
-                if (item.celda_id !== 'DB_ENTRY') {
-                    const lista = document.getElementById('listado-'+item.celda_id);
-                    if (lista) {
-                        contadores[item.celda_id]++;
-                        const info = item.contenido.split('|');
-                        lista.innerHTML += `
-                            <div class="class-card">
-                                <div class="class-info">
-                                    <b>${info[0]} — ${info[1]}</b>
-                                    <span>${info[2].toUpperCase()} • 👤 ${info[3] || 'N/A'}</span>
-                                </div>
-                                <span class="del-x" onclick="borrarRegistro('${item.id}')">×</span>
-                            </div>
-                        `;
-                    }
-                }
-            });
-
-            // Actualizar etiquetas dinámicas (cantidad de clases)
-            SEMANA.forEach(d => {
-                const label = document.getElementById(`count-${d}`);
-                if(label) label.innerText = `(${contadores[d]} clases)`;
-            });
-        }
-
-        // --- FUNCIONES DE FORMULARIO (HUMANIZADAS) ---
-        function abrirFormClase(dia) {
-            const f = document.getElementById(`form-container-${dia}`);
-            f.innerHTML = `
-                <div style="padding:10px 0">
-                    <select id="h-${dia}">${getHoras()}</select>
-                    <select id="t-${dia}">${CLASES_TIPO.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <input type="text" id="n-${dia}" placeholder="Nombre Alumno">
-                    <button class="btn-action" onclick="saveNewClase('${dia}')">GUARDAR</button>
-                    <p onclick="this.parentElement.innerHTML=''" style="text-align:center; font-size:0.7rem; color:var(--text-silver); margin-top:10px; cursor:pointer">CANCELAR</p>
+        // FORMULARIOS DE CLASE
+        function abrirPopupClase(dia) {
+            const spot = document.getElementById(`clase-form-spot-${dia}`);
+            spot.innerHTML = `
+                <div class="anim-up" style="background: #111; padding: 15px; border-radius: 15px; margin-bottom:15px;">
+                    <select id="h-${dia}">${generarHoras()}</select>
+                    <select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <input type="text" id="n-${dia}" placeholder="Nombres">
+                    <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
+                    <a class="btn-cancelar" onclick="cerrarSpot('${dia}')">CANCELAR</a>
                 </div>
             `;
         }
 
-        function getHoras() {
-            let h = "";
+        function cerrarSpot(dia) { document.getElementById(`clase-form-spot-${dia}`).innerHTML = ''; }
+
+        function generarHoras() {
+            let res = "";
             for(let i=8; i<=21; i++) {
-                let suffix = i >= 12 ? "PM" : "AM";
-                let display = i > 12 ? i-12 : i;
-                h += `<option>${display}:00 ${suffix}</option><option>${display}:30 ${suffix}</option>`;
+                let ampm = i >= 12 ? "PM" : "AM";
+                let h = i > 12 ? i-12 : i;
+                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
             }
-            return h;
+            return res;
         }
 
-        async function saveNewClase(dia) {
-            const valor = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|Grupal|${document.getElementById('n-'+dia).value}`;
-            await _supabase.from('horarios').insert([{ celda_id: dia, contenido: valor }]);
-            document.getElementById(`form-container-${dia}`).innerHTML = '';
-            refrescarDatos();
+        // OPERACIONES DATA
+        async function pushClase(dia) {
+            const payload = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
+            await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
+            cerrarSpot(dia);
+            actualizarTodo();
         }
 
-        // --- SISTEMA ALUMNOS ---
-        async function refrescarAlumnos() {
-            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
-            const l = document.getElementById('student-list');
-            l.innerHTML = '';
-            data?.forEach(s => {
-                const p = s.contenido.split('|');
-                l.innerHTML += `
-                    <div class="class-card" style="border-left-color: #3a3a3c">
-                        <div class="class-info">
-                            <b>${p[1]}</b>
-                            <span>Vence: ${p[7]} • ${p[3]}</span>
+        async function actualizarTodo() {
+            const { data } = await _sp.from('horarios').select('*');
+            DIAS.forEach(d => {
+                const list = document.getElementById(`clases-realtime-${d}`);
+                const badge = document.getElementById(`badge-${d}`);
+                if(!list) return;
+                
+                const filtrados = data.filter(x => x.celda_id === d);
+                badge.innerText = `${filtrados.length} EJERCICIOS`;
+                
+                list.innerHTML = filtrados.map(item => {
+                    const p = item.contenido.split('|');
+                    return `
+                        <div class="clase-box anim-up">
+                            <div style="flex:1">
+                                <b style="font-size:0.9rem">${p[0]} - ${p[1]}</b><br>
+                                <span style="font-size:0.7rem; color:#888">${p[2]} | ${p[3]}</span>
+                            </div>
+                            <span style="cursor:pointer; color:#444" onclick="borrar('${item.id}')">×</span>
                         </div>
-                        <span class="del-x" onclick="borrarRegistro('${s.id}', true)">×</span>
+                    `;
+                }).join('');
+            });
+            renderListaAlumnos(data);
+        }
+
+        async function borrar(id) {
+            if(confirm("¿Quitar registro?")) {
+                await _sp.from('horarios').delete().eq('id', id);
+                actualizarTodo();
+            }
+        }
+
+        // SECCION ALUMNOS (ARREGLADA)
+        function toggleSeccionAlumnos() {
+            const m = document.getElementById('modulo-alumnos');
+            m.style.display = m.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function abrirFormNuevoAlumno() {
+            document.getElementById('form-alumno-nuevo').innerHTML = `
+                <div class="anim-up" style="background: var(--gris-card); padding: 20px; border-radius: 20px; border: 1px solid #333;">
+                    <input type="text" id="db-nom" placeholder="Nombre Completo">
+                    <input type="text" id="db-tel" placeholder="WhatsApp">
+                    <input type="text" id="db-vence" placeholder="Vencimiento (DD/MM)">
+                    <button class="btn-principal" onclick="saveAlumnoDB()">REGISTRAR</button>
+                    <a class="btn-cancelar" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</a>
+                </div>
+            `;
+        }
+
+        async function saveAlumnoDB() {
+            const n = document.getElementById('db-nom').value;
+            const t = document.getElementById('db-tel').value;
+            const v = document.getElementById('db-vence').value;
+            const content = `DB|${n}|${t}|||||${v}`; // Mantenemos estructura anterior
+            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            document.getElementById('form-alumno-nuevo').innerHTML = '';
+            actualizarTodo();
+        }
+
+        function renderListaAlumnos(data) {
+            const list = document.getElementById('render-alumnos');
+            const alumnos = data.filter(x => x.celda_id === 'DB_ENTRY');
+            list.innerHTML = alumnos.map(a => {
+                const p = a.contenido.split('|');
+                return `
+                    <div class="clase-box" style="border-left-color: #555">
+                        <div style="flex:1">
+                            <b>${p[1]}</b><br>
+                            <span style="font-size:0.7rem; color:#888">Vence: ${p[7]} | Tel: ${p[2]}</span>
+                        </div>
+                        <span style="cursor:pointer; color:#444" onclick="borrar('${a.id}')">×</span>
                     </div>
                 `;
-            });
-        }
-
-        async function borrarRegistro(id, isDB = false) {
-            if(confirm("¿Eliminar este registro?")) {
-                await _supabase.from('horarios').delete().eq('id', id);
-                if(isDB) refrescarAlumnos(); else refrescarDatos();
-            }
-        }
-
-        function gestionarDB() {
-            const s = document.getElementById('db-section');
-            s.style.display = s.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function logoutUser() {
-            localStorage.removeItem('pulseSession');
-            location.reload();
+            }).join('');
         }
     </script>
 </body>
