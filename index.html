@@ -82,14 +82,11 @@
         <div class="logo-pulse anim-up"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
         <div class="card-login anim-up">
             <h2 style="font-weight:800; margin-bottom:30px; letter-spacing: 4px; font-size: 1.3rem;">PILATES PULSE</h2>
-            
             <input type="text" id="adminUser" placeholder="Usuario">
-            
             <div class="pass-container">
                 <input type="password" id="adminPass" placeholder="Password">
                 <span class="toggle-pass" onclick="togglePassView()">Ver</span>
             </div>
-
             <button onclick="handleLogin()" class="btn-principal" style="margin-top: 10px;">INGRESAR</button>
         </div>
     </div>
@@ -126,7 +123,6 @@
             else { document.getElementById('login-section').style.display = 'flex'; }
         };
 
-        // Función para ver contraseña
         function togglePassView() {
             const passInput = document.getElementById('adminPass');
             const toggleText = document.querySelector('.toggle-pass');
@@ -294,7 +290,7 @@
                     <div class="clase-box" style="border-left-color: #555">
                         <div style="flex:1">
                             <b style="font-size:0.95rem">${p[1]}</b><br>
-                            <span style="font-size:0.75rem; color:#fff">${p[3]}</span>
+                            <span style="font-size:0.75rem; color:#fff">${p[3]} — <span style="color:var(--texto-secundario)">${p[4]}</span></span>
                             
                             <div id="extra-${a.id}" class="info-extra">
                                 <p><b>Teléfono:</b> ${p[2]}</p>
