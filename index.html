@@ -39,7 +39,6 @@
             backdrop-filter: blur(10px);
         }
 
-        /* Animación "Smooth Travel" a 2000fps feel */
         .traveling {
             transform: translate(80px, 600px) scale(0.05) rotate(15deg) !important;
             opacity: 0 !important;
@@ -58,42 +57,40 @@
             background: var(--card); padding: 50px 30px; border-radius: 40px; 
             width: 90%; max-width: 380px; text-align: center; border: 1px solid var(--border);
         }
-        .logo-pulse { width: 90px; height: 90px; background: #fff; border-radius: 50%; margin: 0 auto 25px; overflow: hidden; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
-        .logo-pulse img { width: 100%; height: 100%; object-fit: cover; }
 
         input, select, textarea { 
             width: 100%; background: #1a1a1c; border: 1px solid var(--border); 
             padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px;
-            font-family: var(--font-main); font-weight: 500; transition: 0.3s;
+            font-family: var(--font-main); font-weight: 500; font-size: 0.9rem;
         }
-        input:focus { border-color: #555; background: #222; }
+
+        label { font-size: 0.6rem; color: #555; font-weight: 800; margin-left: 10px; display: block; margin-bottom: 5px; text-transform: uppercase; }
 
         .btn-principal { 
             background: #fff; color: #000; border: none; padding: 18px; 
             border-radius: 18px; font-weight: 900; width: 100%; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
         }
 
         /* --- DASHBOARD --- */
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; }
-        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); transition: 0.4s; }
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); }
         .dia-header { padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .nombre-dia { font-weight: 900; font-size: 1.2rem; }
         
         .clase-box { 
             background: rgba(255,255,255,0.02); padding: 20px; border-radius: 22px; 
-            margin-bottom: 12px; border: 1px solid var(--border); display: flex; 
-            justify-content: space-between; align-items: center;
+            margin-bottom: 12px; border: 1px solid var(--border);
         }
 
         .footer-nav { 
             display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
-            margin-top: 40px; position: sticky; bottom: 20px;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 460px; z-index: 999;
         }
         .nav-btn { 
-            background: var(--card); color: #fff; padding: 20px; border-radius: 24px; 
+            background: rgba(18, 18, 20, 0.8); color: #fff; padding: 20px; border-radius: 24px; 
             border: 1px solid var(--border); font-weight: 800; font-size: 0.7rem; 
-            cursor: pointer; position: relative; backdrop-filter: blur(10px);
+            cursor: pointer; position: relative; backdrop-filter: blur(15px);
         }
         .nav-btn.active-btn { background: #fff; color: #000; }
         
@@ -103,15 +100,12 @@
             box-shadow: 0 0 15px var(--danger);
         }
 
-        .countdown-live { 
-            color: var(--danger); font-family: 'Courier New', monospace; 
-            font-weight: 900; background: rgba(255,45,85,0.1); padding: 2px 8px; border-radius: 6px;
-        }
+        .info-extra-db { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #222; font-size: 0.75rem; color: #8e8e93; }
+        .info-extra-db p { margin: 5px 0; }
+        .info-extra-db b { color: #fff; }
 
-        .notif-card { 
-            background: var(--card); border-radius: 25px; margin-bottom: 10px; 
-            padding: 20px; border-left: 4px solid var(--danger);
-        }
+        .btn-more { background: #222; color: #fff; border: none; padding: 8px 15px; border-radius: 10px; font-size: 0.6rem; font-weight: 800; margin-top: 10px; cursor: pointer; }
+        .countdown-live { color: var(--danger); font-family: monospace; font-weight: 900; background: rgba(255,45,85,0.1); padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -119,9 +113,8 @@
     <div id="top-alert"></div>
 
     <div id="login-section" style="display:none;">
-        <div class="logo-pulse anim-up"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
         <div class="card-login anim-up">
-            <h2 style="font-weight:900; margin-bottom:35px; letter-spacing: 6px;">PILATES PULSE</h2>
+            <h2 style="font-weight:900; margin-bottom:35px; letter-spacing: 6px; text-align:center;">PILATES PULSE</h2>
             <input type="text" id="adminUser" placeholder="ADMIN ID">
             <input type="password" id="adminPass" placeholder="PASSWORD">
             <button onclick="handleLogin()" class="btn-principal">IDENTIFICAR</button>
@@ -129,22 +122,16 @@
     </div>
 
     <div id="app-content" style="display:none;">
-        <div class="branding anim-up">
-            <div class="logo-pulse"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <h1 style="font-weight:900; letter-spacing:3px; text-align:center;">PILATES PULSE</h1>
-            <p onclick="logout()" style="text-align:center; font-size:0.6rem; color:#555; cursor:pointer;">LOGOUT SYSTEM</p>
-        </div>
-        
         <div class="main-container" id="listaDias"></div>
 
         <div class="main-container">
             <div id="modulo-notificaciones" style="display:none;" class="anim-up">
-                <h3 style="font-size:0.7rem; color:#555; margin-bottom:20px;">NOTIFICACIONES DE SISTEMA</h3>
+                <h3 style="font-size:0.7rem; color:#555; margin-bottom:20px;">ALERTAS ACTIVAS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
 
             <div id="modulo-alumnos" style="display:none;" class="anim-up">
-                <button class="btn-principal" style="margin-bottom:20px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR NUEVO</button>
+                <button class="btn-principal" style="margin-bottom:25px;" onclick="abrirFormNuevoAlumno()">+ NUEVO REGISTRO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
@@ -163,6 +150,8 @@
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
 
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
@@ -174,7 +163,7 @@
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
             if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); }
-            else alert("Error de credenciales");
+            else alert("Acceso Incorrecto");
         }
 
         function startApp() {
@@ -189,12 +178,13 @@
             document.getElementById('listaDias').innerHTML = DIAS.map(d => `
                 <div class="dia-item anim-up">
                     <div class="dia-header" onclick="toggleDia('${d}')">
-                        <span class="nombre-dia">${d}</span>
+                        <span style="font-weight:900;">${d.toUpperCase()}</span>
                         <span id="badge-${d}" style="font-size:0.6rem; color:#555">0</span>
                     </div>
-                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
-                        <button class="btn-principal" style="font-size:0.6rem; padding:10px; margin-bottom:15px;" onclick="addClasePopup('${d}')">+ AÑADIR</button>
-                        <div id="clases-${d}"></div>
+                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 30px 25px 30px;">
+                        <div id="clase-form-${d}"></div>
+                        <button class="btn-principal" style="font-size:0.6rem; padding:12px; background:#1a1a1c; color:#fff;" onclick="addClasePopup('${d}')">+ AÑADIR CLASE</button>
+                        <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
         }
@@ -206,18 +196,105 @@
             el.style.display = vis ? 'none' : 'block';
         }
 
+        function addClasePopup(dia) {
+            document.getElementById(`clase-form-${dia}`).innerHTML = `
+                <div style="background:#000; padding:20px; border-radius:20px; margin-bottom:20px; border:1px solid #222;">
+                    <label>Hora</label><select id="h-${dia}">${generarHoras()}</select>
+                    <label>Tipo</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>Modalidad</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>Alumnos</label><input type="text" id="n-${dia}" placeholder="Nombre(s)...">
+                    <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
+                </div>`;
+        }
+
+        function generarHoras() {
+            let res = ""; for(let i=8; i<=21; i++) {
+                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
+                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
+            } return res;
+        }
+
+        async function pushClase(dia) {
+            const payload = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
+            await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
+            updateAll();
+        }
+
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             DIAS.forEach(d => {
                 const filtrados = data.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = filtrados.length;
+                document.getElementById(`badge-${d}`).innerText = `${filtrados.length} ACTIVIDADES`;
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
-                    return `<div class="clase-box"><div><b>${p[0]}</b> - ${p[1]}<br><small>${p[3]}</small></div><span onclick="borrar('${i.id}')">×</span></div>`;
+                    return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><b style="font-size:0.8rem;">${p[0]} - ${p[1]}</b><br><small style="color:#555;">${p[3]}</small></div>
+                        <span style="color:#333; cursor:pointer;" onclick="borrar('${i.id}')">×</span>
+                    </div>`;
                 }).join('');
             });
             renderAlumnos(data);
             processVencimientos(data);
+        }
+
+        function switchModulo(id) {
+            document.getElementById('modulo-alumnos').style.display = 'none';
+            document.getElementById('modulo-notificaciones').style.display = 'none';
+            document.getElementById(id).style.display = 'block';
+            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+        }
+
+        function abrirFormNuevoAlumno() {
+            document.getElementById('form-alumno-nuevo').innerHTML = `
+                <div class="anim-up" style="background:#111; padding:25px; border-radius:30px; margin-bottom:30px; border:1px solid #222;">
+                    <label>Nombre Completo</label><input type="text" id="db-nom">
+                    <label>Teléfono</label><input type="text" id="db-tel">
+                    <label>Vencimiento</label><input type="date" id="db-vence">
+                    <label>Clase Comprada</label><select id="db-tipo-clase">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>Frecuencia Semanal</label><select id="db-frecuencia">${FRECUENCIAS.map(f=>`<option>${f}</option>`).join('')}</select>
+                    <label>Condición Salud</label><textarea id="db-salud"></textarea>
+                    <label>Razón Visita</label><textarea id="db-razon"></textarea>
+                    <label>Referido por</label><input type="text" id="db-fuente">
+                    <button class="btn-principal" onclick="saveAlumno()">REGISTRAR EN BASE DE DATOS</button>
+                </div>`;
+        }
+
+        async function saveAlumno() {
+            const vals = ['db-nom','db-tel','db-tipo-clase','db-frecuencia','0','db-salud','db-razon','db-fuente','No','db-vence'].map(id => document.getElementById(id).value);
+            const content = `DB|${vals[0]}|${vals[1]}|${vals[2]}|${vals[3]}|0|${vals[5]}|${vals[6]}|${vals[7]}|No|${vals[9]}`;
+            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            document.getElementById('form-alumno-nuevo').innerHTML = '';
+            updateAll();
+        }
+
+        function renderAlumnos(data) {
+            const alums = data.filter(x => x.celda_id === 'DB_ENTRY');
+            document.getElementById('render-alumnos').innerHTML = alums.map(a => {
+                const p = a.contenido.split('|');
+                return `<div class="clase-box">
+                    <div style="width:100%;">
+                        <b style="font-size:0.9rem;">${p[1]}</b><br>
+                        <small style="color:#fff;">${p[3]} — ${p[4]}</small><br>
+                        <small style="color:var(--danger);">Expira: ${p[10]}</small>
+                        <div id="extra-${a.id}" class="info-extra-db">
+                            <p><b>Tel:</b> ${p[2]}</p>
+                            <p><b>Salud:</b> ${p[6] || 'Ninguna'}</p>
+                            <p><b>Razón:</b> ${p[7] || 'N/A'}</p>
+                            <p><b>Referido:</b> ${p[8] || 'N/A'}</p>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <button class="btn-more" onclick="toggleExtra('${a.id}')">VER DETALLES</button>
+                            <span style="color:#333; font-size:1.2rem; cursor:pointer;" onclick="borrar('${a.id}')">×</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleExtra(id) {
+            const el = document.getElementById(`extra-${id}`);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
 
         function processVencimientos(data) {
@@ -228,19 +305,18 @@
             alumnos.forEach(a => {
                 const p = a.contenido.split('|');
                 if(p[10]) {
-                    // Creamos la fecha de vencimiento usando la fecha guardada y la hora de registro
-                    const vencimiento = new Date(p[10] + "T23:59:59"); 
-                    const diff = vencimiento - hoy;
-                    const horasRestantes = diff / (1000 * 60 * 60);
+                    const venc = new Date(p[10] + "T23:59:59"); 
+                    const diff = venc - hoy;
+                    const horas = diff / (1000 * 60 * 60);
 
-                    // Notificar si faltan menos de 48 horas (2 días)
-                    if(diff > 0 && horasRestantes <= 48) {
+                    if(diff > 0 && horas <= 48) {
                         count++;
-                        let timeDisplay = horasRestantes > 24 
-                            ? `Faltan ${Math.floor(horasRestantes / 24)} día(s)` 
-                            : `<span class="countdown-live" data-expire="${vencimiento.getTime()}">--:--:--</span>`;
-                        
-                        html += `<div class="notif-card"><b>${p[1]}</b><br><small>Vencimiento inminente: ${timeDisplay}</small></div>`;
+                        let timeTxt = horas > 24 
+                            ? `${Math.floor(horas/24)} DÍAS` 
+                            : `<span class="countdown-live" data-expire="${venc.getTime()}">--:--:--</span>`;
+                        html += `<div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:10px; border-left:4px solid var(--danger);">
+                            <b>${p[1]}</b><br><small>VENCIMIENTO EN: ${timeTxt}</small>
+                        </div>`;
                     }
                 }
             });
@@ -249,9 +325,8 @@
                 document.getElementById('lista-notificaciones').innerHTML = html;
                 document.getElementById('active-dot').style.display = 'block';
                 const banner = document.getElementById('top-alert');
-                banner.innerText = `${count} ALUMNOS POR VENCER`;
+                banner.innerText = `${count} VENCIMIENTOS PRÓXIMOS`;
                 banner.style.display = 'block';
-                
                 setTimeout(() => {
                     banner.classList.add('traveling');
                     setTimeout(() => banner.style.display = 'none', 1200);
@@ -261,8 +336,7 @@
 
         function syncTimers() {
             document.querySelectorAll('.countdown-live').forEach(t => {
-                const meta = parseInt(t.getAttribute('data-expire'));
-                const diff = meta - new Date().getTime();
+                const diff = parseInt(t.getAttribute('data-expire')) - new Date().getTime();
                 if(diff <= 0) { t.innerText = "EXPIRADO"; return; }
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
@@ -271,44 +345,7 @@
             });
         }
 
-        function switchModulo(id) {
-            document.getElementById('modulo-alumnos').style.display = 'none';
-            document.getElementById('modulo-notificaciones').style.display = 'none';
-            document.getElementById(id).style.display = 'block';
-            
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
-        }
-
-        function abrirFormNuevoAlumno() {
-            document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div class="anim-up" style="background:#111; padding:25px; border-radius:30px; margin-bottom:20px; border:1px solid #222;">
-                    <input type="text" id="db-nom" placeholder="NOMBRE COMPLETO">
-                    <label style="font-size:0.6rem; color:#555; margin-left:10px;">FECHA DE VENCIMIENTO</label>
-                    <input type="date" id="db-vence">
-                    <select id="db-clase">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <button class="btn-principal" onclick="saveAlumno()">GUARDAR EN NUBE</button>
-                </div>`;
-        }
-
-        async function saveAlumno() {
-            const n = document.getElementById('db-nom').value;
-            const v = document.getElementById('db-vence').value;
-            const c = document.getElementById('db-clase').value;
-            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: `DB|${n}|0|${c}|0|0|0|0|0|0|${v}` }]);
-            document.getElementById('form-alumno-nuevo').innerHTML = '';
-            updateAll();
-        }
-
-        function renderAlumnos(data) {
-            const alums = data.filter(x => x.celda_id === 'DB_ENTRY');
-            document.getElementById('render-alumnos').innerHTML = alums.map(a => {
-                const p = a.contenido.split('|');
-                return `<div class="clase-box"><div><b>${p[1]}</b><br><small>${p[3]}</small></div><span onclick="borrar('${a.id}')">×</span></div>`;
-            }).join('');
-        }
-
-        async function borrar(id) { if(confirm("¿Confirmar eliminación?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        async function borrar(id) { if(confirm("¿Eliminar registro?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
         function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
     </script>
 </body>
