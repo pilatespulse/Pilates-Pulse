@@ -34,13 +34,8 @@
         .anim-up { animation: entradaSuave 0.7s var(--smooth) forwards; }
 
         /* --- LOGIN --- */
-        #login-section { 
-            height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
-        }
-        .card-login { 
-            background: var(--gris-card); padding: 40px 25px; border-radius: 28px; 
-            width: 100%; max-width: 360px; text-align: center;
-        }
+        #login-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .card-login { background: var(--gris-card); padding: 40px 25px; border-radius: 28px; width: 100%; max-width: 360px; text-align: center; }
 
         /* --- APP LAYOUT --- */
         .main-container { padding: 20px; max-width: 480px; margin: 0 auto; }
@@ -49,54 +44,30 @@
         .logo-pulse img { width: 100%; height: 100%; object-fit: cover; }
 
         /* --- INTERFAZ DE DIAS --- */
-        .dia-item { 
-            background: var(--gris-card); margin-bottom: 12px; border-radius: 24px;
-            border: 1px solid var(--borde); transition: transform 0.3s var(--smooth);
-        }
-        .dia-item:active { transform: scale(0.97); }
-
-        .dia-header { 
-            padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-        }
-        .nombre-dia { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.3px; }
+        .dia-item { background: var(--gris-card); margin-bottom: 12px; border-radius: 24px; border: 1px solid var(--borde); transition: transform 0.3s var(--smooth); }
+        .dia-header { padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .nombre-dia { font-weight: 800; font-size: 1.1rem; }
         .conteo-clases { font-size: 0.7rem; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; }
-
-        .dia-content { 
-            max-height: 0; opacity: 0; overflow: hidden;
-            transition: max-height 0.6s var(--smooth), opacity 0.4s ease;
-            padding: 0 20px;
-        }
+        .dia-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.6s var(--smooth), opacity 0.4s ease; padding: 0 20px; }
         .dia-content.abierto { max-height: 2000px; opacity: 1; padding-bottom: 25px; }
 
         /* --- FORMULARIOS --- */
-        .clase-box { 
-            background: rgba(255,255,255,0.04); padding: 18px; border-radius: 18px; 
-            margin-bottom: 10px; border-left: 3px solid #fff;
-        }
-        
-        select, input { 
-            width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; padding: 15px; 
-            border-radius: 12px; color: #fff; margin-bottom: 12px; font-family: inherit; font-size: 0.9rem;
-        }
+        .clase-box { background: rgba(255,255,255,0.04); padding: 18px; border-radius: 18px; margin-bottom: 10px; border-left: 3px solid #fff; }
+        select, input, textarea { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; padding: 15px; border-radius: 12px; color: #fff; margin-bottom: 12px; font-family: inherit; font-size: 0.9rem; }
+        textarea { resize: vertical; min-height: 80px; }
 
-        .btn-principal { 
-            background: var(--blanco); color: #000; border: none; padding: 16px; 
-            border-radius: 14px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s;
-        }
-        .btn-cancelar { 
-            display: block; text-align: center; color: var(--texto-secundario); 
-            font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: none; font-weight: 600;
-        }
+        .btn-principal { background: var(--blanco); color: #000; border: none; padding: 16px; border-radius: 14px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s; }
+        .btn-cancelar { display: block; text-align: center; color: var(--texto-secundario); font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: none; font-weight: 600; }
+        .btn-dashed { background: transparent; border: 1px dashed #444; color: #888; padding: 14px; border-radius: 12px; width: 100%; margin: 10px 0; cursor: pointer; }
 
-        .btn-dashed { 
-            background: transparent; border: 1px dashed #444; color: #888;
-            padding: 14px; border-radius: 12px; width: 100%; margin: 10px 0; cursor: pointer;
-        }
+        .db-footer-btn { background: var(--blanco); color: #000; padding: 20px; border-radius: 20px; width: 100%; border: none; font-weight: 800; margin-top: 30px; }
+        label { font-size: 0.65rem; color: var(--texto-secundario); margin-left: 5px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 5px; }
 
-        .db-footer-btn {
-            background: var(--blanco); color: #000; padding: 20px; border-radius: 20px;
-            width: 100%; border: none; font-weight: 800; margin-top: 30px;
-        }
+        /* --- ESTILO INFO EXTRA ALUMNO --- */
+        .info-extra { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; animation: entradaSuave 0.4s ease forwards; }
+        .info-extra p { font-size: 0.75rem; color: var(--texto-secundario); margin: 6px 0; }
+        .info-extra b { color: #fff; }
+        .btn-more { background: #3a3a3c; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -158,11 +129,7 @@
             actualizarTodo();
         }
 
-        // Función logout agregada
-        function logout() {
-            localStorage.removeItem('studio_auth');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
 
         function renderizarEstructura() {
             const container = document.getElementById('listaDias');
@@ -192,10 +159,10 @@
             const spot = document.getElementById(`clase-form-spot-${dia}`);
             spot.innerHTML = `
                 <div class="anim-up" style="background: #111; padding: 15px; border-radius: 15px; margin-bottom:15px;">
-                    <select id="h-${dia}">${generarHoras()}</select>
-                    <select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <input type="text" id="n-${dia}" placeholder="Nombres">
+                    <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
+                    <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>NOMBRES</label><input type="text" id="n-${dia}" placeholder="Escribir nombres...">
                     <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
                     <a class="btn-cancelar" onclick="cerrarSpot('${dia}')">CANCELAR</a>
                 </div>
@@ -258,25 +225,20 @@
         }
 
         function abrirFormNuevoAlumno() {
+            let opcionesEdad = "";
+            for(let i=1; i<=100; i++) { opcionesEdad += `<option value="${i}">${i}</option>`; }
             document.getElementById('form-alumno-nuevo').innerHTML = `
                 <div class="anim-up" style="background: var(--gris-card); padding: 20px; border-radius: 20px; border: 1px solid #333;">
-                    <label style="font-size:0.7rem; color:#888; margin-left:5px">NOMBRE</label>
-                    <input type="text" id="db-nom" placeholder="Nombre Completo">
-                    
-                    <label style="font-size:0.7rem; color:#888; margin-left:5px">TELÉFONO</label>
-                    <input type="text" id="db-tel" placeholder="Número de Telf">
-                    
-                    <label style="font-size:0.7rem; color:#888; margin-left:5px">TIPO DE CLASE COMPRADA</label>
-                    <select id="db-tipo-clase">
-                        ${CLASES.map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select>
-
-                    <label style="font-size:0.7rem; color:#888; margin-left:5px">HORARIOS</label>
-                    <select id="db-frecuencia">
-                        ${FRECUENCIAS.map(f => `<option value="${f}">${f}</option>`).join('')}
-                    </select>
-
-                    <button class="btn-principal" style="margin-top:10px" onclick="saveAlumnoDB()">REGISTRAR</button>
+                    <label>NOMBRE COMPLETO</label><input type="text" id="db-nom" placeholder="Ej: Maria Perez">
+                    <label>NÚMERO DE TELÉFONO</label><input type="text" id="db-tel" placeholder="+58...">
+                    <label>EDAD</label><select id="db-edad">${opcionesEdad}</select>
+                    <label>TIPO DE CLASE COMPRADA</label><select id="db-tipo-clase">${CLASES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                    <label>HORARIOS (FRECUENCIA)</label><select id="db-frecuencia">${FRECUENCIAS.map(f => `<option value="${f}">${f}</option>`).join('')}</select>
+                    <label>CONDICIÓN DE SALUD</label><textarea id="db-salud" placeholder="Alergias, lesiones, patologías..."></textarea>
+                    <label>RAZÓN DE SU VISITA</label><textarea id="db-razon" placeholder="¿Qué busca lograr?"></textarea>
+                    <label>¿CÓMO SUPO DE NOSOTROS?</label><input type="text" id="db-fuente" placeholder="Instagram, recomendado, etc.">
+                    <label>¿VIENE REFERIDO POR ESPECIALISTA?</label><select id="db-referido"><option value="No">No</option><option value="Si">Si</option></select>
+                    <button class="btn-principal" style="margin-top:10px" onclick="saveAlumnoDB()">REGISTRAR ALUMNO</button>
                     <a class="btn-cancelar" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</a>
                 </div>
             `;
@@ -285,9 +247,14 @@
         async function saveAlumnoDB() {
             const n = document.getElementById('db-nom').value;
             const t = document.getElementById('db-tel').value;
+            const ed = document.getElementById('db-edad').value;
             const tc = document.getElementById('db-tipo-clase').value;
             const fr = document.getElementById('db-frecuencia').value;
-            const content = `DB|${n}|${t}|${tc}|${fr}||||`; 
+            const sa = document.getElementById('db-salud').value;
+            const rz = document.getElementById('db-razon').value;
+            const fu = document.getElementById('db-fuente').value;
+            const re = document.getElementById('db-referido').value;
+            const content = `DB|${n}|${t}|${tc}|${fr}|${ed}|${sa}|${rz}|${fu}|${re}`; 
             await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
             document.getElementById('form-alumno-nuevo').innerHTML = '';
             actualizarTodo();
@@ -301,14 +268,37 @@
                 return `
                     <div class="clase-box" style="border-left-color: #555">
                         <div style="flex:1">
-                            <b>${p[1]}</b><br>
-                            <span style="font-size:0.75rem; color:#fff">${p[3]} — ${p[4]}</span><br>
-                            <span style="font-size:0.7rem; color:#888">Tel: ${p[2]}</span>
+                            <b style="font-size:0.95rem">${p[1]}</b><br>
+                            <span style="font-size:0.75rem; color:#fff">${p[3]}</span>
+                            
+                            <div id="extra-${a.id}" class="info-extra">
+                                <p><b>Teléfono:</b> ${p[2]}</p>
+                                <p><b>Frecuencia:</b> ${p[4]}</p>
+                                <p><b>Edad:</b> ${p[5]} años</p>
+                                <p><b>Salud:</b> ${p[6] || 'Ninguna'}</p>
+                                <p><b>Razón visita:</b> ${p[7] || 'No especifica'}</p>
+                                <p><b>Fuente:</b> ${p[8] || 'No especifica'}</p>
+                                <p><b>Referido:</b> ${p[9] || 'No'}</p>
+                            </div>
+
+                            <button class="btn-more" id="btn-m-${a.id}" onclick="toggleInfoAlumno('${a.id}')">Más información del alumno</button>
                         </div>
                         <span style="cursor:pointer; color:#444; font-size:1.5rem" onclick="borrar('${a.id}')">×</span>
                     </div>
                 `;
             }).join('');
+        }
+
+        function toggleInfoAlumno(id) {
+            const extra = document.getElementById(`extra-${id}`);
+            const btn = document.getElementById(`btn-m-${id}`);
+            if(extra.style.display === 'block') {
+                extra.style.display = 'none';
+                btn.innerText = 'Más información del alumno';
+            } else {
+                extra.style.display = 'block';
+                btn.innerText = 'Ocultar información';
+            }
         }
     </script>
 </body>
