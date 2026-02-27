@@ -51,15 +51,15 @@
 </head>
 <body>
 
-    <div id="login-section" style="display:none;">
+    <div id="login-section" style="display:none; padding-top: 50px;">
         <div class="branding-container">
             <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text">PILATES PULSE</div>
         </div>
         <div style="margin: 0 auto; width: 90%; max-width: 380px; padding-top: 20px;">
-            <input type="text" id="adminUser" placeholder="ADMIN ID">
-            <input type="password" id="adminPass" placeholder="PASSWORD">
-            <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
+            <input type="text" id="adminUser" placeholder="USUARIO">
+            <input type="password" id="adminPass" placeholder="CONTRASEÑA">
+            <button onclick="handleLogin()" class="btn-principal">ACCEDER AL PANEL</button>
         </div>
     </div>
 
@@ -104,6 +104,7 @@
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
 
+        // LÓGICA DE LOGIN CONECTADA A SUPABASE
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
             else document.getElementById('login-section').style.display = 'block';
@@ -112,9 +113,16 @@
         async function handleLogin() {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
-            const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); }
-            else alert("Acceso denegado");
+            
+            // Busca en la tabla 'usuarios_admin' que ya tienes en Supabase
+            const { data, error } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
+            
+            if (data) { 
+                localStorage.setItem('studio_auth', 'true'); 
+                startApp(); 
+            } else { 
+                alert("Acceso denegado: Usuario o contraseña incorrectos."); 
+            }
         }
 
         function startApp() {
@@ -123,6 +131,8 @@
             renderEstructura();
             updateAll();
         }
+
+        // --- RESTO DEL SCRIPT BASE (Mantenido intacto) ---
 
         function renderEstructura() {
             document.getElementById('listaDias').innerHTML = DIAS.map(d => `
@@ -202,7 +212,6 @@
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
                 const estaVencido = checkVencimiento(p[10]);
-                // p[1]:Nom, p[2]:Tel, p[3]:Clase, p[4]:Frec, p[5]:Mod, p[6]:Salud, p[7]:Visita, p[8]:Origen, p[9]:Ref, p[10]:Vence, p[11]:Edad
                 return `<div class="clase-box">
                     <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'S/N'}</b>
                     <br><small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
@@ -232,9 +241,7 @@
         function processVencimientos() {
             const listaNotif = document.getElementById('lista-notificaciones');
             let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
-            
             document.getElementById('active-dot').style.display = alertas.length > 0 ? 'block' : 'none';
-            
             if (alertas.length === 0) {
                 listaNotif.innerHTML = `<p style="text-align:center; opacity:0.3; font-size:0.7rem;">No hay alumnos próximos a vencer.</p>`;
             } else {
