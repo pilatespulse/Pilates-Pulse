@@ -234,10 +234,17 @@
         }
 
         function generarHoras() {
-            let res = ""; for(let i=8; i<=21; i++) {
-                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
-                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
-            } return res;
+            let res = ""; 
+            // Iniciamos a las 7:00 AM (i=7) y terminamos a las 10:00 PM (i=22)
+            for(let i=7; i<=22; i++) {
+                let h = i > 12 ? i-12 : i; 
+                let ampm = i >= 12 ? "PM" : "AM";
+                // Mostramos 7:00 y 7:30, etc.
+                res += `<option>${h}:00 ${ampm}</option>`;
+                // No mostrar 10:30 PM si el límite es 10:00 PM
+                if (i < 22) res += `<option>${h}:30 ${ampm}</option>`;
+            } 
+            return res;
         }
 
         async function pushClase(dia) {
