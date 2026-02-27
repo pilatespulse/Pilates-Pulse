@@ -240,4 +240,56 @@
 
         function abrirFormNuevoAlumno(editId = null, existingData = null) {
             const p = existingData ? existingData.split('|') : Array(12).fill('');
-            let edades = ""; for
+            let edades = ""; for(let i=1; i<=100; i++) edades += `<option value="${i}">${i}</option>`;
+
+            document.getElementById('btn-abrir-registro').style.display = 'none';
+            document.getElementById('form-alumno-nuevo').innerHTML = `
+                <div style="background:#111; padding:20px; border-radius:30px; border:1px solid #222; margin-bottom:20px;">
+                    <label>Nombre</label><input type="text" id="db-nom" value="${p[1]}">
+                    <label>Edad</label><select id="db-edad">${edades}</select>
+                    <label>Teléfono</label><input type="text" id="db-tel" value="${p[2]}">
+                    <label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select>
+                    <label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select>
+                    <label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select>
+                    <label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}">
+                    <label>Salud</label><textarea id="db-salud">${p[6]}</textarea>
+                    <label>Visita</label><textarea id="db-visita">${p[7]}</textarea>
+                    <label>Origen</label><textarea id="db-fuente">${p[8]}</textarea>
+                    <label>Referido</label><select id="db-ref"><option>No</option><option>Si</option></select>
+                    <button class="btn-principal" onclick="saveAlumno('${editId}')">GUARDAR</button>
+                    <button class="btn-cancelar" onclick="cerrarFormAlumno()">CERRAR</button>
+                </div>`;
+            if(editId) document.getElementById('db-edad').value = p[11];
+        }
+
+        async function saveAlumno(editId = "null") {
+            const d = (id) => document.getElementById(id).value;
+            const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;
+            if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
+            else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            cerrarFormAlumno(); updateAll();
+        }
+
+        function cerrarFormAlumno() { document.getElementById('form-alumno-nuevo').innerHTML = ''; document.getElementById('btn-abrir-registro').style.display = 'block'; }
+        function switchModulo(id) {
+            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+        }
+
+        function processVencimientos(data) {
+            const hoy = new Date(); let count = 0;
+            data.filter(x => x.celda_id === 'DB_ENTRY').forEach(a => {
+                const v = a.contenido.split('|')[10];
+                if(v && (new Date(v) - hoy) / 3600000 <= 48) count++;
+            });
+            document.getElementById('active-dot').style.display = count > 0 ? 'block' : 'none';
+        }
+
+        async function borrar(id) { if(confirm("¿Borrar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
+        function syncTimers() {} // Placeholder
+    </script>
+</body>
+</html>
