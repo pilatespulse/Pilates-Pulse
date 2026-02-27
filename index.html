@@ -84,6 +84,13 @@
         }
         .btn-principal:active { transform: scale(0.96); opacity: 0.8; }
 
+        .btn-cancelar {
+            background: #1a1a1c; color: #666; border: 1px solid var(--border);
+            padding: 15px; border-radius: 20px; font-weight: 800; width: 100%;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 10px; transition: 0.3s;
+        }
+
         /* --- DASHBOARD --- */
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
         .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 35px; border: 1px solid var(--border); }
@@ -142,7 +149,7 @@
             </div>
 
             <div id="modulo-alumnos" style="display:none;" class="anim-up">
-                <button class="btn-principal" style="margin-bottom:30px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:30px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
@@ -213,9 +220,17 @@
                     <label style="font-size:0.55rem; color:#555;">TIPO</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
                     <label style="font-size:0.55rem; color:#555;">MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label style="font-size:0.55rem; color:#555;">ALUMNO</label><input type="text" id="n-${dia}">
-                    <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button class="btn-principal" style="padding:15px; font-size:0.7rem;" onclick="pushClase('${dia}')">GUARDAR</button>
+                        <button class="btn-cancelar" style="margin:0; padding:15px; font-size:0.7rem;" onclick="cerrarClaseForm('${dia}')">CANCELAR</button>
+                    </div>
                 </div>`;
             document.getElementById(`btn-add-${dia}`).style.display = 'none';
+        }
+
+        function cerrarClaseForm(dia) {
+            document.getElementById(`clase-form-${dia}`).innerHTML = '';
+            document.getElementById(`btn-add-${dia}`).style.display = 'block';
         }
 
         function generarHoras() {
@@ -232,8 +247,7 @@
             const n = document.getElementById('n-'+dia).value;
             const payload = `${h}|${t}|${m}|${n}`;
             await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
-            document.getElementById(`clase-form-${dia}`).innerHTML = '';
-            document.getElementById(`btn-add-${dia}`).style.display = 'block';
+            cerrarClaseForm(dia);
             updateAll();
         }
 
@@ -263,8 +277,9 @@
         }
 
         function abrirFormNuevoAlumno() {
+            document.getElementById('btn-abrir-registro').style.display = 'none';
             document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div class="anim-up" style="background:#111; padding:30px; border-radius:35px; margin-bottom:30px; border:1px solid #222;">
+                <div class="anim-up" style="background:#111; padding:30px; border-radius:35px; margin-bottom:35px; border:1px solid #222;">
                     <label>NOMBRE COMPLETO</label><input type="text" id="db-nom">
                     <label>FECHA VENCIMIENTO</label><input type="date" id="db-vence">
                     <label>TELÉFONO</label><input type="text" id="db-tel">
@@ -272,7 +287,13 @@
                     <label>FRECUENCIA</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option>${f}</option>`).join('')}</select>
                     <label>SALUD / RAZÓN VISITA</label><textarea id="db-salud"></textarea>
                     <button class="btn-principal" onclick="saveAlumno()">REGISTRAR EN BASE DE DATOS</button>
+                    <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
                 </div>`;
+        }
+
+        function cerrarFormAlumno() {
+            document.getElementById('form-alumno-nuevo').innerHTML = '';
+            document.getElementById('btn-abrir-registro').style.display = 'block';
         }
 
         async function saveAlumno() {
@@ -285,7 +306,7 @@
             const content = `DB|${n}|${t}|${c}|${f}|0|${s}|0|0|No|${v}`;
             const { error } = await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
             if(!error) {
-                document.getElementById('form-alumno-nuevo').innerHTML = '';
+                cerrarFormAlumno();
                 updateAll();
             }
         }
