@@ -3,82 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilates Pulse Admin</title>
+    <title>Pilates Pulse | Future Admin</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --negro-puro: #000000;
-            --gris-card: #1c1c1e;
-            --blanco: #ffffff;
-            --texto-secundario: #8e8e93;
-            --borde: rgba(255,255,255,0.1);
-            --smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --accent: #ff3b30;
+            --bg: #050505;
+            --card: #121214;
+            --accent: #ffffff;
+            --danger: #ff2d55;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Montserrat', sans-serif;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--negro-puro); color: var(--blanco); overflow-x: hidden; }
+        body { 
+            font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; 
+            overflow-x: hidden; letter-spacing: -0.02em;
+        }
 
-        /* Banner de Notificación Superior */
+        /* BANNER FUTURISTA */
         #top-alert {
-            position: fixed; top: 0; left: 0; width: 100%; 
-            background: var(--blanco); color: #000;
-            padding: 10px; font-weight: 800; font-size: 0.65rem;
-            text-align: center; z-index: 10000; text-transform: uppercase;
-            display: none; transition: all 0.8s var(--smooth);
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px;
+            background: rgba(255, 255, 255, 0.95); color: #000;
+            padding: 14px 20px; border-radius: 20px;
+            font-weight: 900; font-size: 0.65rem; text-align: center;
+            z-index: 10000; text-transform: uppercase;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            display: none; transition: all 1.2s var(--ease-out-expo);
+            backdrop-filter: blur(10px);
         }
 
-        /* Animación hacia el botón */
-        .fly-to-notif {
-            transform: translateY(500px) scale(0.1) translateX(100px) !important;
+        /* Animación "Smooth Travel" a 2000fps feel */
+        .traveling {
+            transform: translate(80px, 600px) scale(0.05) rotate(15deg) !important;
             opacity: 0 !important;
+            filter: blur(10px) brightness(2);
         }
 
-        .anim-up { animation: entradaSuave 0.7s var(--smooth) forwards; }
-        @keyframes entradaSuave {
-            from { opacity: 0; transform: translateY(15px); filter: blur(5px); }
+        .anim-up { animation: slideUp 0.8s var(--ease-out-expo) forwards; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
             to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
         /* --- LOGIN --- */
-        #login-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .card-login { background: var(--gris-card); padding: 40px 25px; border-radius: 28px; width: 100%; max-width: 360px; text-align: center; }
-        .pass-container { position: relative; width: 100%; }
-        .toggle-pass { position: absolute; right: 15px; top: 18px; color: var(--texto-secundario); cursor: pointer; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
-
-        /* --- APP LAYOUT --- */
-        .main-container { padding: 20px; max-width: 480px; margin: 0 auto; }
-        .branding { text-align: center; padding: 40px 0 20px; }
-        .logo-pulse { width: 85px; height: 85px; background: #fff; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; }
+        #login-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .card-login { 
+            background: var(--card); padding: 50px 30px; border-radius: 40px; 
+            width: 90%; max-width: 380px; text-align: center; border: 1px solid var(--border);
+        }
+        .logo-pulse { width: 90px; height: 90px; background: #fff; border-radius: 50%; margin: 0 auto 25px; overflow: hidden; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
         .logo-pulse img { width: 100%; height: 100%; object-fit: cover; }
 
-        .dia-item { background: var(--gris-card); margin-bottom: 12px; border-radius: 24px; border: 1px solid var(--borde); }
-        .dia-header { padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .nombre-dia { font-weight: 800; font-size: 1.1rem; }
-        .conteo-clases { font-size: 0.7rem; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; }
-        .dia-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.6s var(--smooth), opacity 0.4s ease; padding: 0 20px; }
-        .dia-content.abierto { max-height: 2000px; opacity: 1; padding-bottom: 25px; }
+        input, select, textarea { 
+            width: 100%; background: #1a1a1c; border: 1px solid var(--border); 
+            padding: 18px; border-radius: 18px; color: #fff; margin-bottom: 12px;
+            font-family: var(--font-main); font-weight: 500; transition: 0.3s;
+        }
+        input:focus { border-color: #555; background: #222; }
 
-        .clase-box { background: rgba(255,255,255,0.04); padding: 18px; border-radius: 18px; margin-bottom: 10px; border-left: 3px solid #fff; }
-        select, input, textarea { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; padding: 15px; border-radius: 12px; color: #fff; margin-bottom: 12px; font-family: inherit; font-size: 0.9rem; }
+        .btn-principal { 
+            background: #fff; color: #000; border: none; padding: 18px; 
+            border-radius: 18px; font-weight: 900; width: 100%; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+        }
 
-        .btn-principal { background: var(--blanco); color: #000; border: none; padding: 16px; border-radius: 14px; font-weight: 800; width: 100%; cursor: pointer; }
-        .btn-cancelar { display: block; text-align: center; color: var(--texto-secundario); font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: none; font-weight: 600; }
-        .btn-dashed { background: transparent; border: 1px dashed #444; color: #888; padding: 14px; border-radius: 12px; width: 100%; margin: 10px 0; cursor: pointer; }
+        /* --- DASHBOARD --- */
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); transition: 0.4s; }
+        .dia-header { padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .nombre-dia { font-weight: 900; font-size: 1.2rem; }
+        
+        .clase-box { 
+            background: rgba(255,255,255,0.02); padding: 20px; border-radius: 22px; 
+            margin-bottom: 12px; border: 1px solid var(--border); display: flex; 
+            justify-content: space-between; align-items: center;
+        }
 
-        .footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px; }
-        .db-footer-btn { background: var(--blanco); color: #000; padding: 18px; border-radius: 20px; width: 100%; border: none; font-weight: 800; font-size: 0.7rem; cursor: pointer; }
-        .notif-btn { background: #1c1c1e; color: #fff; border: 1px solid #333; position: relative; }
-        .dot-alert { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: none; }
+        .footer-nav { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
+            margin-top: 40px; position: sticky; bottom: 20px;
+        }
+        .nav-btn { 
+            background: var(--card); color: #fff; padding: 20px; border-radius: 24px; 
+            border: 1px solid var(--border); font-weight: 800; font-size: 0.7rem; 
+            cursor: pointer; position: relative; backdrop-filter: blur(10px);
+        }
+        .nav-btn.active-btn { background: #fff; color: #000; }
+        
+        .dot-notif { 
+            position: absolute; top: 15px; right: 15px; width: 10px; height: 10px; 
+            background: var(--danger); border-radius: 50%; display: none;
+            box-shadow: 0 0 15px var(--danger);
+        }
 
-        label { font-size: 0.65rem; color: var(--texto-secundario); margin-left: 5px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .countdown-live { 
+            color: var(--danger); font-family: 'Courier New', monospace; 
+            font-weight: 900; background: rgba(255,45,85,0.1); padding: 2px 8px; border-radius: 6px;
+        }
 
-        .info-extra { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
-        .notif-item { padding: 15px; border-bottom: 1px solid #222; font-size: 0.8rem; }
-        .notif-item b { color: var(--accent); }
+        .notif-card { 
+            background: var(--card); border-radius: 25px; margin-bottom: 10px; 
+            padding: 20px; border-left: 4px solid var(--danger);
+        }
     </style>
 </head>
 <body>
@@ -88,43 +121,40 @@
     <div id="login-section" style="display:none;">
         <div class="logo-pulse anim-up"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
         <div class="card-login anim-up">
-            <h2 style="font-weight:800; margin-bottom:30px; letter-spacing: 4px; font-size: 1.3rem;">PILATES PULSE</h2>
-            <input type="text" id="adminUser" placeholder="Usuario">
-            <div class="pass-container">
-                <input type="password" id="adminPass" placeholder="Password">
-                <span class="toggle-pass" onclick="togglePassView()">Ver</span>
-            </div>
-            <button onclick="handleLogin()" class="btn-principal" style="margin-top: 10px;">INGRESAR</button>
+            <h2 style="font-weight:900; margin-bottom:35px; letter-spacing: 6px;">PILATES PULSE</h2>
+            <input type="text" id="adminUser" placeholder="ADMIN ID">
+            <input type="password" id="adminPass" placeholder="PASSWORD">
+            <button onclick="handleLogin()" class="btn-principal">IDENTIFICAR</button>
         </div>
     </div>
 
     <div id="app-content" style="display:none;">
         <div class="branding anim-up">
             <div class="logo-pulse"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <h1 style="font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 5px;">PILATES PULSE</h1>
-            <p onclick="logout()" style="color:var(--texto-secundario); font-size:0.6rem; cursor:pointer; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;">Cerrar sesión</p>
+            <h1 style="font-weight:900; letter-spacing:3px; text-align:center;">PILATES PULSE</h1>
+            <p onclick="logout()" style="text-align:center; font-size:0.6rem; color:#555; cursor:pointer;">LOGOUT SYSTEM</p>
         </div>
         
         <div class="main-container" id="listaDias"></div>
 
         <div class="main-container">
-            <div class="footer-nav">
-                <button class="db-footer-btn" onclick="toggleSeccion('modulo-alumnos')">BASE DE DATOS</button>
-                <button class="db-footer-btn notif-btn" id="btn-notif-main" onclick="toggleSeccion('modulo-notificaciones')">
-                    NOTIFICACIONES
-                    <div class="dot-alert" id="active-dot"></div>
-                </button>
+            <div id="modulo-notificaciones" style="display:none;" class="anim-up">
+                <h3 style="font-size:0.7rem; color:#555; margin-bottom:20px;">NOTIFICACIONES DE SISTEMA</h3>
+                <div id="lista-notificaciones"></div>
             </div>
 
-            <div id="modulo-notificaciones" style="display:none; padding-top:20px;">
-                <h3 style="font-size:0.8rem; letter-spacing:1px; color:var(--texto-secundario)">AVISOS DE VENCIMIENTO</h3>
-                <div id="lista-notificaciones" style="background:var(--gris-card); border-radius:20px; overflow:hidden;"></div>
-            </div>
-
-            <div id="modulo-alumnos" style="display:none; padding-top:20px;">
-                <button class="btn-dashed" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+            <div id="modulo-alumnos" style="display:none;" class="anim-up">
+                <button class="btn-principal" style="margin-bottom:20px;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR NUEVO</button>
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
+            </div>
+
+            <div class="footer-nav">
+                <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DE DATOS</button>
+                <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
+                    NOTIFICACIONES
+                    <div class="dot-notif" id="active-dot"></div>
+                </button>
             </div>
         </div>
     </div>
@@ -133,194 +163,153 @@
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
-        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
 
         window.onload = () => {
-            if (localStorage.getItem('studio_auth')) { startApp(); } 
-            else { document.getElementById('login-section').style.display = 'flex'; }
+            if (localStorage.getItem('studio_auth')) startApp();
+            else document.getElementById('login-section').style.display = 'flex';
         };
-
-        function togglePassView() {
-            const passInput = document.getElementById('adminPass');
-            passInput.type = passInput.type === 'password' ? 'text' : 'password';
-            document.querySelector('.toggle-pass').innerText = passInput.type === 'password' ? 'Ver' : 'Ocultar';
-        }
 
         async function handleLogin() {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); } 
-            else { alert("Error"); }
+            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); }
+            else alert("Error de credenciales");
         }
 
         function startApp() {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            renderizarEstructura();
-            actualizarTodo();
+            renderEstructura();
+            updateAll();
+            setInterval(syncTimers, 1000);
         }
 
-        function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
-
-        function renderizarEstructura() {
+        function renderEstructura() {
             document.getElementById('listaDias').innerHTML = DIAS.map(d => `
                 <div class="dia-item anim-up">
-                    <div class="dia-header" onclick="clickDia('${d}')">
+                    <div class="dia-header" onclick="toggleDia('${d}')">
                         <span class="nombre-dia">${d}</span>
-                        <span class="conteo-clases" id="badge-${d}">0 Ejercicios</span>
+                        <span id="badge-${d}" style="font-size:0.6rem; color:#555">0</span>
                     </div>
-                    <div class="dia-content" id="cont-${d}">
-                        <div id="clase-form-spot-${d}"></div>
-                        <button class="btn-dashed" onclick="abrirPopupClase('${d}')">+ AÑADIR CLASE</button>
-                        <div id="clases-realtime-${d}"></div>
+                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
+                        <button class="btn-principal" style="font-size:0.6rem; padding:10px; margin-bottom:15px;" onclick="addClasePopup('${d}')">+ AÑADIR</button>
+                        <div id="clases-${d}"></div>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
-        function clickDia(id) {
-            const el = document.getElementById(`cont-${id}`);
-            const abierto = el.classList.contains('abierto');
-            document.querySelectorAll('.dia-content').forEach(c => c.classList.remove('abierto'));
-            if (!abierto) el.classList.add('abierto');
+        function toggleDia(d) {
+            const el = document.getElementById(`cont-${d}`);
+            const vis = el.style.display === 'block';
+            document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
+            el.style.display = vis ? 'none' : 'block';
         }
 
-        function abrirPopupClase(dia) {
-            document.getElementById(`clase-form-spot-${dia}`).innerHTML = `
-                <div class="anim-up" style="background:#111; padding:15px; border-radius:15px; margin-bottom:15px;">
-                    <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
-                    <label>TIPO</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label>NOMBRES</label><input type="text" id="n-${dia}">
-                    <button class="btn-principal" onclick="pushClase('${dia}')">GUARDAR</button>
-                    <a class="btn-cancelar" onclick="document.getElementById('clase-form-spot-${dia}').innerHTML=''">CANCELAR</a>
-                </div>`;
-        }
-
-        function generarHoras() {
-            let res = "";
-            for(let i=8; i<=21; i++) {
-                let ampm = i >= 12 ? "PM" : "AM";
-                let h = i > 12 ? i-12 : i;
-                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
-            }
-            return res;
-        }
-
-        async function pushClase(dia) {
-            const payload = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
-            await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
-            actualizarTodo();
-        }
-
-        async function actualizarTodo() {
+        async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             DIAS.forEach(d => {
-                const list = document.getElementById(`clases-realtime-${d}`);
                 const filtrados = data.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = `${filtrados.length} Ejercicios`;
-                list.innerHTML = filtrados.map(item => {
-                    const p = item.contenido.split('|');
-                    return `<div class="clase-box"><div><b>${p[0]} - ${p[1]}</b><br><small>${p[2]} | ${p[3]}</small></div><span onclick="borrar('${item.id}')">×</span></div>`;
+                document.getElementById(`badge-${d}`).innerText = filtrados.length;
+                document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
+                    const p = i.contenido.split('|');
+                    return `<div class="clase-box"><div><b>${p[0]}</b> - ${p[1]}<br><small>${p[3]}</small></div><span onclick="borrar('${i.id}')">×</span></div>`;
                 }).join('');
             });
-            renderListaAlumnos(data);
-            revisarVencimientos(data);
+            renderAlumnos(data);
+            processVencimientos(data);
         }
 
-        async function borrar(id) {
-            if(confirm("¿Quitar?")) { await _sp.from('horarios').delete().eq('id', id); actualizarTodo(); }
-        }
-
-        function toggleSeccion(id) {
-            const m = document.getElementById(id);
-            const visible = m.style.display === 'block';
-            document.getElementById('modulo-alumnos').style.display = 'none';
-            document.getElementById('modulo-notificaciones').style.display = 'none';
-            m.style.display = visible ? 'none' : 'block';
-        }
-
-        function abrirFormNuevoAlumno() {
-            let opcionesEdad = ""; for(let i=1; i<=100; i++) { opcionesEdad += `<option value="${i}">${i}</option>`; }
-            document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div class="anim-up" style="background:var(--gris-card); padding:20px; border-radius:20px; border:1px solid #333;">
-                    <label>NOMBRE</label><input type="text" id="db-nom">
-                    <label>TEL</label><input type="text" id="db-tel">
-                    <label>VENCIMIENTO</label><input type="date" id="db-vence">
-                    <label>EDAD</label><select id="db-edad">${opcionesEdad}</select>
-                    <label>CLASE</label><select id="db-tipo-clase">${CLASES.map(c => `<option>${c}</option>`).join('')}</select>
-                    <label>FRECUENCIA</label><select id="db-frecuencia">${FRECUENCIAS.map(f => `<option>${f}</option>`).join('')}</select>
-                    <label>SALUD</label><textarea id="db-salud"></textarea>
-                    <label>RAZÓN</label><textarea id="db-razon"></textarea>
-                    <label>FUENTE</label><input type="text" id="db-fuente">
-                    <label>REFERIDO</label><select id="db-referido"><option>No</option><option>Si</option></select>
-                    <button class="btn-principal" onclick="saveAlumnoDB()">REGISTRAR</button>
-                </div>`;
-        }
-
-        async function saveAlumnoDB() {
-            const vals = ['db-nom','db-tel','db-tipo-clase','db-frecuencia','db-edad','db-salud','db-razon','db-fuente','db-referido','db-vence'].map(id => document.getElementById(id).value);
-            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: `DB|${vals.join('|')}` }]);
-            document.getElementById('form-alumno-nuevo').innerHTML = '';
-            actualizarTodo();
-        }
-
-        function renderListaAlumnos(data) {
-            const alumnos = data.filter(x => x.celda_id === 'DB_ENTRY');
-            document.getElementById('render-alumnos').innerHTML = alumnos.map(a => {
-                const p = a.contenido.split('|');
-                return `<div class="clase-box">
-                    <div><b>${p[1]}</b><br><small>${p[3]} | ${p[4]}</small><br><small style="color:var(--accent)">Vence: ${p[10]}</small>
-                    <div id="extra-${a.id}" class="info-extra"><p>Tel: ${p[2]} | Edad: ${p[5]} | Salud: ${p[6]}</p></div>
-                    <button class="btn-more" onclick="toggleExtra('${a.id}')">Más info</button></div>
-                    <span onclick="borrar('${a.id}')">×</span></div>`;
-            }).join('');
-        }
-
-        function revisarVencimientos(data) {
+        function processVencimientos(data) {
             const hoy = new Date();
             const alumnos = data.filter(x => x.celda_id === 'DB_ENTRY');
-            const listaNotif = document.getElementById('lista-notificaciones');
-            const dot = document.getElementById('active-dot');
-            let html = "";
-            let proximos = 0;
+            let html = ""; let count = 0;
 
             alumnos.forEach(a => {
                 const p = a.contenido.split('|');
                 if(p[10]) {
-                    const vence = new Date(p[10]);
-                    const diffDays = Math.ceil((vence - hoy) / (1000 * 60 * 60 * 24));
-                    if(diffDays >= 0 && diffDays <= 2) {
-                        proximos++;
-                        html += `<div class="notif-item">A <b>${p[1]}</b> se le vencerán sus clases en <b>${diffDays} días</b></div>`;
+                    // Creamos la fecha de vencimiento usando la fecha guardada y la hora de registro
+                    const vencimiento = new Date(p[10] + "T23:59:59"); 
+                    const diff = vencimiento - hoy;
+                    const horasRestantes = diff / (1000 * 60 * 60);
+
+                    // Notificar si faltan menos de 48 horas (2 días)
+                    if(diff > 0 && horasRestantes <= 48) {
+                        count++;
+                        let timeDisplay = horasRestantes > 24 
+                            ? `Faltan ${Math.floor(horasRestantes / 24)} día(s)` 
+                            : `<span class="countdown-live" data-expire="${vencimiento.getTime()}">--:--:--</span>`;
+                        
+                        html += `<div class="notif-card"><b>${p[1]}</b><br><small>Vencimiento inminente: ${timeDisplay}</small></div>`;
                     }
                 }
             });
 
-            if(proximos > 0) {
-                listaNotif.innerHTML = html;
-                dot.style.display = 'block';
+            if(count > 0) {
+                document.getElementById('lista-notificaciones').innerHTML = html;
+                document.getElementById('active-dot').style.display = 'block';
                 const banner = document.getElementById('top-alert');
-                banner.innerText = `TIENES ${proximos} VENCIMIENTOS PRÓXIMOS`;
+                banner.innerText = `${count} ALUMNOS POR VENCER`;
                 banner.style.display = 'block';
                 
-                // Animación de vuelo hacia el botón
                 setTimeout(() => {
-                    banner.classList.add('fly-to-notif');
-                    setTimeout(() => { banner.style.display = 'none'; }, 800);
-                }, 3000);
-            } else {
-                listaNotif.innerHTML = "<p style='padding:20px; font-size:0.7rem; color:#555'>No hay avisos pendientes</p>";
-                dot.style.display = 'none';
+                    banner.classList.add('traveling');
+                    setTimeout(() => banner.style.display = 'none', 1200);
+                }, 4000);
             }
         }
 
-        function toggleExtra(id) {
-            const e = document.getElementById(`extra-${id}`);
-            e.style.display = e.style.display === 'block' ? 'none' : 'block';
+        function syncTimers() {
+            document.querySelectorAll('.countdown-live').forEach(t => {
+                const meta = parseInt(t.getAttribute('data-expire'));
+                const diff = meta - new Date().getTime();
+                if(diff <= 0) { t.innerText = "EXPIRADO"; return; }
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                t.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            });
         }
+
+        function switchModulo(id) {
+            document.getElementById('modulo-alumnos').style.display = 'none';
+            document.getElementById('modulo-notificaciones').style.display = 'none';
+            document.getElementById(id).style.display = 'block';
+            
+            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+        }
+
+        function abrirFormNuevoAlumno() {
+            document.getElementById('form-alumno-nuevo').innerHTML = `
+                <div class="anim-up" style="background:#111; padding:25px; border-radius:30px; margin-bottom:20px; border:1px solid #222;">
+                    <input type="text" id="db-nom" placeholder="NOMBRE COMPLETO">
+                    <label style="font-size:0.6rem; color:#555; margin-left:10px;">FECHA DE VENCIMIENTO</label>
+                    <input type="date" id="db-vence">
+                    <select id="db-clase">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <button class="btn-principal" onclick="saveAlumno()">GUARDAR EN NUBE</button>
+                </div>`;
+        }
+
+        async function saveAlumno() {
+            const n = document.getElementById('db-nom').value;
+            const v = document.getElementById('db-vence').value;
+            const c = document.getElementById('db-clase').value;
+            await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: `DB|${n}|0|${c}|0|0|0|0|0|0|${v}` }]);
+            document.getElementById('form-alumno-nuevo').innerHTML = '';
+            updateAll();
+        }
+
+        function renderAlumnos(data) {
+            const alums = data.filter(x => x.celda_id === 'DB_ENTRY');
+            document.getElementById('render-alumnos').innerHTML = alums.map(a => {
+                const p = a.contenido.split('|');
+                return `<div class="clase-box"><div><b>${p[1]}</b><br><small>${p[3]}</small></div><span onclick="borrar('${a.id}')">×</span></div>`;
+            }).join('');
+        }
+
+        async function borrar(id) { if(confirm("¿Confirmar eliminación?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
     </script>
 </body>
 </html>
