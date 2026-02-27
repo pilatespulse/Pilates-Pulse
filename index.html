@@ -169,9 +169,16 @@
             document.getElementById(`clase-form-${dia}`).innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222;">
                     <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
+                    <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
                     <label>ALUMNO</label><input type="text" id="n-${dia}">
                     <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}')">GUARDAR</button>
+                    <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="cerrarClaseForm('${dia}')">CANCELAR</button>
                 </div>`;
+        }
+
+        function cerrarClaseForm(dia) {
+            document.getElementById(`clase-form-${dia}`).innerHTML = '';
         }
 
         function generarHoras() {
@@ -183,8 +190,11 @@
 
         async function pushClase(dia) {
             const h = document.getElementById('h-'+dia).value;
+            const t = document.getElementById('t-'+dia).value;
+            const m = document.getElementById('m-'+dia).value;
             const n = document.getElementById('n-'+dia).value;
-            await _sp.from('horarios').insert([{ celda_id: dia, contenido: `${h}|CLASE|MOD|${n}` }]);
+            await _sp.from('horarios').insert([{ celda_id: dia, contenido: `${h}|${t}|${m}|${n}` }]);
+            cerrarClaseForm(dia);
             updateAll();
         }
 
@@ -197,8 +207,8 @@
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem;"><b>${p[0]}</b> ${p[3]}</span>
-                        <span onclick="borrar('${i.id}')" style="opacity:0.2;">×</span>
+                        <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]} / ${p[3]}</small></span>
+                        <span onclick="borrar('${i.id}')" style="opacity:0.2; cursor:pointer;">×</span>
                     </div>`;
                 }).join('');
             });
@@ -271,11 +281,21 @@
         }
 
         function cerrarFormAlumno() { document.getElementById('form-alumno-nuevo').innerHTML = ''; document.getElementById('btn-abrir-registro').style.display = 'block'; }
+        
         function switchModulo(id) {
             document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
             document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
             document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
             document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+            
+            // Si volvemos a la agenda, ocultamos los módulos
+            if(id === 'agenda') {
+                 document.getElementById('modulo-alumnos').style.display = 'none';
+                 document.getElementById('modulo-notificaciones').style.display = 'none';
+                 document.getElementById('listaDias').style.display = 'block';
+            } else {
+                 document.getElementById('listaDias').style.display = 'none';
+            }
         }
 
         function processVencimientos(data) {
@@ -289,7 +309,6 @@
 
         async function borrar(id) { if(confirm("¿Borrar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
         function logout() { localStorage.removeItem('studio_auth'); location.reload(); }
-        function syncTimers() {} // Placeholder
     </script>
 </body>
 </html>
