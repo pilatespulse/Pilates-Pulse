@@ -11,6 +11,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
+    <meta property="og:title" content="Pilates Pulse | Admin">
+    <meta property="og:image" content="https://i.postimg.cc/Xqs2VjT0/image.png">
+    <meta property="og:description" content="Gestión exclusiva Pilates Pulse">
+    <meta name="theme-color" content="#050505">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
     
@@ -34,22 +39,14 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
-        .logo-pulse-circle { width: 90px; height: 90px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
+        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
+        .logo-pulse-circle { width: 90px; height: 90px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
         .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1.1rem; text-transform: uppercase; }
 
-        /* Botón Logout */
-        .btn-logout {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255,255,255,0.05); color: #777;
-            border: 1px solid var(--border); padding: 8px 12px;
-            border-radius: 12px; font-size: 0.5rem; font-weight: 900;
-            cursor: pointer; text-transform: uppercase;
-        }
-
         input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
         .btn-principal { background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
         .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); }
@@ -79,7 +76,6 @@
 
     <div id="app-content" style="display:none;">
         <header class="branding-container">
-            <button class="btn-logout" onclick="handleLogout()">SALIR</button>
             <div class="logo-pulse-circle" style="width: 50px; height: 50px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text" style="font-size: 0.7rem;">ADMIN PANEL</div>
         </header>
@@ -108,8 +104,12 @@
 
     <script>
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+        const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
 
+        // CONTROL DE ACCESO
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
             else document.getElementById('login-section').style.display = 'flex';
@@ -125,13 +125,6 @@
             } else alert("Acceso Incorrecto");
         }
 
-        function handleLogout() {
-            if(confirm("¿Cerrar sesión?")) {
-                localStorage.removeItem('studio_auth');
-                location.reload();
-            }
-        }
-
         function startApp() {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
@@ -139,6 +132,7 @@
             switchModulo('modulo-alumnos');
         }
 
+        // LÓGICA DE DATOS
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
@@ -159,9 +153,10 @@
                 const vencido = checkVencimiento(p[10]);
                 return `<div class="clase-box">
                     <b style="font-size:0.85rem;" class="${vencido ? 'vence-alerta' : ''}">${p[1]}</b>
-                    <br><small style="opacity:0.5;">Vence: ${p[10] || 'N/A'}</small>
+                    <br><small style="opacity:0.5;">${p[3]} | ${p[4]}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
-                        <p>TEL: ${p[2]}</p>
+                        <p>TEL: ${p[2]}</p><p>EDAD: ${p[11]}</p><p>SALUD: ${p[6]}</p>
+                        <p>VENCE: <b class="${vencido ? 'vence-alerta' : ''}">${p[10]}</b></p>
                         <button class="btn-principal" style="padding:10px; font-size:0.5rem;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
                     <div style="display:flex; justify-content:space-between; margin-top:15px;">
@@ -200,7 +195,7 @@
                     <label>Teléfono</label><input type="text" id="db-tel" value="${p[2]}">
                     <label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}">
                     <button class="btn-principal" onclick="saveAlumno('${editId}')">GUARDAR</button>
-                    <button style="background:transparent; border:none; color:#777; width:100%; margin-top:10px;" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</button>
+                    <button class="btn-cancelar" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</button>
                 </div>`;
         }
 
