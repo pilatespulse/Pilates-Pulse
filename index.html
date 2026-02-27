@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pilates Pulse | Luxury Admin</title>
     
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
+    <link rel="shortcut icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
     
@@ -112,7 +116,6 @@
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
 
-        // --- LÓGICA DE ACCESO ---
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
             else document.getElementById('login-section').style.display = 'flex';
@@ -135,7 +138,6 @@
             updateAll();
         }
 
-        // --- LÓGICA DE AGENDA ---
         function renderEstructura() {
             document.getElementById('listaDias').innerHTML = DIAS.map(d => `
                 <div class="dia-item">
@@ -183,7 +185,6 @@
             updateAll();
         }
 
-        // --- LÓGICA DE ALUMNOS Y VENCIMIENTO ---
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
@@ -208,7 +209,7 @@
             const hoy = new Date();
             const venc = new Date(fechaStr + "T23:59:59");
             const diff = (venc - hoy) / (1000 * 60 * 60); 
-            return diff <= 48; // Rojo si vence en 48h o ya venció
+            return diff <= 48; 
         }
 
         function renderAlumnosList(lista) {
