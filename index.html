@@ -49,7 +49,7 @@
         .logo-pulse { width: 85px; height: 85px; background: #fff; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; }
         .logo-pulse img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- INTERFAZ DE DIAS (ESTILO IMAGEN) --- */
+        /* --- INTERFAZ DE DIAS --- */
         .dia-item { 
             background: var(--gris-card); margin-bottom: 12px; border-radius: 24px;
             border: 1px solid var(--borde); transition: transform 0.3s var(--smooth);
@@ -117,12 +117,10 @@
             <h1 style="font-size: 1.2rem; font-weight: 800; letter-spacing: 2px;">PILATES PULSE</h1>
         </div>
         
-        <div class="main-container" id="listaDias">
-            </div>
+        <div class="main-container" id="listaDias"></div>
 
         <div class="main-container">
             <button class="db-footer-btn" onclick="toggleSeccionAlumnos()">BASE DE DATOS ALUMNOS</button>
-            
             <div id="modulo-alumnos" style="display:none; padding-top:20px;">
                 <button class="btn-dashed" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
                 <div id="form-alumno-nuevo"></div>
@@ -132,14 +130,13 @@
     </div>
 
     <script>
-        // CLIENTE SUPABASE
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
 
-        // CONTROL DE SESION
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) { startApp(); } 
             else { document.getElementById('login-section').style.display = 'flex'; }
@@ -149,10 +146,8 @@
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { 
-                localStorage.setItem('studio_auth', 'true'); 
-                startApp(); 
-            } else { alert("Error de acceso"); }
+            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); } 
+            else { alert("Error de acceso"); }
         }
 
         function startApp() {
@@ -162,7 +157,6 @@
             actualizarTodo();
         }
 
-        // DIBUJAR LA WEB
         function renderizarEstructura() {
             const container = document.getElementById('listaDias');
             container.innerHTML = DIAS.map(d => `
@@ -187,7 +181,6 @@
             if (!estaAbierto) el.classList.add('abierto');
         }
 
-        // FORMULARIOS DE CLASE
         function abrirPopupClase(dia) {
             const spot = document.getElementById(`clase-form-spot-${dia}`);
             spot.innerHTML = `
@@ -214,7 +207,6 @@
             return res;
         }
 
-        // OPERACIONES DATA
         async function pushClase(dia) {
             const payload = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
             await _sp.from('horarios').insert([{ celda_id: dia, contenido: payload }]);
@@ -228,10 +220,8 @@
                 const list = document.getElementById(`clases-realtime-${d}`);
                 const badge = document.getElementById(`badge-${d}`);
                 if(!list) return;
-                
                 const filtrados = data.filter(x => x.celda_id === d);
                 badge.innerText = `${filtrados.length} EJERCICIOS`;
-                
                 list.innerHTML = filtrados.map(item => {
                     const p = item.contenido.split('|');
                     return `
@@ -255,7 +245,6 @@
             }
         }
 
-        // SECCION ALUMNOS (ARREGLADA)
         function toggleSeccionAlumnos() {
             const m = document.getElementById('modulo-alumnos');
             m.style.display = m.style.display === 'none' ? 'block' : 'none';
@@ -264,10 +253,23 @@
         function abrirFormNuevoAlumno() {
             document.getElementById('form-alumno-nuevo').innerHTML = `
                 <div class="anim-up" style="background: var(--gris-card); padding: 20px; border-radius: 20px; border: 1px solid #333;">
+                    <label style="font-size:0.7rem; color:#888; margin-left:5px">NOMBRE</label>
                     <input type="text" id="db-nom" placeholder="Nombre Completo">
-                    <input type="text" id="db-tel" placeholder="WhatsApp">
-                    <input type="text" id="db-vence" placeholder="Vencimiento (DD/MM)">
-                    <button class="btn-principal" onclick="saveAlumnoDB()">REGISTRAR</button>
+                    
+                    <label style="font-size:0.7rem; color:#888; margin-left:5px">TELÉFONO</label>
+                    <input type="text" id="db-tel" placeholder="Número de Telf">
+                    
+                    <label style="font-size:0.7rem; color:#888; margin-left:5px">TIPO DE CLASE COMPRADA</label>
+                    <select id="db-tipo-clase">
+                        ${CLASES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+
+                    <label style="font-size:0.7rem; color:#888; margin-left:5px">HORARIOS</label>
+                    <select id="db-frecuencia">
+                        ${FRECUENCIAS.map(f => `<option value="${f}">${f}</option>`).join('')}
+                    </select>
+
+                    <button class="btn-principal" style="margin-top:10px" onclick="saveAlumnoDB()">REGISTRAR</button>
                     <a class="btn-cancelar" onclick="document.getElementById('form-alumno-nuevo').innerHTML=''">CANCELAR</a>
                 </div>
             `;
@@ -276,8 +278,11 @@
         async function saveAlumnoDB() {
             const n = document.getElementById('db-nom').value;
             const t = document.getElementById('db-tel').value;
-            const v = document.getElementById('db-vence').value;
-            const content = `DB|${n}|${t}|||||${v}`; // Mantenemos estructura anterior
+            const tc = document.getElementById('db-tipo-clase').value;
+            const fr = document.getElementById('db-frecuencia').value;
+            
+            // Guardamos la info estructurada en el string de contenido
+            const content = `DB|${n}|${t}|${tc}|${fr}||||`; 
             await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
             document.getElementById('form-alumno-nuevo').innerHTML = '';
             actualizarTodo();
@@ -292,9 +297,10 @@
                     <div class="clase-box" style="border-left-color: #555">
                         <div style="flex:1">
                             <b>${p[1]}</b><br>
-                            <span style="font-size:0.7rem; color:#888">Vence: ${p[7]} | Tel: ${p[2]}</span>
+                            <span style="font-size:0.75rem; color:#fff">${p[3]} — ${p[4]}</span><br>
+                            <span style="font-size:0.7rem; color:#888">Tel: ${p[2]}</span>
                         </div>
-                        <span style="cursor:pointer; color:#444" onclick="borrar('${a.id}')">×</span>
+                        <span style="cursor:pointer; color:#444; font-size:1.5rem" onclick="borrar('${a.id}')">×</span>
                     </div>
                 `;
             }).join('');
