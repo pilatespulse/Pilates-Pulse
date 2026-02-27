@@ -111,6 +111,8 @@
         
         .dot-notif { position: absolute; top: 15px; right: 20px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 15px var(--danger); }
         .countdown-live { color: var(--danger); font-family: monospace; font-weight: 900; background: rgba(255,45,85,0.1); padding: 3px 8px; border-radius: 6px; }
+
+        label { display: block; font-size: 0.6rem; color: #555; margin-bottom: 5px; font-weight: 800; letter-spacing: 1px; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -216,10 +218,10 @@
         function addClasePopup(dia) {
             document.getElementById(`clase-form-${dia}`).innerHTML = `
                 <div class="anim-up" style="background:#000; padding:25px; border-radius:25px; margin-bottom:20px; border:1px solid #333;">
-                    <label style="font-size:0.55rem; color:#555;">HORA</label><select id="h-${dia}">${generarHoras()}</select>
-                    <label style="font-size:0.55rem; color:#555;">TIPO</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <label style="font-size:0.55rem; color:#555;">MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <label style="font-size:0.55rem; color:#555;">ALUMNO</label><input type="text" id="n-${dia}">
+                    <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
+                    <label>TIPO</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>ALUMNO</label><input type="text" id="n-${dia}">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         <button class="btn-principal" style="padding:15px; font-size:0.7rem;" onclick="pushClase('${dia}')">GUARDAR</button>
                         <button class="btn-cancelar" style="margin:0; padding:15px; font-size:0.7rem;" onclick="cerrarClaseForm('${dia}')">CANCELAR</button>
@@ -235,13 +237,10 @@
 
         function generarHoras() {
             let res = ""; 
-            // Iniciamos a las 7:00 AM (i=7) y terminamos a las 10:00 PM (i=22)
             for(let i=7; i<=22; i++) {
                 let h = i > 12 ? i-12 : i; 
                 let ampm = i >= 12 ? "PM" : "AM";
-                // Mostramos 7:00 y 7:30, etc.
                 res += `<option>${h}:00 ${ampm}</option>`;
-                // No mostrar 10:30 PM si el límite es 10:00 PM
                 if (i < 22) res += `<option>${h}:30 ${ampm}</option>`;
             } 
             return res;
@@ -284,15 +283,30 @@
         }
 
         function abrirFormNuevoAlumno() {
+            let opcionesEdad = "";
+            for(let i=1; i<=100; i++) opcionesEdad += `<option value="${i}">${i} años</option>`;
+
             document.getElementById('btn-abrir-registro').style.display = 'none';
             document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div class="anim-up" style="background:#111; padding:30px; border-radius:35px; margin-bottom:35px; border:1px solid #222;">
+                <div class="anim-up" style="background:#111; padding:25px; border-radius:35px; margin-bottom:35px; border:1px solid #222;">
                     <label>NOMBRE COMPLETO</label><input type="text" id="db-nom">
-                    <label>FECHA VENCIMIENTO</label><input type="date" id="db-vence">
+                    <label>EDAD</label><select id="db-edad">${opcionesEdad}</select>
                     <label>TELÉFONO</label><input type="text" id="db-tel">
                     <label>TIPO CLASE</label><select id="db-clase">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <label>FRECUENCIA</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option>${f}</option>`).join('')}</select>
-                    <label>SALUD / RAZÓN VISITA</label><textarea id="db-salud"></textarea>
+                    <label>MODALIDAD</label><select id="db-mod">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>HORARIO (Frecuencia)</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option>${f}</option>`).join('')}</select>
+                    <label>FECHA VENCIMIENTO PAGO</label><input type="date" id="db-vence">
+                    
+                    <label>CONDICIÓN DE SALUD</label><textarea id="db-salud" placeholder="Escribe aquí..."></textarea>
+                    <label>RAZÓN DE SU VISITA</label><textarea id="db-visita" placeholder="Escribe aquí..."></textarea>
+                    <label>¿CÓMO SUPO DE NOSOTROS?</label><textarea id="db-fuente" placeholder="Escribe aquí..."></textarea>
+                    
+                    <label>¿VIENE REFERIDO POR ESPECIALISTA?</label>
+                    <select id="db-ref">
+                        <option>No</option>
+                        <option>Si</option>
+                    </select>
+
                     <button class="btn-principal" onclick="saveAlumno()">REGISTRAR EN BASE DE DATOS</button>
                     <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
                 </div>`;
@@ -305,12 +319,21 @@
 
         async function saveAlumno() {
             const n = document.getElementById('db-nom').value;
-            const v = document.getElementById('db-vence').value;
+            const e = document.getElementById('db-edad').value;
             const t = document.getElementById('db-tel').value;
             const c = document.getElementById('db-clase').value;
+            const m = document.getElementById('db-mod').value;
             const f = document.getElementById('db-frec').value;
+            const v = document.getElementById('db-vence').value;
             const s = document.getElementById('db-salud').value;
-            const content = `DB|${n}|${t}|${c}|${f}|0|${s}|0|0|No|${v}`;
+            const r = document.getElementById('db-visita').value;
+            const fu = document.getElementById('db-fuente').value;
+            const ref = document.getElementById('db-ref').value;
+
+            // Estructura de guardado: 
+            // DB | nombre | tel | tipo | frec | mod | salud | visita | fuente | referido | venc | edad
+            const content = `DB|${n}|${t}|${c}|${f}|${m}|${s}|${r}|${fu}|${ref}|${v}|${e}`;
+            
             const { error } = await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
             if(!error) {
                 cerrarFormAlumno();
@@ -324,12 +347,20 @@
                 const p = a.contenido.split('|');
                 return `<div class="clase-box">
                     <b style="font-size:0.95rem;">${p[1]}</b><br>
-                    <small style="color:var(--danger); font-weight:800;">EXPIRA: ${p[10]}</small>
-                    <div id="extra-${a.id}" style="display:none; margin-top:15px; padding:15px; background:rgba(0,0,0,0.2); border-radius:15px; font-size:0.8rem; color:#aaa;">
-                        <p>TEL: ${p[2]}</p><p>INFO: ${p[6]}</p>
+                    <small style="color:var(--danger); font-weight:800;">EXPIRA: ${p[10] || 'Sin fecha'}</small>
+                    <div id="extra-${a.id}" style="display:none; margin-top:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:15px; font-size:0.75rem; color:#ccc; border:1px solid #333;">
+                        <p><b>EDAD:</b> ${p[11]} años</p>
+                        <p><b>TEL:</b> ${p[2]}</p>
+                        <p><b>CLASE:</b> ${p[3]} (${p[4]})</p>
+                        <p><b>MODALIDAD:</b> ${p[5]}</p>
+                        <hr style="opacity:0.1; margin:10px 0;">
+                        <p><b>SALUD:</b> ${p[6] || 'Ninguna'}</p>
+                        <p><b>RAZÓN VISITA:</b> ${p[7] || 'N/A'}</p>
+                        <p><b>ORIGEN:</b> ${p[8] || 'N/A'}</p>
+                        <p><b>REFERIDO:</b> ${p[9]}</p>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                        <button class="btn-principal" style="width:auto; font-size:0.55rem; padding:10px 20px;" onclick="toggleExtra('${a.id}')">VER DETALLES</button>
+                        <button class="btn-principal" style="width:auto; font-size:0.55rem; padding:10px 20px;" onclick="toggleExtra('${a.id}')">VER FICHA COMPLETA</button>
                         <span style="color:#333; cursor:pointer;" onclick="borrar('${a.id}')">ELIMINAR</span>
                     </div>
                 </div>`;
