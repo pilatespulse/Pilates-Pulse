@@ -3,365 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilates Pulse | Admin</title>
+    <title>Pilates Pulse | Studio Admin</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    
     <style>
         :root { 
-            --primary: #5f7d74;
-            --bg: #f8fafb; 
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-light: #a0aec0;
-            --radius-lg: 24px;
-            --radius-md: 18px;
-            --shadow: 0 10px 25px rgba(0,0,0,0.03);
-            
-            /* Colores Minimalistas por día */
-            --color-Lunes: #e3f2fd; --txt-Lunes: #1976d2;
-            --color-Martes: #f3e5f5; --txt-Martes: #7b1fa2;
-            --color-Miércoles: #e8f5e9; --txt-Miércoles: #388e3c;
-            --color-Jueves: #fff3e0; --txt-Jueves: #f57c00;
-            --color-Viernes: #fce4ec; --txt-Viernes: #c2185b;
-            --color-Sábado: #efebe9; --txt-Sábado: #5d4037;
+            --bg-dark: #000000;
+            --card-dark: #1c1c1e; /* Gris grafito estilo iOS */
+            --accent: #ffffff;
+            --text-silver: #a1a1a6;
+            --danger: #ff453a;
+            --radius-main: 22px;
+            /* Curva de animación ultra smooth */
+            --bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
             font-family: 'Inter', sans-serif; 
-            margin: 0; background: var(--bg); color: var(--text-main); 
-            overflow-x: hidden; scroll-behavior: smooth;
+            margin: 0; background-color: var(--bg-dark); color: #fff; 
+            overflow-x: hidden;
         }
 
-        /* --- ANIMACIONES --- */
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        /* --- ANIMACIONES DE ENTRADA --- */
+        @keyframes revealUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-15px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        .smooth-entry { animation: revealUp 0.8s var(--bezier) forwards; }
 
-        .animate-appear { animation: fadeInScale 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-        
         /* --- LOGIN --- */
-        #login { 
-            height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
-        .login-card { 
-            background: white; padding: 40px; border-radius: var(--radius-lg); 
-            width: 100%; max-width: 380px; text-align: center; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+        #login { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
+        .login-box { 
+            background: var(--card-dark); padding: 40px 30px; border-radius: 30px; 
+            width: 100%; max-width: 380px; text-align: center;
         }
 
-        /* --- APP CONTAINER --- */
-        .container { padding: 0 20px 100px; max-width: 480px; margin: auto; width: 100%; }
-        .header { padding: 50px 20px 30px; text-align: center; }
+        /* --- HEADER --- */
+        .header { padding: 60px 20px 20px; text-align: center; }
+        .logo-box { 
+            width: 90px; height: 90px; margin: 0 auto 20px; 
+            border-radius: 50%; background: #fff; padding: 2px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .logo-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         
-        .logo-container { width: 75px; height: 75px; margin: 0 auto 15px; transition: transform 0.5s ease; }
-        .logo-container:hover { transform: rotate(5deg) scale(1.05); }
-        .logo-img { width: 100%; height: 100%; background: white; border-radius: 50%; box-shadow: var(--shadow); border: 2px solid #fff; overflow: hidden; }
-        .logo-img img { width: 100%; height: 100%; object-fit: cover; }
-
-        .title { 
-            font-family: 'Montserrat', sans-serif; color: var(--primary); 
-            letter-spacing: 5px; text-transform: uppercase; font-size: 1rem; font-weight: 600;
+        .studio-title { 
+            font-family: 'Montserrat', sans-serif; font-weight: 700; 
+            font-size: 1.4rem; letter-spacing: -0.5px; margin: 0;
         }
 
-        /* --- ACORDEÓN DINÁMICO --- */
-        .day-group { 
-            margin-bottom: 14px; opacity: 0; 
-            animation: slideIn 0.4s ease forwards;
-        }
+        /* --- INTERFAZ DE DÍAS (ESTILO REFERENCIA) --- */
+        .container { padding: 20px; max-width: 500px; margin: auto; }
         
-        /* Retraso escalonado para los días */
-        .day-group:nth-child(1) { animation-delay: 0.1s; }
-        .day-group:nth-child(2) { animation-delay: 0.2s; }
-        .day-group:nth-child(3) { animation-delay: 0.3s; }
-        .day-group:nth-child(4) { animation-delay: 0.4s; }
-        .day-group:nth-child(5) { animation-delay: 0.5s; }
-        .day-group:nth-child(6) { animation-delay: 0.6s; }
-
-        .day-header { 
-            background: white; padding: 20px 25px; border-radius: var(--radius-md); 
-            display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; box-shadow: var(--shadow); transition: all 0.3s ease;
-            border: 1px solid transparent;
+        .day-tile { 
+            background: var(--card-dark); margin-bottom: 12px; border-radius: var(--radius-main);
+            overflow: hidden; transition: all 0.4s var(--bezier);
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .day-header:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+        .day-tile:active { transform: scale(0.96); }
 
-        /* Colores por día aplicados al header */
-        .day-Lunes { border-left: 5px solid var(--txt-Lunes); }
-        .day-Martes { border-left: 5px solid var(--txt-Martes); }
-        .day-Miércoles { border-left: 5px solid var(--txt-Miércoles); }
-        .day-Jueves { border-left: 5px solid var(--txt-Jueves); }
-        .day-Viernes { border-left: 5px solid var(--txt-Viernes); }
-        .day-Sábado { border-left: 5px solid var(--txt-Sábado); }
-
-        .day-content { 
-            display: none; flex-direction: column; padding: 15px 5px; gap: 12px;
-            overflow: hidden; animation: expandDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .day-trigger { 
+            padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
+        .day-name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1.2rem; }
+        .day-counter { font-size: 0.75rem; color: var(--text-silver); text-transform: uppercase; letter-spacing: 1px; }
 
-        @keyframes expandDown {
-            from { opacity: 0; max-height: 0; transform: translateY(-10px); }
-            to { opacity: 1; max-height: 1000px; transform: translateY(0); }
+        .day-body { 
+            max-height: 0; opacity: 0; overflow: hidden;
+            transition: max-height 0.5s var(--bezier), opacity 0.3s ease;
+            padding: 0 20px;
         }
+        .day-body.active { max-height: 1500px; opacity: 1; padding-bottom: 25px; }
 
-        /* --- TARJETAS --- */
-        .class-item { 
-            background: white; padding: 18px; border-radius: var(--radius-md); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; 
-            justify-content: space-between; align-items: center;
-            border: 1px solid #f1f5f9; transition: 0.3s;
+        /* --- ELEMENTOS DE LISTA --- */
+        .class-card { 
+            background: rgba(255,255,255,0.03); padding: 18px; border-radius: 18px; 
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid var(--accent);
         }
-        .class-item:hover { border-color: var(--primary); }
+        .class-info b { display: block; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+        .class-info span { font-size: 0.75rem; color: var(--text-silver); }
 
-        /* --- FORMULARIOS --- */
-        .input-row { 
-            background: #fff; padding: 25px; border-radius: var(--radius-lg); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.06); display: flex; 
-            flex-direction: column; gap: 12px; margin-bottom: 15px;
-        }
-        
+        /* --- BOTONES E INPUTS --- */
         input, select { 
-            border: 1.5px solid #edf2f7; padding: 14px; border-radius: 12px; 
-            background: #fcfcfc; font-family: inherit; font-size: 0.9rem; transition: 0.3s;
+            width: 100%; background: #2c2c2e; border: none; padding: 16px; 
+            border-radius: 14px; color: #fff; margin-bottom: 10px; font-family: inherit;
         }
-        input:focus { border-color: var(--primary); background: #fff; }
+        
+        .btn-action { 
+            background: var(--accent); color: #000; border: none; padding: 18px; 
+            border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer;
+            font-family: 'Montserrat', sans-serif; transition: 0.3s;
+        }
+        .btn-add-dash { 
+            background: transparent; border: 1px dashed #3a3a3c; color: var(--text-silver);
+            padding: 15px; border-radius: 14px; width: 100%; margin-bottom: 15px; cursor: pointer;
+        }
 
-        .btn-save { 
-            background: var(--primary); color: white; border: none; padding: 18px; 
-            border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(95, 125, 116, 0.2);
+        .db-btn {
+            background: #fff; color: #000; padding: 22px; border-radius: 20px;
+            width: 100%; border: none; font-weight: 700; margin-top: 40px;
+            letter-spacing: 1px;
         }
-        .btn-save:active { transform: scale(0.97); }
 
-        .btn-add-inline {
-            border: 1.5px dashed #cbd5e0; padding: 15px; border-radius: 15px; 
-            color: var(--text-light); background: transparent; cursor: pointer; 
-            font-weight: 500; font-size: 0.75rem; transition: 0.3s;
-        }
-        .btn-add-inline:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
-
-        .db-toggle-btn {
-            margin-top: 40px; background: #2d3436; color: white; padding: 22px; 
-            border-radius: 20px; border: none; width: 100%; font-weight: 600; 
-            letter-spacing: 2px; font-size: 0.7rem; cursor: pointer; transition: 0.3s;
-        }
+        .del-x { color: #3a3a3c; font-size: 1.4rem; cursor: pointer; transition: 0.2s; }
+        .del-x:hover { color: var(--danger); }
     </style>
 </head>
 <body>
 
     <div id="login" style="display:none;">
-        <div class="login-card animate-appear">
-            <div class="logo-container"><div class="logo-img"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
-            <h2 class="title">Admin Access</h2>
-            <div style="margin-top:30px; display: flex; flex-direction: column; gap: 12px;">
-                <input type="text" id="userInput" placeholder="Usuario">
-                <input type="password" id="passInput" placeholder="Contraseña">
-                <button onclick="checkLogin()" class="btn-save" style="margin-top:15px;">Entrar</button>
-            </div>
+        <div class="logo-box"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+        <div class="login-box smooth-entry">
+            <h2 class="studio-title" style="margin-bottom:30px">STUDIO LOGIN</h2>
+            <input type="text" id="userInput" placeholder="Usuario">
+            <input type="password" id="passInput" placeholder="Password">
+            <button onclick="intentarAcceso()" class="btn-action" style="margin-top:10px">ENTRAR</button>
         </div>
     </div>
 
     <div id="app" style="display:none;">
-        <div class="header animate-appear">
-            <div class="logo-container"><div class="logo-img"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div></div>
-            <h1 class="title">Pilates Pulse</h1>
-            <p onclick="logout()" style="font-size:0.6rem; color:var(--text-light); cursor:pointer; margin-top:15px; text-transform:uppercase; letter-spacing:2px;">Cerrar Sesión</p>
+        <div class="header smooth-entry">
+            <div class="logo-box"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <h1 class="studio-title">PILATES PULSE</h1>
+            <p onclick="logoutUser()" style="color:var(--text-silver); font-size:0.65rem; cursor:pointer; margin-top:15px; letter-spacing:2px">LOGOUT SYSTEM</p>
         </div>
         
-        <div class="container">
-            <div id="mainCalendar"></div>
-            
-            <button class="db-toggle-btn animate-appear" style="animation-delay: 0.7s;" onclick="toggleDB()">
-                BASE DE DATOS DE ALUMNOS
-            </button>
+        <div class="container" id="calendarWrapper">
+            </div>
 
-            <div id="db-content" style="display:none; padding-top:20px;">
-                <button id="btnAddDB" class="btn-add-inline" style="width:100%" onclick="showDBForm()">+ Agregar Nuevo Alumno</button>
-                <div id="db-form-container"></div>
-                <div id="db-list"></div>
+        <div class="container">
+            <button class="db-btn" onclick="gestionarDB()">BASE DE DATOS ALUMNOS</button>
+            <div id="db-section" style="display:none; padding-top:20px;">
+                <button id="btnNewStudent" class="btn-add-dash" onclick="formNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <div id="student-form"></div>
+                <div id="student-list"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // Configuración cliente
         const _supabase = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
-        const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        const tiposClase = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        const opcionesModalidad = ["Grupal", "Privada", "Masaje", "Cumpleaños"];
-        const opcionesPaquete = ["1/semana", "2/semana", "3/semana"];
+        
+        const SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const CLASES_TIPO = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
 
-        const generarHoras = () => {
-            let options = "";
-            for(let h = 8; h <= 21; h++){
-                let ampm = h >= 12 ? 'PM' : 'AM';
-                let displayH = h > 12 ? h - 12 : h;
-                options += `<option>${displayH}:00 ${ampm}</option><option>${displayH}:30 ${ampm}</option>`;
+        // Verificar sesión inicial
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('pulseSession');
+            if (token && (new Date().getTime() - token < 14400000)) {
+                lanzarApp();
+            } else {
+                document.getElementById('login').style.display = 'flex';
             }
-            return options;
-        };
+        });
 
-        window.onload = function() {
-            const st = localStorage.getItem('pulseSession');
-            if (st && (new Date().getTime() - st < 14400000)) { showApp(); } 
-            else { document.getElementById('login').style.display = 'flex'; }
-        };
-
-        async function checkLogin() {
+        async function intentarAcceso() {
             const u = document.getElementById('userInput').value;
             const p = document.getElementById('passInput').value;
+            
             const { data } = await _supabase.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { 
-                localStorage.setItem('pulseSession', new Date().getTime()); 
-                // Animación de salida antes de mostrar la app
-                document.querySelector('.login-card').style.transform = "translateY(-20px)";
-                document.querySelector('.login-card').style.opacity = "0";
-                setTimeout(showApp, 400);
-            } 
-            else { alert("Datos incorrectos"); }
+            
+            if (data) {
+                localStorage.setItem('pulseSession', new Date().getTime());
+                lanzarApp();
+            } else {
+                alert("Datos incorrectos");
+            }
         }
 
-        function showApp() {
+        function lanzarApp() {
             document.getElementById('login').style.display = 'none';
-            const app = document.getElementById('app');
-            app.style.display = 'block';
-            app.classList.add('animate-appear');
-            renderCalendar(); loadCalendarData(); loadDBData();
+            document.getElementById('app').style.display = 'block';
+            dibujarCalendario();
+            refrescarDatos();
+            refrescarAlumnos();
         }
 
-        function logout() { localStorage.removeItem('pulseSession'); location.reload(); }
-
-        function renderCalendar() {
-            document.getElementById('mainCalendar').innerHTML = dias.map(dia => `
-                <div class="day-group">
-                    <div class="day-header day-${dia}" onclick="toggleDay('${dia}')">
-                        <span style="font-weight:600; font-size:0.9rem;">${dia}</span>
-                        <span id="arrow-${dia}" style="color:var(--text-light); font-size:0.7rem; transition:0.3s;">▼</span>
+        function dibujarCalendario() {
+            const contenedor = document.getElementById('calendarWrapper');
+            contenedor.innerHTML = SEMANA.map((dia, index) => `
+                <div class="day-tile smooth-entry" style="animation-delay: ${index * 0.1}s">
+                    <div class="day-trigger" onclick="toggleAcordeon('${dia}')">
+                        <span class="day-name">${dia}</span>
+                        <span class="day-counter" id="count-${dia}">(0 clases)</span>
                     </div>
-                    <div class="day-content" id="content-${dia}">
-                        <div id="form-cal-${dia}"></div>
-                        <button class="btn-add-inline" onclick="showCalendarForm('${dia}')">+ Añadir Clase</button>
-                        <div id="list-${dia}"></div>
+                    <div class="day-body" id="body-${dia}">
+                        <div id="form-container-${dia}"></div>
+                        <button class="btn-add-dash" onclick="abrirFormClase('${dia}')">+ AÑADIR CLASE</button>
+                        <div id="listado-${dia}"></div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function toggleDay(dia) {
-            const c = document.getElementById(`content-${dia}`);
-            const arrow = document.getElementById(`arrow-${dia}`);
-            const isVisible = c.style.display === 'flex';
+        function toggleAcordeon(id) {
+            const body = document.getElementById(`body-${id}`);
+            const isAbierto = body.classList.contains('active');
             
-            // Cerrar otros con suavidad
-            document.querySelectorAll('.day-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('[id^="arrow-"]').forEach(a => a.style.transform = 'rotate(0deg)');
+            // Cerrar todos antes (opcional, para look más limpio)
+            document.querySelectorAll('.day-body').forEach(b => b.classList.remove('active'));
             
-            if (!isVisible) { 
-                c.style.display = 'flex'; 
-                arrow.style.transform = 'rotate(180deg)';
-            }
+            if (!isAbierto) body.classList.add('active');
         }
 
-        function showCalendarForm(dia) {
-            document.getElementById(`form-cal-${dia}`).innerHTML = `
-                <div class="input-row animate-appear">
-                    <label style="font-size:0.6rem; color:var(--text-light); font-weight:700;">HORA</label>
-                    <select id="time-${dia}">${generarHoras()}</select>
-                    <label style="font-size:0.6rem; color:var(--text-light); font-weight:700;">CLASE</label>
-                    <select id="type-${dia}">${tiposClase.map(t=>`<option>${t}</option>`).join('')}</select>
-                    <label style="font-size:0.6rem; color:var(--text-light); font-weight:700;">MODALIDAD</label>
-                    <select id="mod-cal-${dia}">${opcionesModalidad.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <input type="text" id="names-${dia}" placeholder="Nombre del alumno">
-                    <button class="btn-save" onclick="saveCalendar('${dia}')">Guardar Clase</button>
-                    <button style="background:none; border:none; color:var(--text-light); cursor:pointer; font-size:0.7rem;" onclick="document.getElementById('form-cal-${dia}').innerHTML=''">Cancelar</button>
-                </div>`;
-        }
-
-        async function saveCalendar(dia) {
-            const content = `${document.getElementById('time-'+dia).value}|${document.getElementById('type-'+dia).value}|${document.getElementById('mod-cal-'+dia).value}|${document.getElementById('names-'+dia).value}`;
-            await _supabase.from('horarios').insert([{ celda_id: dia, contenido: content }]);
-            loadCalendarData();
-            document.getElementById(`form-cal-${dia}`).innerHTML = '';
-        }
-
-        function showDBForm() {
-            document.getElementById('btnAddDB').style.display = 'none';
-            document.getElementById('db-form-container').innerHTML = `
-                <div class="input-row animate-appear">
-                    <input type="text" id="db-name" placeholder="Nombre Completo">
-                    <input type="text" id="db-phone" placeholder="Teléfono">
-                    <select id="db-pkg">${opcionesPaquete.map(p=>`<option>${p}</option>`).join('')}</select>
-                    <select id="db-mod">${opcionesModalidad.map(m=>`<option>${m}</option>`).join('')}</select>
-                    <select id="db-time">${generarHoras()}</select>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="db-pay" placeholder="Pago (dd/mm)" style="flex:1">
-                        <input type="text" id="db-exp" placeholder="Vence (dd/mm)" style="flex:1">
-                    </div>
-                    <button class="btn-save" onclick="saveDB()">Guardar en DB</button>
-                    <button style="background:none; border:none; color:var(--text-light); cursor:pointer;" onclick="hideDBForm()">Cancelar</button>
-                </div>`;
-        }
-
-        function hideDBForm() {
-            document.getElementById('db-form-container').innerHTML = '';
-            document.getElementById('btnAddDB').style.display = 'block';
-        }
-
-        async function saveDB() {
-            const content = `DB|${document.getElementById('db-name').value}|${document.getElementById('db-phone').value}|${document.getElementById('db-pkg').value}|${document.getElementById('db-mod').value}|${document.getElementById('db-time').value}|${document.getElementById('db-pay').value}|${document.getElementById('db-exp').value}`;
-            await _supabase.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            hideDBForm();
-            loadDBData();
-        }
-
-        async function loadCalendarData() {
+        async function refrescarDatos() {
             const { data } = await _supabase.from('horarios').select('*').order('created_at', { ascending: true });
-            dias.forEach(d => { const l = document.getElementById('list-'+d); if(l) l.innerHTML = ''; });
+            
+            // Limpiar y Contar
+            const contadores = {};
+            SEMANA.forEach(d => {
+                const lista = document.getElementById('listado-'+d);
+                if(lista) lista.innerHTML = '';
+                contadores[d] = 0;
+            });
+
             data?.forEach(item => {
-                const list = document.getElementById('list-'+item.celda_id);
-                if (list && item.celda_id !== 'DB_ENTRY') {
-                    const p = item.contenido.split('|');
-                    list.innerHTML += `<div class="class-item animate-appear">
-                        <div><b style="color:var(--primary); font-size:0.85rem;">${p[0]} - ${p[1]}</b><br>
-                        <span style="font-size:0.7rem; color:var(--text-light); text-transform:uppercase;">${p[2]} • ${p[3] || 'N/A'}</span></div>
-                        <span style="color:#f0f0f0; cursor:pointer; font-size:1.2rem;" onclick="deleteItem('${item.id}')">×</span>
-                    </div>`;
+                if (item.celda_id !== 'DB_ENTRY') {
+                    const lista = document.getElementById('listado-'+item.celda_id);
+                    if (lista) {
+                        contadores[item.celda_id]++;
+                        const info = item.contenido.split('|');
+                        lista.innerHTML += `
+                            <div class="class-card">
+                                <div class="class-info">
+                                    <b>${info[0]} — ${info[1]}</b>
+                                    <span>${info[2].toUpperCase()} • 👤 ${info[3] || 'N/A'}</span>
+                                </div>
+                                <span class="del-x" onclick="borrarRegistro('${item.id}')">×</span>
+                            </div>
+                        `;
+                    }
                 }
             });
-        }
 
-        async function loadDBData() {
-            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
-            const list = document.getElementById('db-list');
-            list.innerHTML = '';
-            data?.forEach(item => {
-                const p = item.contenido.split('|');
-                list.innerHTML += `<div class="class-item animate-appear">
-                    <div><b style="font-size:0.9rem;">${p[1]}</b><br>
-                    <span style="font-size:0.7rem; color:var(--text-light);">${p[3]} • ${p[4]} • Vence: ${p[7]}</span></div>
-                    <span style="color:#f0f0f0; cursor:pointer;" onclick="deleteItem('${item.id}', true)">×</span>
-                </div>`;
+            // Actualizar etiquetas dinámicas (cantidad de clases)
+            SEMANA.forEach(d => {
+                const label = document.getElementById(`count-${d}`);
+                if(label) label.innerText = `(${contadores[d]} clases)`;
             });
         }
 
-        async function deleteItem(id, isDB = false) {
-            if(confirm("¿Eliminar?")) {
+        // --- FUNCIONES DE FORMULARIO (HUMANIZADAS) ---
+        function abrirFormClase(dia) {
+            const f = document.getElementById(`form-container-${dia}`);
+            f.innerHTML = `
+                <div style="padding:10px 0">
+                    <select id="h-${dia}">${getHoras()}</select>
+                    <select id="t-${dia}">${CLASES_TIPO.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <input type="text" id="n-${dia}" placeholder="Nombre Alumno">
+                    <button class="btn-action" onclick="saveNewClase('${dia}')">GUARDAR</button>
+                    <p onclick="this.parentElement.innerHTML=''" style="text-align:center; font-size:0.7rem; color:var(--text-silver); margin-top:10px; cursor:pointer">CANCELAR</p>
+                </div>
+            `;
+        }
+
+        function getHoras() {
+            let h = "";
+            for(let i=8; i<=21; i++) {
+                let suffix = i >= 12 ? "PM" : "AM";
+                let display = i > 12 ? i-12 : i;
+                h += `<option>${display}:00 ${suffix}</option><option>${display}:30 ${suffix}</option>`;
+            }
+            return h;
+        }
+
+        async function saveNewClase(dia) {
+            const valor = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|Grupal|${document.getElementById('n-'+dia).value}`;
+            await _supabase.from('horarios').insert([{ celda_id: dia, contenido: valor }]);
+            document.getElementById(`form-container-${dia}`).innerHTML = '';
+            refrescarDatos();
+        }
+
+        // --- SISTEMA ALUMNOS ---
+        async function refrescarAlumnos() {
+            const { data } = await _supabase.from('horarios').select('*').eq('celda_id', 'DB_ENTRY');
+            const l = document.getElementById('student-list');
+            l.innerHTML = '';
+            data?.forEach(s => {
+                const p = s.contenido.split('|');
+                l.innerHTML += `
+                    <div class="class-card" style="border-left-color: #3a3a3c">
+                        <div class="class-info">
+                            <b>${p[1]}</b>
+                            <span>Vence: ${p[7]} • ${p[3]}</span>
+                        </div>
+                        <span class="del-x" onclick="borrarRegistro('${s.id}', true)">×</span>
+                    </div>
+                `;
+            });
+        }
+
+        async function borrarRegistro(id, isDB = false) {
+            if(confirm("¿Eliminar este registro?")) {
                 await _supabase.from('horarios').delete().eq('id', id);
-                if(isDB) loadDBData(); else loadCalendarData();
+                if(isDB) refrescarAlumnos(); else refrescarDatos();
             }
         }
 
-        function toggleDB() {
-            const c = document.getElementById('db-content');
-            const isHidden = c.style.display === 'none';
-            c.style.display = isHidden ? 'block' : 'none';
-            if(isHidden) c.classList.add('animate-appear');
+        function gestionarDB() {
+            const s = document.getElementById('db-section');
+            s.style.display = s.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('pulseSession');
+            location.reload();
         }
     </script>
 </body>
