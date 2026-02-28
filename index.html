@@ -22,6 +22,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
 
+        /* --- INTERFAZ BASE --- */
         .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
         .logo-pulse-circle { width: 60px; height: 60px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
@@ -33,63 +34,39 @@
         .planner-container { background: var(--card); border-radius: 25px; overflow: hidden; border: 1px solid var(--border); }
         .planner-header { background: var(--tiffany); padding: 25px; text-align: center; }
         .planner-title { font-family: 'Pacifico', cursive; color: #fff; font-size: 1.8rem; margin: 0; }
-        
         .planner-grid { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); }
-        .planner-day-box { background: var(--card); min-height: 100px; display: flex; flex-direction: column; transition: all 0.3s ease; }
-        
-        /* Cabecera del día con Lápiz */
-        .planner-day-label { 
-            background: rgba(255,255,255,0.02); 
-            color: #fff; 
-            font-weight: 900; 
-            font-size: 0.65rem; 
-            padding: 12px 20px; 
-            border-bottom: 1px dashed var(--border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-
-        .edit-icon { cursor: pointer; font-size: 0.9rem; opacity: 0.5; transition: 0.3s; padding: 5px; }
-        .edit-icon:hover { opacity: 1; transform: scale(1.2); }
-        .edit-mode-active .edit-icon { opacity: 1; filter: drop-shadow(0 0 5px var(--tiffany)); }
-
+        .planner-day-box { background: var(--card); min-height: 100px; display: flex; flex-direction: column; }
+        .planner-day-label { background: rgba(255,255,255,0.02); color: #fff; font-weight: 900; font-size: 0.65rem; padding: 12px 20px; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; }
         .planner-content { padding: 12px 20px; flex-grow: 1; }
-        .planner-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            font-size: 0.7rem; 
-            border-bottom: 1px solid rgba(255,255,255,0.03); 
-            padding: 8px 0; 
-            color: #bbb; 
-        }
+        .planner-item { font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.03); padding: 8px 0; color: #bbb; }
         .planner-item b { color: var(--tiffany); margin-right: 5px; }
 
-        /* Botones de control ocultos por defecto */
-        .btn-delete-item, .btn-add-inline { display: none; }
-        .edit-mode-active .btn-delete-item { display: inline; color: var(--danger); font-size: 1.1rem; cursor: pointer; margin-left: 10px; font-weight: bold; }
-        .edit-mode-active .btn-add-inline { 
-            display: block; 
-            width: 100%; 
-            background: rgba(94, 192, 193, 0.1); 
-            color: var(--tiffany); 
-            border: 1px dashed var(--tiffany); 
-            padding: 8px; 
-            border-radius: 10px; 
-            margin-top: 10px; 
-            font-size: 0.6rem; 
-            font-weight: 900; 
-            cursor: pointer;
+        /* --- CORRECCIÓN ÁREA DE NOTAS (LIMPIEZA DE LA "E") --- */
+        .notes-container { 
+            padding: 15px 20px; /* Aumentamos padding lateral para que nada tape el texto */
+            background: rgba(255,255,255,0.01);
         }
 
-        /* --- NOTAS --- */
-        .notes-container { padding: 15px 20px; background: rgba(255,255,255,0.01); border-top: 1px solid var(--border); }
         .notes-area { 
-            width: 100%; background: transparent; border: none; color: var(--tiffany); 
-            font-size: 0.9rem; font-family: inherit; resize: none; padding: 5px 2px; 
-            line-height: 1.5; min-height: 100px; caret-color: var(--tiffany); 
+            width: 100%; 
+            background: transparent; 
+            border: none; 
+            color: var(--tiffany); 
+            font-size: 0.9rem; /* Un poco más grande para mejor legibilidad */
+            font-family: inherit; 
+            resize: none; 
+            padding: 5px 2px; /* Espacio extra a la izquierda de la primera letra */
+            line-height: 1.5;
+            min-height: 120px;
+            caret-color: var(--tiffany); /* El cursor de escritura ahora es celeste */
         }
+
+        .notes-area::placeholder {
+            color: rgba(94, 192, 193, 0.3);
+            padding-left: 2px;
+        }
+
+        .saving-indicator { font-size: 0.55rem; color: var(--tiffany); opacity: 0.6; margin-top: 8px; font-weight: 600; display: none; text-transform: uppercase; letter-spacing: 1px; }
 
         /* --- NAVEGACIÓN --- */
         .footer-nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 450px; }
@@ -112,28 +89,47 @@
                         <h2 class="planner-title">Weekly Planner</h2>
                     </div>
                     
-                    <div class="planner-grid" id="render-planner-grid"></div>
+                    <div class="planner-grid" id="render-planner-grid">
+                        </div>
 
                     <div class="notes-container">
                         <div style="font-size: 0.6rem; color: var(--tiffany); font-weight: 900; letter-spacing: 2px; margin-bottom: 10px;">NOTES</div>
                         <textarea class="notes-area" id="main-notes" placeholder="Escribe aquí..." onblur="saveNotes()"></textarea>
+                        <div id="saving-msg" class="saving-indicator">Sincronizando...</div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="footer-nav">
+            <button class="nav-btn active-btn">AGENDA</button>
+            <button class="nav-btn">ALUMNOS</button>
+            <button class="nav-btn">NOTIF.</button>
         </div>
     </div>
 
     <script>
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        let CACHE_DATA = [];
         let ID_NOTAS = null;
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
-            CACHE_DATA = data;
-            renderAgenda();
             
+            // Render de días de la semana
+            const grid = document.getElementById('render-planner-grid');
+            grid.innerHTML = DIAS.map(d => {
+                const clases = data.filter(x => x.celda_id === d);
+                return `
+                <div class="planner-day-box">
+                    <div class="planner-day-label"><span>${d.toUpperCase()}</span></div>
+                    <div class="planner-content">
+                        ${clases.length > 0 ? clases.map(c => `<div class="planner-item"><b>${c.contenido.split('|')[0]}</b> ${c.contenido.split('|')[1]}</div>`).join('') : '<div style="opacity:0.1; font-size:0.6rem;">VACÍO</div>'}
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Cargar notas
             const notaEntry = data.find(x => x.celda_id === 'NOTAS_AGENDA');
             if (notaEntry) {
                 document.getElementById('main-notes').value = notaEntry.contenido;
@@ -141,51 +137,19 @@
             }
         }
 
-        function renderAgenda() {
-            const grid = document.getElementById('render-planner-grid');
-            grid.innerHTML = DIAS.map(d => {
-                const clases = CACHE_DATA.filter(x => x.celda_id === d);
-                return `
-                <div class="planner-day-box" id="box-${d}">
-                    <div class="planner-day-label">
-                        <span>${d.toUpperCase()}</span>
-                        <span class="edit-icon" onclick="toggleEditDay('${d}')">✏️</span>
-                    </div>
-                    <div class="planner-content">
-                        <div id="items-${d}">
-                            ${clases.map(c => `
-                                <div class="planner-item">
-                                    <span><b>${c.contenido.split('|')[0]}</b> ${c.contenido.split('|')[1]}</span>
-                                    <span class="btn-delete-item" onclick="borrar('${c.id}')">×</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button class="btn-add-inline" onclick="alert('Aquí abrirías tu formulario de nueva clase para ${d}')">+ AGREGAR CLASE</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function toggleEditDay(dia) {
-            const box = document.getElementById(`box-${dia}`);
-            box.classList.toggle('edit-mode-active');
-        }
-
         async function saveNotes() {
             const txt = document.getElementById('main-notes').value;
+            const msg = document.getElementById('saving-msg');
+            msg.style.display = 'block';
+
             if (ID_NOTAS) {
                 await _sp.from('horarios').update({ contenido: txt }).eq('id', ID_NOTAS);
             } else {
                 const { data } = await _sp.from('horarios').insert([{ celda_id: 'NOTAS_AGENDA', contenido: txt }]).select();
                 if(data) ID_NOTAS = data[0].id;
             }
-        }
-
-        async function borrar(id) {
-            if(confirm("¿Eliminar esta clase?")) {
-                await _sp.from('horarios').delete().eq('id', id);
-                updateAll();
-            }
+            
+            setTimeout(() => { msg.style.display = 'none'; }, 1000);
         }
 
         window.onload = updateAll;
