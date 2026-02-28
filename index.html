@@ -55,7 +55,7 @@
         .nav-btn.active-btn { background: #fff; color: #000; border-color: #fff; }
         .dot-notif { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; }
 
-        /* --- ESTILO AGENDA PLANNER --- */
+        /* --- ESTILO AGENDA PLANNER DARK (ESTRUCTURA DE IMAGEN) --- */
         .planner-container { background: var(--card); border-radius: 25px; overflow: hidden; border: 1px solid var(--border); padding-bottom: 20px; }
         .planner-header { background: #1a1a1c; padding: 25px; text-align: center; border-bottom: 1px solid var(--border); }
         .planner-title { font-family: 'Pacifico', cursive; color: #fff; font-size: 1.8rem; margin: 0; }
@@ -132,6 +132,7 @@
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
 
@@ -241,7 +242,13 @@
                         }).join('') : '<div style="opacity:0.1; font-size:0.6rem; padding-top:5px;">SIN CLASES AGENDADAS</div>'}
                     </div>
                 </div>`;
-            }).join('');
+            }).join('') + `
+                <div class="planner-day-box" style="background:rgba(255,255,255,0.01);">
+                    <div class="planner-day-label" style="border:none;"><span>NOTAS</span><div class="box-decor" style="opacity:0.8;"></div></div>
+                    <div class="planner-content" style="font-size:0.6rem; opacity:0.3; padding:15px; font-weight:600;">
+                        SISTEMA DE GESTIÓN PILATES PULSE LUXURY.
+                    </div>
+                </div>`;
         }
 
         function checkVencimiento(fechaStr) {
@@ -261,6 +268,7 @@
                     <div id="extra-${a.id}" class="ficha-detalles">
                         <p><b>TELÉFONO:</b> ${p[2]}</p>
                         <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p>
+                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between;">
                         <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; border:1px solid #333;" onclick="toggleExtra('${a.id}')">DETALLES</button>
