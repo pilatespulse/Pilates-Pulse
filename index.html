@@ -12,9 +12,8 @@
         :root { 
             --bg: #050505;
             --card: #121214;
-            --accent: #ffffff;
+            --accent: #5ec0c1; /* Color turquesa de la imagen */
             --danger: #ff2d55;
-            --tiffany: #5ec0c1;
             --border: rgba(255, 255, 255, 0.08);
             --font-main: 'Montserrat', sans-serif;
         }
@@ -22,42 +21,52 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
 
-        /* --- LOGIN --- */
-        #login-section { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        /* --- SECCIÓN LOGIN --- */
+        #login-section {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 10000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
 
         /* --- INTERFAZ --- */
         .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
-        .logo-pulse-circle { width: 60px; height: 60px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
+        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 0.8rem; text-transform: uppercase; }
+        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
 
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
+        .search-container { margin-bottom: 20px; position: relative; }
+        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; }
+        .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; }
+
+        input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
+        .btn-principal { background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
-        /* --- FORMULARIOS --- */
-        .form-container { background: #000; padding: 20px; border-radius: 25px; border: 1px solid var(--tiffany); margin-bottom: 20px; }
-        input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 15px; border-radius: 15px; color: #fff; margin-bottom: 12px; font-family: inherit; font-size: 0.8rem; }
-        label { display: block; font-size: 0.6rem; color: var(--tiffany); font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
+        .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
+        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
 
-        .btn-principal { background: #fff; color: #000; border: none; padding: 18px; border-radius: 18px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7rem; }
-        .btn-cancelar { background: transparent; color: #777; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: 800; font-size: 0.6rem; }
+        .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        /* --- LISTADO ALUMNOS --- */
-        .clase-box { background: var(--card); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
-        .vence-alerta { color: var(--danger) !important; font-weight: 900; }
-        .ficha-detalles { display: none; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; }
-
-        /* --- NAV --- */
         .footer-nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 450px; z-index: 999; }
-        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 15px 5px; border-radius: 20px; border: 1px solid var(--border); font-weight: 800; font-size: 0.6rem; cursor: pointer; backdrop-filter: blur(20px); }
-        .nav-btn.active-btn { background: #fff; color: #000; }
+        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 15px 5px; border-radius: 20px; border: 1px solid var(--border); font-weight: 800; font-size: 0.6rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; }
+        .nav-btn.active-btn { background: var(--accent); color: #000; border-color: var(--accent); }
+        .dot-notif { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; }
 
-        /* --- AGENDA SEMANAL --- */
-        .planner-container { background: var(--card); border-radius: 25px; overflow: hidden; border: 1px solid var(--border); }
-        .planner-header { background: var(--tiffany); padding: 20px; text-align: center; }
-        .planner-title { font-family: 'Pacifico', cursive; color: #fff; font-size: 1.5rem; margin: 0; }
-        .planner-day-box { border-bottom: 1px solid var(--border); padding: 15px; }
-        .planner-day-label { font-weight: 900; font-size: 0.7rem; color: var(--tiffany); margin-bottom: 8px; }
-        .planner-item { font-size: 0.7rem; color: #bbb; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        /* --- ESTILO AGENDA PLANNER (BASADO EN IMAGEN) --- */
+        .planner-container { background: #fff; border-radius: 15px; overflow: hidden; color: #333; padding-bottom: 20px; }
+        .planner-header { background: var(--accent); padding: 20px; text-align: center; border-bottom: 4px solid #4da9aa; }
+        .planner-title { font-family: 'Pacifico', cursive; color: #fff; font-size: 1.8rem; margin: 0; }
+        .planner-grid { display: grid; grid-template-columns: 1fr; gap: 2px; background: #e0e0e0; border: 2px solid #e0e0e0; }
+        .planner-day-box { background: #fff; min-height: 120px; display: flex; flex-direction: column; }
+        .planner-day-label { background: #f8f8f8; color: #555; font-weight: 900; font-size: 0.65rem; padding: 8px 12px; border-bottom: 1px dashed #ddd; display: flex; justify-content: space-between; }
+        .planner-day-label .box-decor { width: 15px; height: 15px; background: #c5e7e7; border-radius: 3px; }
+        .planner-content { padding: 10px; flex-grow: 1; }
+        .planner-item { font-size: 0.7rem; border-bottom: 1px solid #f0f0f0; padding: 5px 0; line-height: 1.2; color: #444; }
+        .planner-item b { color: var(--accent); font-weight: 900; }
+        label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -67,7 +76,7 @@
             <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text">PILATES PULSE</div>
         </div>
-        <div style="width: 85%; max-width: 350px;">
+        <div style="width: 90%; max-width: 380px;">
             <input type="text" id="adminUser" placeholder="ADMIN ID">
             <input type="password" id="adminPass" placeholder="PASSWORD">
             <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
@@ -75,44 +84,60 @@
     </div>
 
     <div id="app-content" style="display:none;">
-        <div class="branding-container" onclick="location.reload()">
-            <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
-            <div class="brand-text">PILATES PULSE</div>
+        <div class="branding-container" onclick="location.reload()" style="cursor:pointer">
+            <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
         </div>
 
-        <div class="main-container">
-            <div id="modulo-alumnos" style="display:none;">
-                <input type="text" id="buscadorAlumnos" placeholder="🔍 Buscar alumno..." onkeyup="filtrarAlumnos()" style="margin-bottom:15px;">
-                <button class="btn-principal" style="background: var(--tiffany); color: #fff; margin-bottom:20px;" onclick="abrirFormNuevoAlumno()">+ NUEVO ALUMNO</button>
-                
-                <div id="area-formulario"></div> <div id="render-alumnos"></div>
-            </div>
+        <div class="main-container" id="listaDias"></div>
 
+        <div class="main-container">
             <div id="modulo-agenda" style="display:none;">
                 <div class="planner-container">
-                    <div class="planner-header"><h2 class="planner-title">Agenda Semanal</h2></div>
-                    <div id="render-planner-grid"></div>
+                    <div class="planner-header">
+                        <h2 class="planner-title">Agenda Semanal</h2>
+                        <div style="font-size: 0.6rem; color: rgba(255,255,255,0.8); font-weight: 900; margin-top: 5px; letter-spacing: 2px;">PILATES PULSE LUXURY</div>
+                    </div>
+                    <div class="planner-grid" id="render-planner-grid">
+                        </div>
                 </div>
             </div>
 
             <div id="modulo-notificaciones" style="display:none;">
-                <h3 style="font-size:0.7rem; text-align:center; letter-spacing:2px;">VENCIMIENTOS</h3>
+                <h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
-        </div>
 
-        <div class="footer-nav">
-            <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>
-            <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">ALUMNOS</button>
-            <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">NOTIF.</button>
+            <div id="modulo-alumnos" style="display:none;">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()">
+                </div>
+                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                <div id="form-alumno-nuevo"></div>
+                <div id="render-alumnos"></div>
+            </div>
+
+            <div class="footer-nav">
+                <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>
+                <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">ALUMNOS</button>
+                <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
+                    NOTIF. <div class="dot-notif" id="active-dot"></div>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
-        let CACHE_HORARIOS = [];
+        const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
+        let CACHE_HORARIOS = [];
 
+        // --- ACCESO ---
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
             else document.getElementById('login-section').style.display = 'flex';
@@ -122,149 +147,166 @@
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
-            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); } else alert("Credenciales incorrectas");
+            if (data) { localStorage.setItem('studio_auth', 'true'); startApp(); } else alert("Acceso denegado");
         }
 
         function startApp() {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
+            renderEstructura();
+            updateAll();
+        }
+
+        function renderEstructura() {
+            document.getElementById('listaDias').innerHTML = DIAS.map(d => `
+                <div class="dia-item">
+                    <div class="dia-header" onclick="toggleDia('${d}')">
+                        <span style="font-weight:900; font-size:0.75rem;">${d.toUpperCase()}</span>
+                        <span id="badge-${d}" style="font-size:0.5rem; opacity:0.5;">0</span>
+                    </div>
+                    <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
+                        <div id="clase-form-${d}"></div>
+                        <button class="btn-principal" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
+                        <div id="clases-${d}" style="margin-top:15px;"></div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function toggleDia(d) {
+            const el = document.getElementById(`cont-${d}`);
+            const vis = el.style.display === 'block';
+            document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
+            el.style.display = vis ? 'none' : 'block';
+        }
+
+        function addClasePopup(dia) {
+            document.getElementById(`clase-form-${dia}`).innerHTML = `
+                <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222;">
+                    <label>HORA</label><select id="h-${dia}">${generarHoras()}</select>
+                    <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option>${m}</option>`).join('')}</select>
+                    <label>ALUMNO</label><input type="text" id="n-${dia}">
+                    <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}')">GUARDAR</button>
+                    <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('clase-form-${dia}').innerHTML=''">CANCELAR</button>
+                </div>`;
+        }
+
+        function generarHoras() {
+            let res = ""; for(let i=7; i<=21; i++) {
+                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
+                res += `<option>${h}:00 ${ampm}</option><option>${h}:30 ${ampm}</option>`;
+            } return res;
+        }
+
+        async function pushClase(dia) {
+            const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
+            await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
             updateAll();
         }
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
-            CACHE_HORARIOS = data || [];
-            CACHE_ALUMNOS = CACHE_HORARIOS.filter(x => x.celda_id === 'DB_ENTRY');
-            renderAlumnosList(CACHE_ALUMNOS);
-            renderPlanner();
-            renderNotificaciones();
-        }
-
-        /* --- LÓGICA DE ALUMNOS (ARREGLADA) --- */
-        function abrirFormNuevoAlumno(id = null, contenido = "") {
-            const valores = contenido ? contenido.split('|') : Array(11).fill('');
-            const area = document.getElementById('area-formulario');
+            CACHE_HORARIOS = data;
+            CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
             
-            area.innerHTML = `
-                <div class="form-container">
-                    <h4 style="margin:0 0 15px 0; font-size:0.7rem; color:var(--tiffany);">${id ? 'EDITAR' : 'REGISTRAR'} ALUMNO</h4>
-                    <label>Nombre Completo</label>
-                    <input type="text" id="f_nombre" value="${valores[1]}">
-                    <label>Teléfono</label>
-                    <input type="text" id="f_tel" value="${valores[2]}">
-                    <label>Fecha de Vencimiento</label>
-                    <input type="date" id="f_venc" value="${valores[10]}">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <div><label>Frecuencia</label><input type="text" id="f_frec" value="${valores[3]}" placeholder="2/sem"></div>
-                        <div><label>Monto</label><input type="text" id="f_monto" value="${valores[5]}" placeholder="$"></div>
-                    </div>
-                    <button class="btn-principal" onclick="guardarAlumno('${id}')">GUARDAR DATOS</button>
-                    <button class="btn-cancelar" onclick="document.getElementById('area-formulario').innerHTML=''">CANCELAR</button>
-                </div>`;
-            area.scrollIntoView({ behavior: 'smooth' });
+            DIAS.forEach(d => {
+                const filtrados = data.filter(x => x.celda_id === d);
+                document.getElementById(`badge-${d}`).innerText = filtrados.length;
+                document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
+                    const p = i.contenido.split('|');
+                    return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]} / ${p[3]}</small></span>
+                        <span onclick="borrar('${i.id}')" style="opacity:0.2; cursor:pointer; font-size: 1.2rem;">×</span>
+                    </div>`;
+                }).join('');
+            });
+            renderAlumnosList(CACHE_ALUMNOS);
+            processVencimientos();
+            renderPlanner();
         }
 
-        async function guardarAlumno(id) {
-            const fields = [
-                'DB_ENTRY',
-                document.getElementById('f_nombre').value,
-                document.getElementById('f_tel').value,
-                document.getElementById('f_frec').value,
-                '', '', '', '', '', '', // Campos vacíos para completar los 11
-                document.getElementById('f_venc').value
-            ];
-            const contenido = fields.join('|');
+        // --- LÓGICA RENDER PLANNER ESTILO IMAGEN ---
+        function renderPlanner() {
+            const grid = document.getElementById('render-planner-grid');
+            grid.innerHTML = DIAS.map(d => {
+                const clasesDia = CACHE_HORARIOS.filter(x => x.celda_id === d);
+                clasesDia.sort((a,b) => a.contenido.split('|')[0].localeCompare(b.contenido.split('|')[0]));
 
-            if (id && id !== 'null') {
-                await _sp.from('horarios').update({ contenido }).eq('id', id);
-            } else {
-                await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido }]);
-            }
+                return `
+                <div class="planner-day-box">
+                    <div class="planner-day-label">
+                        <span>${d.toUpperCase()}</span>
+                        <div class="box-decor"></div>
+                    </div>
+                    <div class="planner-content">
+                        ${clasesDia.length > 0 ? clasesDia.map(c => {
+                            const p = c.contenido.split('|');
+                            return `<div class="planner-item"><b>${p[0]}</b> ${p[1]} (${p[3]})</div>`;
+                        }).join('') : '<div style="opacity:0.2; font-size:0.6rem;">Sin clases</div>'}
+                    </div>
+                </div>`;
+            }).join('') + `
+                <div class="planner-day-box" style="background:#f0f9f9;">
+                    <div class="planner-day-label"><span>NOTAS</span><div class="box-decor" style="background:#5ec0c1;"></div></div>
+                    <div class="planner-content" style="font-size:0.6rem; opacity:0.5; padding:15px;">
+                        Registro semanal de Pilates Pulse Luxury.
+                    </div>
+                </div>`;
+        }
 
-            document.getElementById('area-formulario').innerHTML = '';
-            updateAll();
+        function checkVencimiento(fechaStr) {
+            if (!fechaStr) return false;
+            const hoy = new Date();
+            const venc = new Date(fechaStr + "T23:59:59");
+            return (venc - hoy) / (1000 * 60 * 60) <= 48;
         }
 
         function renderAlumnosList(lista) {
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
-                return `
-                <div class="clase-box">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b style="font-size:0.8rem;">${p[1] || 'Sin Nombre'}</b>
-                        <span style="font-size:0.6rem; opacity:0.5;">${p[3]}</span>
+                const estaVencido = checkVencimiento(p[10]);
+                return `<div class="clase-box">
+                    <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b>
+                    <br><small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
+                    <div id="extra-${a.id}" class="ficha-detalles">
+                        <p><b>TELÉFONO:</b> ${p[2]}</p>
+                        <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p>
+                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
-                    <div style="font-size:0.65rem; margin-top:5px; color:#888;">Vence: <span class="${checkVenc(p[10]) ? 'vence-alerta' : ''}">${p[10] || '--'}</span></div>
-                    
-                    <div id="det-${a.id}" class="ficha-detalles">
-                        <p>📞 <b>TEL:</b> ${p[2]}</p>
-                        <p>💰 <b>PAGO:</b> ${p[5]}</p>
-                        <button class="btn-principal" style="padding:10px; font-size:0.5rem;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
-                    </div>
-
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="nav-btn" style="flex:1; padding:8px; font-size:0.5rem;" onclick="toggleDet('${a.id}')">VER MÁS</button>
-                        <button onclick="borrarAlumno('${a.id}')" style="background:transparent; border:none; color:var(--danger); font-size:0.5rem; font-weight:900; cursor:pointer;">ELIMINAR</button>
+                    <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between;">
+                        <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; border:1px solid #333;" onclick="toggleExtra('${a.id}')">DETALLES</button>
+                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900;" onclick="borrar('${a.id}')">BORRAR</button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        /* --- UTILIDADES --- */
-        function checkVenc(f) {
-            if (!f) return false;
-            const hoy = new Date();
-            const venc = new Date(f + "T23:59:59");
-            return (venc - hoy) / (1000 * 60 * 60 * 24) <= 2;
-        }
-
-        function toggleDet(id) {
-            const el = document.getElementById(`det-${id}`);
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-        }
-
-        async function borrarAlumno(id) {
-            if (confirm("¿Seguro que deseas eliminar este registro?")) {
-                await _sp.from('horarios').delete().eq('id', id);
-                updateAll();
-            }
+        function processVencimientos() {
+            const listaNotif = document.getElementById('lista-notificaciones');
+            let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
+            document.getElementById('active-dot').style.display = alertas.length > 0 ? 'block' : 'none';
+            listaNotif.innerHTML = alertas.length === 0 ? `<p style="text-align:center; opacity:0.3; font-size:0.7rem;">Sin vencimientos.</p>` : 
+            alertas.map(a => `<div class="clase-box" style="border-left:4px solid var(--danger);"><b>${a.contenido.split('|')[1]}</b><br><small>Vence: ${a.contenido.split('|')[10]}</small></div>`).join('');
         }
 
         function switchModulo(id) {
-            ['modulo-agenda', 'modulo-alumnos', 'modulo-notificaciones'].forEach(m => {
-                document.getElementById(m).style.display = (m === id) ? 'block' : 'none';
-            });
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-            const btnMap = {'modulo-agenda': 'btn-agenda', 'modulo-alumnos': 'btn-db', 'modulo-notificaciones': 'btn-notif'};
-            document.getElementById(btnMap[id]).classList.add('active-btn');
+            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
+            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+            document.getElementById('listaDias').style.display = (id === 'modulo-agenda' || id === 'modulo-alumnos' || id === 'modulo-notificaciones') ? 'none' : 'block';
+            
+            document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
+            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
         }
 
-        function renderPlanner() {
-            const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-            document.getElementById('render-planner-grid').innerHTML = dias.map(d => {
-                const clases = CACHE_HORARIOS.filter(x => x.celda_id === d);
-                return `
-                <div class="planner-day-box">
-                    <div class="planner-day-label">${d.toUpperCase()}</div>
-                    ${clases.map(c => `<div class="planner-item"><b>${c.contenido.split('|')[0]}</b> ${c.contenido.split('|')[1]}</div>`).join('')}
-                </div>`;
-            }).join('');
-        }
-
-        function renderNotificaciones() {
-            const alertas = CACHE_ALUMNOS.filter(a => checkVenc(a.contenido.split('|')[10]));
-            document.getElementById('lista-notificaciones').innerHTML = alertas.length ? alertas.map(a => `
-                <div class="clase-box" style="border-left: 4px solid var(--danger);">
-                    <b style="font-size:0.7rem;">${a.contenido.split('|')[1]}</b><br>
-                    <small>Vence en menos de 48hs: ${a.contenido.split('|')[10]}</small>
-                </div>`).join('') : '<p style="text-align:center; opacity:0.3; font-size:0.6rem; margin-top:40px;">Todo al día</p>';
-        }
-
+        async function borrar(id) { if(confirm("¿Borrar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
         function filtrarAlumnos() {
             const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
-            const filtrados = CACHE_ALUMNOS.filter(a => a.contenido.toLowerCase().includes(q));
-            renderAlumnosList(filtrados);
+            const f = CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q));
+            renderAlumnosList(f);
         }
+        function toggleExtra(id) { const el = document.getElementById(`extra-${id}`); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
     </script>
 </body>
 </html>
