@@ -52,14 +52,17 @@
 
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        /* --- CRONOGRAMA UNIFICADO --- */
+        /* --- CRONOGRAMA INTERACTIVO --- */
         .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; }
         .crono-row { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); padding: 20px 0; }
         .crono-dia-label { font-family: var(--font-fancy); font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; }
         .crono-list { list-style: none; padding: 0; margin: 0; }
-        .crono-task { display: flex; align-items: center; padding: 6px 0; font-size: 0.8rem; color: #fff; font-family: var(--font-main); font-weight: 400; }
+        .crono-task { cursor: pointer; padding: 10px 0; border-radius: 10px; transition: background 0.3s; }
+        .crono-task:active { background: rgba(255,255,255,0.05); }
+        .crono-task-main { display: flex; align-items: center; font-size: 0.8rem; color: #fff; font-family: var(--font-main); }
         .crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; margin-right: 12px; box-shadow: 0 0 6px var(--celeste); }
-        .crono-empty { opacity: 0.2; font-size: 0.7rem; margin-left: 18px; font-family: var(--font-main); }
+        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; color: #aaa; line-height: 1.6; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- NAVEGACIÓN --- */
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
@@ -237,12 +240,29 @@
                         <div class="crono-list">
                             ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
                                 const p = c.contenido.split('|');
-                                return `<div class="crono-task"><div class="crono-bullet"></div> <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}</div>`;
-                            }).join('') : '<div class="crono-empty">Sin actividades programadas</div>'}
+                                return `
+                                <div class="crono-task" onclick="toggleCronoDetail('${c.id}')">
+                                    <div class="crono-task-main">
+                                        <div class="crono-bullet"></div> 
+                                        <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}
+                                    </div>
+                                    <div id="crono-detail-${c.id}" class="crono-detail-box">
+                                        <b>ALUMNO:</b> ${p[3]}<br>
+                                        <b>MODALIDAD:</b> ${p[2]}
+                                    </div>
+                                </div>`;
+                            }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px;">Sin clases</div>'}
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        function toggleCronoDetail(id) {
+            const el = document.getElementById(`crono-detail-${id}`);
+            const isVisible = el.style.display === 'block';
+            document.querySelectorAll('.crono-detail-box').forEach(box => box.style.display = 'none');
+            el.style.display = isVisible ? 'none' : 'block';
         }
 
         function checkVencimiento(fechaStr) {
