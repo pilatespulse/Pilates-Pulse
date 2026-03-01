@@ -6,7 +6,7 @@
     <title>Pilates Pulse | Luxury Admin</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&family=Playfair+Display:italic,wght@700&display=swap" rel="stylesheet">
     
     <style>
         :root { 
@@ -16,6 +16,7 @@
             --danger: #ff2d55;
             --border: rgba(255, 255, 255, 0.08);
             --font-main: 'Montserrat', sans-serif;
+            --font-fancy: 'Playfair Display', serif;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -50,10 +51,20 @@
 
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        .footer-nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
-        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 15px 5px; border-radius: 25px; border: 1px solid var(--border); font-weight: 800; font-size: 0.6rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; }
+        /* --- ESTILOS CRONOGRAMA (Imagen) --- */
+        .crono-card { background: #fff; color: #000; border-radius: 0; min-height: 100vh; padding: 40px 20px; margin: -20px -20px 100px -20px; }
+        .crono-header { font-family: var(--font-fancy); font-size: 3.5rem; text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .crono-dia-row { display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid #ddd; padding: 20px 0; align-items: start; }
+        .crono-dia-name { font-family: var(--font-fancy); font-size: 1.8rem; }
+        .crono-tasks { list-style: none; padding: 0; margin: 0; }
+        .crono-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; }
+        .crono-check { width: 16px; height: 16px; border: 1.5px solid #000; border-radius: 4px; margin-right: 10px; flex-shrink: 0; }
+
+        /* --- NAVEGACIÓN --- */
+        .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
+        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; }
         .nav-btn.active-btn { background: #fff; color: #000; }
-        .dot-notif { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
+        .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
         label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
     </style>
 </head>
@@ -72,7 +83,7 @@
     </div>
 
     <div id="app-content" style="display:none;">
-        <div class="branding-container" onclick="location.reload()" style="cursor:pointer">
+        <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
             <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
         </div>
@@ -80,6 +91,13 @@
         <div class="main-container">
             <div id="modulo-agenda">
                 <div id="listaDias"></div>
+            </div>
+
+            <div id="modulo-cronograma" style="display:none;">
+                <div class="crono-card">
+                    <div class="crono-header">Cronograma</div>
+                    <div id="render-cronograma"></div>
+                </div>
             </div>
 
             <div id="modulo-notificaciones" style="display:none;">
@@ -99,6 +117,7 @@
 
             <div class="footer-nav">
                 <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>
+                <button class="nav-btn" id="btn-crono" onclick="switchModulo('modulo-cronograma')">CRONO</button>
                 <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DATOS</button>
                 <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
                     NOTIF. <div class="dot-notif" id="active-dot"></div>
@@ -114,6 +133,7 @@
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         let CACHE_ALUMNOS = [];
+        let CACHE_HORARIOS = [];
 
         window.onload = () => {
             if (localStorage.getItem('studio_auth')) startApp();
@@ -135,7 +155,7 @@
             document.getElementById('app-content').style.display = 'block';
             renderEstructura();
             updateAll();
-            switchModulo('modulo-agenda'); // Iniciar en agenda por defecto
+            switchModulo('modulo-agenda');
         }
 
         function renderEstructura() {
@@ -187,6 +207,7 @@
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
+            CACHE_HORARIOS = data;
             CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
             
             DIAS.forEach(d => {
@@ -202,6 +223,26 @@
             });
             renderAlumnosList(CACHE_ALUMNOS);
             processVencimientos();
+            renderCronograma();
+        }
+
+        function renderCronograma() {
+            const container = document.getElementById('render-cronograma');
+            container.innerHTML = DIAS.map(dia => {
+                const clasesDelDia = CACHE_HORARIOS.filter(x => x.celda_id === dia);
+                return `
+                    <div class="crono-dia-row">
+                        <div class="crono-dia-name">${dia}</div>
+                        <ul class="crono-tasks">
+                            ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
+                                const p = c.contenido.split('|');
+                                return `<li class="crono-item"><div class="crono-check"></div> ${p[1]} ${p[0]}</li>`;
+                            }).join('') : '<li class="crono-item" style="opacity:0.3">Sin clases</li>'}
+                            <li class="crono-item"><div class="crono-check"></div></li>
+                        </ul>
+                    </div>
+                `;
+            }).join('');
         }
 
         function checkVencimiento(fechaStr) {
@@ -302,10 +343,15 @@
         
         function switchModulo(id) {
             document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
+            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
             document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
             document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
             
+            // Ocultar logo si estamos en cronograma para más espacio
+            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
+            document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
             document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
             document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
         }
