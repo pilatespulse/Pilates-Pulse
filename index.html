@@ -23,6 +23,11 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
 
+        /* --- BOTÓN CERRAR SESIÓN --- */
+        .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; }
+        .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); }
+
         /* --- SECCIÓN LOGIN --- */
         #login-section {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -31,7 +36,7 @@
         }
 
         /* --- INTERFAZ --- */
-        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
+        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
         .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
         .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
@@ -88,6 +93,10 @@
     </div>
 
     <div id="app-content" style="display:none;">
+        <div class="logout-container">
+            <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
+        </div>
+
         <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
             <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
@@ -155,6 +164,11 @@
                 localStorage.setItem('studio_auth', 'true'); 
                 startApp(); 
             } else alert("Acceso denegado");
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('studio_auth');
+            location.reload();
         }
 
         function startApp() {
