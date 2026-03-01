@@ -13,6 +13,7 @@
             --bg: #050505;
             --card: #121214;
             --accent: #ffffff;
+            --celeste: #a2d2ff;
             --danger: #ff2d55;
             --border: rgba(255, 255, 255, 0.08);
             --font-main: 'Montserrat', sans-serif;
@@ -51,14 +52,15 @@
 
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        /* --- ESTILOS CRONOGRAMA (Imagen) --- */
-        .crono-card { background: #fff; color: #000; border-radius: 0; min-height: 100vh; padding: 40px 20px; margin: -20px -20px 100px -20px; }
-        .crono-header { font-family: var(--font-fancy); font-size: 3.5rem; text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .crono-dia-row { display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid #ddd; padding: 20px 0; align-items: start; }
-        .crono-dia-name { font-family: var(--font-fancy); font-size: 1.8rem; }
-        .crono-tasks { list-style: none; padding: 0; margin: 0; }
-        .crono-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; }
-        .crono-check { width: 16px; height: 16px; border: 1.5px solid #000; border-radius: 4px; margin-right: 10px; flex-shrink: 0; }
+        /* --- NUEVO CRONOGRAMA MINIMALISTA --- */
+        #modulo-cronograma { padding-top: 10px; }
+        .crono-header-text { font-family: var(--font-fancy); font-size: 2.8rem; text-align: center; margin-bottom: 30px; color: #fff; }
+        .crono-row { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); padding: 20px 0; }
+        .crono-dia-label { font-family: var(--font-fancy); font-size: 1.6rem; color: var(--celeste); margin-bottom: 15px; }
+        .crono-list { list-style: none; padding: 0; margin: 0; }
+        .crono-task { display: flex; align-items: center; padding: 8px 0; font-size: 0.85rem; color: rgba(255,255,255,0.8); }
+        .crono-bullet { width: 8px; height: 8px; background: var(--celeste); border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px var(--celeste); }
+        .crono-empty { opacity: 0.2; font-style: italic; font-size: 0.75rem; margin-left: 23px; }
 
         /* --- NAVEGACIÓN --- */
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
@@ -94,10 +96,8 @@
             </div>
 
             <div id="modulo-cronograma" style="display:none;">
-                <div class="crono-card">
-                    <div class="crono-header">Cronograma</div>
-                    <div id="render-cronograma"></div>
-                </div>
+                <div class="crono-header-text">Cronograma</div>
+                <div id="render-cronograma"></div>
             </div>
 
             <div id="modulo-notificaciones" style="display:none;">
@@ -155,7 +155,6 @@
             document.getElementById('app-content').style.display = 'block';
             renderEstructura();
             updateAll();
-            switchModulo('modulo-agenda');
         }
 
         function renderEstructura() {
@@ -231,15 +230,14 @@
             container.innerHTML = DIAS.map(dia => {
                 const clasesDelDia = CACHE_HORARIOS.filter(x => x.celda_id === dia);
                 return `
-                    <div class="crono-dia-row">
-                        <div class="crono-dia-name">${dia}</div>
-                        <ul class="crono-tasks">
+                    <div class="crono-row">
+                        <div class="crono-dia-label">${dia}</div>
+                        <div class="crono-list">
                             ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
                                 const p = c.contenido.split('|');
-                                return `<li class="crono-item"><div class="crono-check"></div> ${p[1]} ${p[0]}</li>`;
-                            }).join('') : '<li class="crono-item" style="opacity:0.3">Sin clases</li>'}
-                            <li class="crono-item"><div class="crono-check"></div></li>
-                        </ul>
+                                return `<div class="crono-task"><div class="crono-bullet"></div> <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}</div>`;
+                            }).join('') : '<div class="crono-empty">Día libre de clases</div>'}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -347,7 +345,6 @@
             document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
             document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
             
-            // Ocultar logo si estamos en cronograma para más espacio
             document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
 
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
