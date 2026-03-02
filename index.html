@@ -23,19 +23,16 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
 
-        /* --- BOTÓN CERRAR SESIÓN --- */
         .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
         .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; }
         .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); }
 
-        /* --- SECCIÓN LOGIN --- */
         #login-section {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 10000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* --- INTERFAZ --- */
         .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
         .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
@@ -57,7 +54,6 @@
 
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        /* --- CRONOGRAMA INTERACTIVO --- */
         .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; }
         .crono-row { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); padding: 20px 0; }
         .crono-dia-label { font-family: var(--font-fancy); font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; }
@@ -70,7 +66,6 @@
         .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; color: #aaa; line-height: 1.6; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- NAVEGACIÓN --- */
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
         .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; }
         .nav-btn.active-btn { background: #fff; color: #000; }
@@ -209,7 +204,7 @@
                     <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
                     <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
                     <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
-                    <label>ALUMNO(S) - (Separar por coma para enumerar)</label><input type="text" id="n-${dia}" value="${p[3]}">
+                    <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
                     <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
                     ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white; padding:10px; font-size:0.5rem;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
                     <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
@@ -226,13 +221,14 @@
             } return res;
         }
 
-        // --- FUNCION PARA FORMATEAR NOMBRES ---
+        // --- ENUMERACIÓN CON SALTO DE LÍNEA ---
         function formatAlumnos(texto) {
-            if(!texto.includes(',')) return texto;
+            if(!texto || !texto.includes(',')) return texto;
+            // Divide por coma, limpia espacios y agrega número con salto de línea al final
             return texto.split(',').map((n, i) => `${i+1}-${n.trim()}`).join('<br>');
         }
 
-        // --- FUNCION PARA CONVERTIR HORA A FORMATO 24H PARA ORDENAR ---
+        // --- ORDEN CRONOLÓGICO ---
         function a24h(horaStr) {
             let [tiempo, ampm] = horaStr.split(' ');
             let [hh, mm] = tiempo.split(':');
@@ -255,7 +251,7 @@
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
-            // ORDENAR CACHE_HORARIOS POR HORA
+            // Ordenamos la data globalmente por hora antes de procesar
             CACHE_HORARIOS = data.sort((a, b) => {
                 if (a.celda_id === 'DB_ENTRY' || b.celda_id === 'DB_ENTRY') return 0;
                 return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
@@ -268,7 +264,7 @@
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]} / ${formatAlumnos(p[3])}</small></span>
+                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:5px;">${formatAlumnos(p[3])}</div></span>
                         <div style="display:flex; gap:10px;">
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem;">📝</span>
                             <span onclick="borrar('${i.id}')" style="opacity:0.2; cursor:pointer;">×</span>
@@ -301,8 +297,9 @@
                                         <span class="crono-edit-icon" onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
                                     </div>
                                     <div id="crono-detail-${c.id}" class="crono-detail-box">
-                                        <b>ALUMNO(S):</b><br> ${formatAlumnos(p[3])}<br><br>
-                                        <b>MODALIDAD:</b> ${p[2]}
+                                        <b style="color:var(--celeste)">ALUMNOS:</b><br>
+                                        <div style="margin-top:5px; color:#fff;">${formatAlumnos(p[3])}</div>
+                                        <div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div>
                                     </div>
                                 </div>`;
                             }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px;">Sin clases</div>'}
@@ -430,7 +427,6 @@
             
             if(id === 'modulo-cronograma') {
                 document.getElementById('edit-form-crono').innerHTML = '';
-                renderCronograma(); // Refrescar orden al entrar
             }
         }
 
