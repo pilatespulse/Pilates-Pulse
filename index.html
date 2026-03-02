@@ -197,7 +197,8 @@
 
         function addClasePopup(dia, editId = null, existingData = null) {
             const p = existingData ? existingData.split('|') : ["", "", "", ""];
-            const targetDiv = editId ? (document.getElementById('modulo-cronograma').style.display === 'block' ? 'edit-form-crono' : `clase-form-${dia}`) : `clase-form-${dia}`;
+            const isCrono = document.getElementById('modulo-cronograma').style.display === 'block';
+            const targetDiv = editId ? (isCrono ? 'edit-form-crono' : `clase-form-${dia}`) : `clase-form-${dia}`;
             
             document.getElementById(targetDiv).innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222;">
@@ -221,14 +222,11 @@
             } return res;
         }
 
-        // --- ENUMERACIÓN CON SALTO DE LÍNEA ---
         function formatAlumnos(texto) {
             if(!texto || !texto.includes(',')) return texto;
-            // Divide por coma, limpia espacios y agrega número con salto de línea al final
             return texto.split(',').map((n, i) => `${i+1}-${n.trim()}`).join('<br>');
         }
 
-        // --- ORDEN CRONOLÓGICO ---
         function a24h(horaStr) {
             let [tiempo, ampm] = horaStr.split(' ');
             let [hh, mm] = tiempo.split(':');
@@ -240,18 +238,22 @@
 
         async function pushClase(dia, editId = "null") {
             const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
+            
             if (editId !== "null") {
                 await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-                document.getElementById('edit-form-crono').innerHTML = '';
             } else {
                 await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
             }
+            
+            // OCULTAR INTERFAZ AL GUARDAR
+            document.getElementById('edit-form-crono').innerHTML = '';
+            document.getElementById(`clase-form-${dia}`).innerHTML = '';
+            
             updateAll();
         }
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
-            // Ordenamos la data globalmente por hora antes de procesar
             CACHE_HORARIOS = data.sort((a, b) => {
                 if (a.celda_id === 'DB_ENTRY' || b.celda_id === 'DB_ENTRY') return 0;
                 return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
@@ -304,8 +306,7 @@
                                 </div>`;
                             }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px;">Sin clases</div>'}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
@@ -407,10 +408,16 @@
             const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;
             if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
             else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            cerrarFormAlumno(); updateAll();
+            
+            // OCULTAR INTERFAZ AL GUARDAR
+            cerrarFormAlumno(); 
+            updateAll();
         }
 
-        function cerrarFormAlumno() { document.getElementById('form-alumno-nuevo').innerHTML = ''; document.getElementById('btn-abrir-registro').style.display = 'block'; }
+        function cerrarFormAlumno() { 
+            document.getElementById('form-alumno-nuevo').innerHTML = ''; 
+            document.getElementById('btn-abrir-registro').style.display = 'block'; 
+        }
         
         function switchModulo(id) {
             document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
