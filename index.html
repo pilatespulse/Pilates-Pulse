@@ -30,6 +30,12 @@
             100% { transform: translateY(-200px) translateX(-20px); opacity: 0; }
         }
 
+        @keyframes popClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.8); }
+            100% { transform: scale(1); }
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body { 
@@ -73,42 +79,67 @@
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
         
-        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; transition: all 0.3s; }
         .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
         .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
 
-        /* Botones de Asistencia - Tamaño Reducido */
+        /* --- BOTÓN DE ASISTENCIA MEJORADO --- */
         .check-btn {
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.3);
-            margin-right: 8px;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            margin-right: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             font-size: 8px;
             font-weight: 900;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             flex-shrink: 0;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+            position: relative;
         }
-        .check-btn.presente { background: var(--success); border-color: var(--success); color: #000; }
-        .check-btn.ausente { background: var(--danger); border-color: var(--danger); color: #fff; }
 
-        .ws-agenda-icon { width: 14px; height: 14px; margin-left: 6px; vertical-align: middle; cursor: pointer; opacity: 0.8; }
+        .check-btn:active {
+            animation: popClick 0.3s ease;
+        }
+
+        .check-btn.presente { 
+            background: var(--success); 
+            border-color: var(--success); 
+            color: #000; 
+            box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
+            transform: scale(1.1);
+        }
+
+        .check-btn.ausente { 
+            background: var(--danger); 
+            border-color: var(--danger); 
+            color: #fff; 
+            box-shadow: 0 0 12px rgba(255, 45, 85, 0.4);
+            transform: scale(1.1);
+        }
+
+        .ws-agenda-icon { width: 14px; height: 14px; margin-left: 8px; vertical-align: middle; cursor: pointer; opacity: 0.6; transition: opacity 0.3s; }
+        .ws-agenda-icon:hover { opacity: 1; }
 
         .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; }
         .crono-row { border-bottom: 1px solid var(--border); padding: 20px 0; }
         .crono-dia-label { font-family: var(--font-fancy); font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; }
         .crono-task-main { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
-        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); }
+        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); animation: slideIn 0.3s ease forwards; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
-        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); text-align: center; }
-        .nav-btn.active-btn { background: #fff; color: #000; }
+        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); text-align: center; transition: all 0.3s; }
+        .nav-btn.active-btn { background: #fff; color: #000; box-shadow: 0 5px 15px rgba(255,255,255,0.05); }
         .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; }
         label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
     </style>
@@ -184,8 +215,7 @@
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
-        const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
-        const WS_ICON_URL = "https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
+        const WS_ICON_URL = "https://i.postimg.cc/HWQkv6Qv/whatsapp-vector-logo-icono-logotipo-vector-redes-sociales-901408-406.avif";
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
 
@@ -296,7 +326,7 @@
                 let ico = st == '1' ? '✓' : (st == '2' ? '×' : '');
                 let ws = db ? `<a href="https://wa.me/${db.contenido.split('|')[2].replace(/\s+/g, '')}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>` : '';
 
-                return `<div style="margin-bottom:6px; display:flex; align-items:center;">
+                return `<div style="margin-bottom:8px; display:flex; align-items:center;">
                             <div class="check-btn ${cls}" onclick="toggleAsistencia('${id}', ${i})">${ico}</div>
                             <span style="font-size:0.65rem; color:#eee;">${nl}</span>
                             ${ws}
@@ -329,7 +359,7 @@
                         <div>
                             <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}</span><br>
                             <small style="opacity:0.4; font-size:0.55rem; text-transform:uppercase;">${p[2]}</small>
-                            <div style="margin-top:10px;">${formatAlumnosAgenda(p[3], i.id, p[4])}</div>
+                            <div style="margin-top:12px;">${formatAlumnosAgenda(p[3], i.id, p[4])}</div>
                         </div>
                         <div style="display:flex; gap:10px;">
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5;">📝</span>
@@ -353,7 +383,7 @@
                         return `<div class="crono-task">
                             <div class="crono-task-main">
                                 <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
-                                    <div style="width:5px; height:5px; border-radius:50%; background:${pres>0?'var(--success)':'var(--celeste)'}; margin-right:10px;"></div>
+                                    <div style="width:5px; height:5px; border-radius:50%; background:${pres>0?'var(--success)':'var(--celeste)'}; margin-right:10px; box-shadow: 0 0 5px ${pres>0? 'var(--success)' : 'transparent'}"></div>
                                     <b>${p[0]}</b> — ${p[1]} <small style="margin-left:8px; opacity:0.4">(${pres}/${p[3].split(',').length})</small>
                                 </div>
                                 <span onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')" style="opacity:0.5">📝</span>
