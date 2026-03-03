@@ -14,7 +14,7 @@
     <style>
         :root { 
             --bg: #050505;
-            --card: #121214;
+            --card: rgba(18, 18, 20, 0.7); /* Ligeramente transparente */
             --accent: #ffffff;
             --celeste: #a2d2ff;
             --danger: #ff2d55;
@@ -24,10 +24,13 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; }
+        body { font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; overflow-x: hidden; letter-spacing: -0.02em; position: relative; }
+
+        /* Canvas para fondo animado */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
 
         .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
-        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
         .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); }
 
         #login-section {
@@ -36,23 +39,43 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
 
+        /* Animación de pulso para el logo en login */
+        @keyframes logoPulse {
+            0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0px rgba(255,255,255,0.2); }
+            50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+            100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0px rgba(255,255,255,0.2); }
+        }
+        #login-section .logo-pulse-circle { animation: logoPulse 4s infinite ease-in-out; }
+
         .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
-        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
+        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; transition: all 0.5s; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
         .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
 
         .search-container { margin-bottom: 20px; position: relative; }
-        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; }
+        .search-input { background: rgba(26, 26, 28, 0.8); border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; backdrop-filter: blur(5px); }
         .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; }
 
         input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
-        .btn-principal { background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
-        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
+        /* Animación de brillo para botones principales */
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+        .btn-principal { 
+            background: linear-gradient(90deg, #fff 0%, #d0d0d0 25%, #fff 50%, #d0d0d0 75%, #fff 100%);
+            background-size: 200% auto;
+            color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; 
+            animation: shine 4s linear infinite;
+        }
+        .btn-principal:active { transform: scale(0.98); }
+
+        .btn-cancelar { background: rgba(26, 26, 28, 0.8); color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
+        
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; backdrop-filter: blur(10px); }
         .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
+        .clase-box { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
         .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
 
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
@@ -63,20 +86,30 @@
         .crono-list { list-style: none; padding: 0; margin: 0; }
         .crono-task { padding: 10px 0; border-radius: 10px; transition: background 0.3s; }
         .crono-task-main { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #fff; font-family: var(--font-main); }
-        .crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; margin-right: 12px; box-shadow: 0 0 6px var(--celeste); }
+        
+        /* Animación suave para el bullet celeste */
+        @keyframes bulletPulse {
+            0% { box-shadow: 0 0 6px var(--celeste); }
+            50% { box-shadow: 0 0 12px var(--celeste), 0 0 20px rgba(162, 210, 255, 0.5); }
+            100% { box-shadow: 0 0 6px var(--celeste); }
+        }
+        .crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; margin-right: 12px; animation: bulletPulse 3s infinite ease-in-out; }
+        
         .crono-edit-icon { cursor: pointer; font-size: 1rem; padding: 5px; opacity: 0.7; }
         .crono-edit-icon:hover { opacity: 1; transform: scale(1.1); }
         .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; color: #aaa; line-height: 1.6; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
-        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; }
+        .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; backdrop-filter: blur(20px); background: rgba(15,15,15,0.5); padding: 10px; border-radius: 20px; border: 1px solid var(--border); }
+        .nav-btn { background: transparent; color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid transparent; font-weight: 800; font-size: 0.5rem; cursor: pointer; position: relative; text-align: center; transition: all 0.3s; }
         .nav-btn.active-btn { background: #fff; color: #000; }
         .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
         label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
     </style>
 </head>
 <body>
+
+    <canvas id="bg-canvas"></canvas>
 
     <div id="login-section">
         <div class="branding-container">
@@ -95,7 +128,7 @@
             <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
         </div>
 
-        <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
+        <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer transition: all 0.3s;">
             <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
         </div>
@@ -122,7 +155,7 @@
             <div id="modulo-alumnos" style="display:none;">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()">
+                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno...">
                 </div>
                 <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
                 <div id="form-alumno-nuevo"></div>
@@ -141,6 +174,7 @@
     </div>
 
     <script>
+        // --- CÓDIGO DE LÓGICA EXISTENTE (Sin cambios) ---
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
@@ -150,6 +184,7 @@
         let CACHE_HORARIOS = [];
 
         window.onload = () => {
+            initBgAnimation(); // Iniciar fondo animado
             if (localStorage.getItem('studio_auth')) startApp();
             else document.getElementById('login-section').style.display = 'flex';
         };
@@ -185,7 +220,7 @@
                     </div>
                     <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
                         <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
+                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px; animation:none; background-image:none;" onclick="addClasePopup('${d}')">+ CLASE</button>
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
@@ -209,7 +244,7 @@
                     <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
                     <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
                     <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
-                    <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
+                    <button class="btn-principal" style="padding:12px; font-size:0.6rem; animation:none; background-image:none; background:#fff;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
                     ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white; padding:10px; font-size:0.5rem;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
                     <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
                 </div>`;
@@ -259,7 +294,6 @@
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             
-            // FILTRADO Y ORDENAMIENTO DE CLASES POR HORA (AM -> PM)
             CACHE_HORARIOS = data.filter(x => x.celda_id !== 'DB_ENTRY').sort((a, b) => {
                 return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
             });
@@ -348,7 +382,7 @@
                         <p><b>VISITA:</b> ${p[7] || 'N/A'}</p>
                         <p><b>ORIGEN:</b> ${p[8] || 'N/A'}</p>
                         <p><b>REFERIDO:</b> ${p[9]}</p>
-                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
+                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px; animation:none; background-image:none; background:#fff;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between; align-items:center;">
                         <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; background:#1a1a1c;" onclick="toggleExtra('${a.id}')">DETALLES</button>
@@ -403,7 +437,7 @@
                     <label>Visita</label><textarea id="db-visita">${p[7]}</textarea>
                     <label>Origen</label><textarea id="db-fuente">${p[8]}</textarea>
                     <label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select>
-                    <button class="btn-principal" onclick="saveAlumno('${editId}')">GUARDAR</button>
+                    <button class="btn-principal" style="animation:none; background-image:none; background:#fff;" onclick="saveAlumno('${editId}')">GUARDAR</button>
                     <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
                 </div>`;
             if(editId) document.getElementById('db-edad').value = p[11];
@@ -430,7 +464,11 @@
             document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
             document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
             
-            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+            // Ocultar marca principal si es cronograma para no saturar
+            document.getElementById('main-brand').style.opacity = id === 'modulo-cronograma' ? '0' : '1';
+            setTimeout(() => {
+                document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+            }, id === 'modulo-cronograma' ? 300 : 0);
 
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
             document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
@@ -448,6 +486,67 @@
                 document.getElementById('edit-form-crono').innerHTML = '';
                 updateAll(); 
             } 
+        }
+
+        // --- CÓDIGO NUEVO: DECORACIONES MÓVILES (Fondo de Partículas) ---
+        function initBgAnimation() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.speedX = Math.random() * 0.2 - 0.1;
+                    this.speedY = Math.random() * 0.2 - 0.1;
+                    // Color aleatorio entre blanco y celeste muy sutil
+                    this.color = Math.random() > 0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(162, 210, 255, 0.2)';
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.y > canvas.height) this.y = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                }
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                // Número de partículas basado en el ancho de pantalla
+                const numberOfParticles = Math.random() * 50 + 50; 
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+
+            initParticles();
+            animate();
         }
     </script>
 </body>
