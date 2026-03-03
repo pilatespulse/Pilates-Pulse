@@ -372,32 +372,25 @@
         }
 
         function formatAlumnosAgenda(texto) {
-            if (!texto) return '';
-    
-    const alumnosArray = texto.split(',');
-    return alumnosArray.map((nombreRaw, i) => {
-        const nombreLimpio = nombreRaw.trim();
-        const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
-        
-        let linkWs = '';
-        if (alumnoDB) {
-            const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
-            
-            // Mensaje prearmado
-            const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\nTienes una reservación para recibir tu clase de ${tipoClase}\nHorario: ${horaClase}\nPor favor, confirmar asistencia.\nPilates Pulse.\n¡Te esperamos!`;
-            
-            const encodedMsg = encodeURIComponent(mensaje);
-            linkWs = `<a href="https://wa.me/${telLimpio}?text=${encodedMsg}" target="_blank">
-                        <img src="${WS_ICON_URL}" class="ws-agenda-icon">
-                      </a>`;
-        }
-        
-        return `<div style="margin-bottom:6px; display:flex; align-items:center;">
-                    <span>${i+1}-${nombreLimpio}</span>
-                    ${linkWs}
-                </div>`;
-    }).join('');
-            
+            if(!texto) return '';
+            const alumnosArray = texto.split(',');
+            return alumnosArray.map((nombreRaw, i) => {
+                const nombreLimpio = nombreRaw.trim();
+                const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
+                
+                let linkWs = '';
+                if (alumnoDB) {
+                    const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
+                    linkWs = `<a href="https://wa.me/${telLimpio}" target="_blank">
+                                <img src="${WS_ICON_URL}" class="ws-agenda-icon">
+                              </a>`;
+                }
+
+                return `<div style="margin-bottom:6px; display:flex; align-items:center;">
+                            <span>${i+1}-${nombreLimpio}</span>
+                            ${linkWs}
+                        </div>`;
+            }).join('');
         }
 
         function a24h(horaStr) {
@@ -434,18 +427,15 @@
                 const filtrados = CACHE_HORARIOS.filter(x => x.celda_id === d);
                 document.getElementById(`badge-${d}`).innerText = filtrados.length;
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
-    const p = i.contenido.split('|');
-    const hora = p[0];          // ej: "11:00 AM"
-    const tipoClase = p[1];     // ej: "Align Flow"
-    
-    return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3], d, hora, tipoClase)}</div></span>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
-            <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
-        </div>
-    </div>`;
-}).join('');
+                    const p = i.contenido.split('|');
+                    return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3])}</div></span>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
+                            <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
+                        </div>
+                    </div>`;
+                }).join('');
             });
             renderAlumnosList(CACHE_ALUMNOS);
             processVencimientos();
