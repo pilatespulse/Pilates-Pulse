@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilates Pulse | Luxury Admin</title>
+    <title>Pilates Pulse | [cite_start]Luxury Admin [cite: 192, 193]</title>
     
     <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
@@ -13,90 +13,106 @@
     
     <style>
         :root { 
-            --bg: #050505;
-            --card: #121214;
-            --accent: #ffffff;
-            --celeste: #a2d2ff;
-            --danger: #ff2d55;
-            --whatsapp: #25D366;
-            --border: rgba(255, 255, 255, 0.08);
-            --font-main: 'Montserrat', sans-serif;
-            --font-fancy: 'Playfair Display', serif;
+            [cite_start]--bg: #050505; [cite: 194]
+            [cite_start]--card: #121214; [cite: 194]
+            [cite_start]--accent: #ffffff; [cite: 194]
+            [cite_start]--celeste: #a2d2ff; [cite: 194]
+            [cite_start]--danger: #ff2d55; [cite: 194]
+            [cite_start]--whatsapp: #25D366; [cite: 194]
+            [cite_start]--border: rgba(255, 255, 255, 0.08); [cite: 194]
+            [cite_start]--font-main: 'Montserrat', sans-serif; [cite: 194]
+            [cite_start]--font-fancy: 'Playfair Display', serif; [cite: 195]
         }
 
         @keyframes bokehFloat {
-            0% { transform: translateY(0) translateX(0); opacity: 0; }
-            10% { opacity: 0.03; }
-            50% { transform: translateY(-100px) translateX(20px); opacity: 0.05; }
-            90% { opacity: 0.03; }
-            100% { transform: translateY(-200px) translateX(-20px); opacity: 0; }
+            0% { transform: translateY(0) translateX(0); opacity: 0; [cite_start]} [cite: 196]
+            10% { opacity: 0.03; [cite_start]} [cite: 197]
+            50% { transform: translateY(-100px) translateX(20px); opacity: 0.05; [cite_start]} [cite: 198]
+            90% { opacity: 0.03; [cite_start]} [cite: 199]
+            100% { transform: translateY(-200px) translateX(-20px); opacity: 0; [cite_start]} [cite: 200]
         }
 
         @keyframes cardPulse {
-            0% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); }
-            50% { box-shadow: 0 0 15px rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); }
-            100% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); }
+            0% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); [cite_start]} [cite: 201]
+            50% { box-shadow: 0 0 15px rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); [cite_start]} [cite: 202]
+            100% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); [cite_start]} [cite: 203]
         }
 
         @keyframes shimmer {
-            0% { transform: translateX(-150%) skewX(-25deg); }
-            100% { transform: translateX(150%) skewX(-25deg); }
+            0% { transform: translateX(-150%) skewX(-25deg); [cite_start]} [cite: 204]
+            100% { transform: translateX(150%) skewX(-25deg); [cite_start]} [cite: 205]
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; [cite_start]} [cite: 206]
         
         body { 
-            font-family: var(--font-main);
+            [cite_start]font-family: var(--font-main); [cite: 207]
             margin: 0; 
             background: var(--bg); 
             color: #fff; 
             overflow-x: hidden; 
             letter-spacing: -0.02em; 
-            position: relative;
-        }
+            [cite_start]position: relative; [cite: 207]
+        [cite_start]} [cite: 208]
 
         .bokeh-container {
-            position: fixed;
+            [cite_start]position: fixed; [cite: 209]
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: -1;
-            overflow: hidden;
-        }
+            [cite_start]overflow: hidden; [cite: 209]
+        [cite_start]} [cite: 210]
 
         .bokeh {
-            position: absolute;
+            [cite_start]position: absolute; [cite: 211]
             background: rgba(255, 255, 255, 1);
             border-radius: 50%;
             filter: blur(30px);
             opacity: 0;
-            animation: bokehFloat infinite linear;
+            [cite_start]animation: bokehFloat infinite linear; [cite: 211]
+        [cite_start]} [cite: 212]
+
+        /* ESTILO NUEVO: OVERLAY MANTENIMIENTO */
+        #mantenimiento-bloqueo {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: none;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
 
-        .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
-        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
-        .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); }
+        .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; [cite_start]} [cite: 213]
+        [cite_start].btn-logout { background: transparent; border: 1px solid var(--border); color: #888; [cite: 214]
+            [cite_start]padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; [cite: 214]
+        [cite_start]} [cite: 215]
+        .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); [cite_start]} [cite: 216]
 
         #login-section {
-            position: fixed;
+            [cite_start]position: fixed; [cite: 217]
             top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 10000; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
+            [cite_start]flex-direction: column; align-items: center; justify-content: center; [cite: 217]
+        [cite_start]} [cite: 218]
 
-        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
-        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; transition: transform 0.5s ease; }
-        .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
+        [cite_start].branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; [cite: 219]
+            padding: 20px 0; position: relative; [cite_start]} [cite: 219]
+        [cite_start].logo-pulse-circle { width: 80px; height: 80px; [cite: 220]
+            [cite_start]background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; transition: transform 0.5s ease; [cite: 220]
+        [cite_start]} [cite: 221]
+        .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; [cite_start]} [cite: 222]
+        .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; [cite_start]} [cite: 223]
 
-        .search-container { margin-bottom: 20px; position: relative; }
-        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; transition: all 0.3s; }
-        .search-input:focus { border-color: rgba(255,255,255,0.3); background: #202022; }
-        .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; }
+        .search-container { margin-bottom: 20px; position: relative; [cite_start]} [cite: 224]
+        [cite_start].search-input { background: #1a1a1c; border: 1px solid var(--border); [cite: 225]
+            [cite_start]padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; transition: all 0.3s; [cite: 225]
+        [cite_start]} [cite: 226]
+        .search-input:focus { border-color: rgba(255,255,255,0.3); background: #202022; [cite_start]} [cite: 227]
+        .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; [cite_start]} [cite: 228]
 
-        input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
+        [cite_start]input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); [cite: 229]
+            [cite_start]padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; [cite: 229]
+        [cite_start]} [cite: 230]
         
         .btn-principal { 
-            background: #fff;
+            [cite_start]background: #fff; [cite: 231]
             color: #000; 
             border: none; 
             padding: 20px; 
@@ -106,88 +122,128 @@
             cursor: pointer; 
             text-transform: uppercase; 
             letter-spacing: 2px; 
-            position: relative;
-            overflow: hidden; 
+            [cite_start]position: relative; [cite: 231]
+            [cite_start]overflow: hidden; [cite: 232]
         }
 
         .btn-principal::after {
-            content: '';
+            [cite_start]content: ''; [cite: 233]
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            animation: shimmer 2s infinite;
-            animation-delay: 1s;
+            [cite_start]animation: shimmer 2s infinite; [cite: 233]
+            [cite_start]animation-delay: 1s; [cite: 234]
         }
 
-        .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
+        [cite_start].btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); [cite: 235]
+            [cite_start]padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; [cite: 235]
+        [cite_start]} [cite: 236]
         
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; }
+        [cite_start].main-container { padding: 20px; [cite: 237]
+            [cite_start]max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; [cite: 237]
+        [cite_start]} [cite: 238]
         
         .dia-item { 
-            background: var(--card);
+            [cite_start]background: var(--card); [cite: 239]
             margin-bottom: 15px; 
             border-radius: 30px; 
             border: 1px solid var(--border); 
             overflow: hidden; 
-            animation: cardPulse 4s infinite ease-in-out;
-        }
-        .dia-item:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); transition: all 0.3s; }
+            [cite_start]animation: cardPulse 4s infinite ease-in-out; [cite: 239]
+        [cite_start]} [cite: 240]
+        .dia-item:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); transition: all 0.3s; [cite_start]} [cite: 241]
 
-        .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; [cite_start]} [cite: 242]
         
         .clase-box { 
-            background: rgba(255,255,255,0.03);
+            [cite_start]background: rgba(255,255,255,0.03); [cite: 243]
             padding: 20px; 
             border-radius: 25px; 
             margin-bottom: 12px; 
             border: 1px solid var(--border); 
             position: relative; 
             animation: cardPulse 5s infinite ease-in-out; 
-            animation-delay: 1s;
-        }
+            [cite_start]animation-delay: 1s; [cite: 243]
+        [cite_start]} [cite: 244]
 
-        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
+        [cite_start].ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; [cite: 245]
+            font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; [cite_start]} [cite: 245]
 
-        .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
+        [cite_start].vence-alerta { color: var(--danger) !important; [cite: 246]
+            text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); [cite_start]} [cite: 246]
 
         .ws-wrapper {
-            display: inline-flex;
+            [cite_start]display: inline-flex; [cite: 247]
             align-items: center;
             text-decoration: none;
             margin-top: 5px;
             transition: transform 0.2s;
-        }
-        .ws-wrapper:active { transform: scale(0.95); }
-        .ws-icon { width: 18px; height: 18px; margin-right: 8px; object-fit: contain; }
-        .ws-number { color: var(--whatsapp); font-weight: 700; font-size: 0.8rem; }
+        [cite_start]} [cite: 247]
+        .ws-wrapper:active { transform: scale(0.95); [cite_start]} [cite: 248]
+        .ws-icon { width: 18px; height: 18px; margin-right: 8px; object-fit: contain; [cite_start]} [cite: 249]
+        .ws-number { color: var(--whatsapp); font-weight: 700; font-size: 0.8rem; [cite_start]} [cite: 250]
 
-        .ws-agenda-icon { width: 16px; height: 16px; margin-left: 6px; vertical-align: text-bottom; cursor: pointer; transition: transform 0.2s; }
-        .ws-agenda-icon:active { transform: scale(1.2); }
+        [cite_start].ws-agenda-icon { width: 16px; height: 16px; margin-left: 6px; vertical-align: text-bottom; cursor: pointer; [cite: 251]
+            transition: transform 0.2s; [cite_start]} [cite: 251]
+        .ws-agenda-icon:active { transform: scale(1.2); [cite_start]} [cite: 252]
 
-        .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .crono-row { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); padding: 20px 0; }
-        .crono-dia-label { font-family: var(--font-fancy); font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; }
-        .crono-list { list-style: none; padding: 0; margin: 0; }
-        .crono-task { padding: 10px 0; border-radius: 10px; transition: background 0.3s; }
-        .crono-task:hover { background: rgba(255,255,255,0.02); }
-        .crono-task-main { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #fff; font-family: var(--font-main); }
-        .crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; margin-right: 12px; box-shadow: 0 0 6px var(--celeste); }
-        .crono-edit-icon { cursor: pointer; font-size: 1rem; padding: 5px; opacity: 0.7; transition: all 0.3s; }
-        .crono-edit-icon:hover { opacity: 1; transform: scale(1.2) rotate(-10deg); }
-        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; color: #aaa; line-height: 1.6; animation: fadeIn 0.3s ease; }
+        [cite_start].crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; [cite: 253]
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); [cite_start]} [cite: 253]
+        [cite_start].crono-row { display: flex; flex-direction: column; [cite: 254]
+            border-bottom: 1px solid var(--border); padding: 20px 0; [cite_start]} [cite: 254]
+        [cite_start].crono-dia-label { font-family: var(--font-fancy); [cite: 255]
+            font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; [cite_start]} [cite: 255]
+        [cite_start].crono-list { list-style: none; [cite: 256]
+            padding: 0; margin: 0; [cite_start]} [cite: 256]
+        [cite_start].crono-task { padding: 10px 0; border-radius: 10px; [cite: 257]
+            transition: background 0.3s; [cite_start]} [cite: 257]
+        .crono-task:hover { background: rgba(255,255,255,0.02); [cite_start]} [cite: 258]
+        [cite_start].crono-task-main { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #fff; [cite: 259]
+            font-family: var(--font-main); [cite_start]} [cite: 259]
+        [cite_start].crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; [cite: 260]
+            margin-right: 12px; box-shadow: 0 0 6px var(--celeste); [cite_start]} [cite: 260]
+        [cite_start].crono-edit-icon { cursor: pointer; [cite: 261]
+            font-size: 1rem; padding: 5px; opacity: 0.7; transition: all 0.3s; [cite_start]} [cite: 261]
+        [cite_start].crono-edit-icon:hover { opacity: 1; [cite: 262]
+            transform: scale(1.2) rotate(-10deg); [cite_start]} [cite: 262]
+        [cite_start].crono-detail-box { display: none; margin: 10px 0 10px 18px; [cite: 263]
+            [cite_start]padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); font-size: 0.75rem; color: #aaa; line-height: 1.6; animation: fadeIn 0.3s ease; [cite: 263]
+        [cite_start]} [cite: 264]
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); [cite_start]} } [cite: 265]
 
-        .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
-        .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; transition: all 0.3s; }
-        .nav-btn.active-btn { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
-        .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
-        label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
+        [cite_start].footer-nav { display: grid; [cite: 266]
+            [cite_start]grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; [cite: 266]
+        [cite_start]} [cite: 267]
+        /* ESTILO NUEVO: SECCIÓN DE AJUSTES EN EL FOOTER SI ES ADMIN */
+        .footer-nav.is-admin { grid-template-columns: repeat(5, 1fr); }
+
+        [cite_start].nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; [cite: 268]
+            [cite_start]border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; [cite: 268]
+            transition: all 0.3s; [cite_start]} [cite: 269]
+        [cite_start].nav-btn.active-btn { background: #fff; color: #000; [cite: 270]
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1); [cite_start]} [cite: 270]
+        [cite_start].dot-notif { position: absolute; top: 5px; [cite: 271]
+            [cite_start]right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); [cite: 271]
+        [cite_start]} [cite: 272]
+        [cite_start]label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; [cite: 273]
+            text-transform: uppercase; margin-left: 5px; [cite_start]} [cite: 273]
+
+        /* ESTILO NUEVO: STATUS PILL MANTENIMIENTO */
+        .status-pill { padding: 12px 20px; border-radius: 50px; font-weight: 900; font-size: 0.7rem; margin-bottom: 25px; display: inline-block; letter-spacing: 1px; }
+        .pill-off { background: var(--whatsapp); color: #000; }
+        .pill-on { background: var(--danger); color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="bokeh-container"></div>
+
+    <div id="mantenimiento-bloqueo">
+        <div class="logo-pulse-circle" style="width: 120px; height: 120px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+        <h1 style="font-family: var(--font-fancy); color: #fff; margin-top: 30px;">Pilates Pulse</h1>
+        <p style="letter-spacing: 2px; font-size: 0.9rem; opacity: 0.8; padding: 0 30px;">¡Pilates Pulse web esta en mantenimiento!</p>
+    </div>
 
     <div id="login-section">
         <div class="branding-container">
@@ -196,7 +252,7 @@
         </div>
         <div style="width: 90%; max-width: 380px;">
             <input type="text" id="adminUser" placeholder="ADMIN ID">
-            <input type="password" id="adminPass" placeholder="PASSWORD">
+            [cite_start]<input type="password" id="adminPass" placeholder="PASSWORD"> [cite: 274]
             <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
         </div>
     </div>
@@ -207,18 +263,32 @@
         </div>
 
         <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
-            <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+            [cite_start]<div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div> [cite: 275]
             <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
         </div>
 
         <div class="main-container">
+
+            <div id="modulo-mantenimiento" style="display:none; text-align: center;">
+                <h2 style="font-family: var(--font-fancy); font-size: 2.2rem; margin-bottom: 10px;">Sistema</h2>
+                <div id="status-actual" class="status-pill pill-off">WEB ACTIVA</div>
+                
+                <div style="background: var(--card); padding: 30px; border-radius: 30px; border: 1px solid var(--border); margin-top: 10px;">
+                    <label>¿MODO MANTENIMIENTO?</label>
+                    <select id="select-mantenimiento" onchange="toggleMantenimiento(this.value)">
+                        <option value="false">NO (Web Activa)</option>
+                        <option value="true">SI (Bloquear Web)</option>
+                    </select>
+                </div>
+            </div>
+
             <div id="modulo-agenda">
                 <div id="listaDias"></div>
             </div>
 
             <div id="modulo-cronograma" style="display:none;">
-                <div class="branding-container" style="padding-top: 0;">
-                    <div class="logo-pulse-circle" style="width: 50px; height: 50px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+                [cite_start]<div class="branding-container" style="padding-top: 0;"> [cite: 276]
+                    [cite_start]<div class="logo-pulse-circle" style="width: 50px; height: 50px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div> [cite: 277]
                 </div>
                 <div class="crono-header-text">Cronograma</div>
                 <div id="edit-form-crono" style="margin-bottom: 20px;"></div>
@@ -226,85 +296,132 @@
             </div>
 
             <div id="modulo-notificaciones" style="display:none;">
-                <h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3>
+                [cite_start]<h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3> [cite: 278, 279]
                 <div id="lista-notificaciones"></div>
             </div>
 
             <div id="modulo-alumnos" style="display:none;">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()">
+                    [cite_start]<input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()"> [cite: 280]
                 </div>
-                <button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button>
+                [cite_start]<button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px; font-size:0.7rem;" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button> [cite: 281]
                 <div id="form-alumno-nuevo"></div>
                 <div id="render-alumnos"></div>
             </div>
 
-            <div class="footer-nav">
+            <div class="footer-nav" id="footer-nav-bar">
                 <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>
-                <button class="nav-btn" id="btn-crono" onclick="switchModulo('modulo-cronograma')">CRONO</button>
+                [cite_start]<button class="nav-btn" id="btn-crono" onclick="switchModulo('modulo-cronograma')">CRONO</button> [cite: 282]
                 <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DATOS</button>
                 <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">
                     NOTIF. <div class="dot-notif" id="active-dot"></div>
                 </button>
+                <button class="nav-btn" id="btn-mantenimiento" style="display:none;" onclick="switchModulo('modulo-mantenimiento')">AJUSTES</button>
             </div>
         </div>
-    </div>
+    [cite_start]</div> [cite: 283]
 
     <script>
-        const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
-        const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
-        const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
+        [cite_start]const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg"); [cite: 283]
+        [cite_start]const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]; [cite: 283]
+        [cite_start]const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"]; [cite: 284]
+        [cite_start]const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"]; [cite: 285]
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         const WS_ICON_URL = "https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
-        let CACHE_ALUMNOS = [];
+        [cite_start]let CACHE_ALUMNOS = []; [cite: 286]
         let CACHE_HORARIOS = [];
+        let CURRENT_USER = "";
 
-        window.onload = () => {
+        window.onload = async () => {
             initBokeh();
-            if (localStorage.getItem('studio_auth')) startApp();
-            else document.getElementById('login-section').style.display = 'flex';
+            await checkMaintenanceStatus(); // Verifica el bloqueo antes de entrar
+            if (localStorage.getItem('studio_auth')) {
+                CURRENT_USER = localStorage.getItem('user_id');
+                [cite_start]startApp(); [cite: 287]
+            } else {
+                [cite_start]document.getElementById('login-section').style.display = 'flex'; [cite: 287]
+            }
         };
+
+        // LÓGICA NUEVA: VERIFICAR SI LA WEB ESTA BLOQUEADA
+        async function checkMaintenanceStatus() {
+            const { data } = await _sp.from('configuracion').select('mantenimiento').eq('id', 1).maybeSingle();
+            if (data && data.mantenimiento === true && !localStorage.getItem('studio_auth')) {
+                document.getElementById('mantenimiento-bloqueo').style.display = 'flex';
+            }
+        }
+
+        // LÓGICA NUEVA: CARGAR PANEL DE CONTROL SI ES ADMIN
+        async function loadMaintenanceView() {
+            const { data } = await _sp.from('configuracion').select('mantenimiento').eq('id', 1).maybeSingle();
+            if (data) {
+                const isMant = data.mantenimiento;
+                document.getElementById('select-mantenimiento').value = isMant.toString();
+                const pill = document.getElementById('status-actual');
+                pill.innerText = isMant ? "MODO MANTENIMIENTO: ACTIVO" : "SISTEMA ONLINE";
+                pill.className = `status-pill ${isMant ? 'pill-on' : 'pill-off'}`;
+            }
+        }
+
+        async function toggleMantenimiento(val) {
+            const boolVal = (val === "true");
+            const { error } = await _sp.from('configuracion').update({ mantenimiento: boolVal }).eq('id', 1);
+            if (!error) {
+                loadMaintenanceView();
+                alert("Estado actualizado correctamente.");
+            }
+        }
 
         function initBokeh() {
             const container = document.querySelector('.bokeh-container');
-            const count = 15;
+            [cite_start]const count = 15; [cite: 288]
             for (let i = 0; i < count; i++) {
                 const bokeh = document.createElement('div');
-                bokeh.className = 'bokeh';
+                [cite_start]bokeh.className = 'bokeh'; [cite: 289]
                 const size = Math.random() * 150 + 50;
                 bokeh.style.width = `${size}px`;
                 bokeh.style.height = `${size}px`;
-                bokeh.style.left = `${Math.random() * 100}%`;
+                [cite_start]bokeh.style.left = `${Math.random() * 100}%`; [cite: 290]
                 bokeh.style.top = `${Math.random() * 100 + 10}%`;
                 const duration = Math.random() * 20 + 15;
-                bokeh.style.animationDuration = `${duration}s`;
+                [cite_start]bokeh.style.animationDuration = `${duration}s`; [cite: 291]
                 bokeh.style.animationDelay = `${Math.random() * 10}s`;
                 container.appendChild(bokeh);
             }
         }
 
         async function handleLogin() {
-            const u = document.getElementById('adminUser').value;
-            const p = document.getElementById('adminPass').value;
-            const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
+            [cite_start]const u = document.getElementById('adminUser').value; [cite: 291]
+            [cite_start]const p = document.getElementById('adminPass').value; [cite: 292]
+            [cite_start]const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle(); [cite: 292]
             if (data) { 
-                localStorage.setItem('studio_auth', 'true');
-                startApp(); 
-            } else alert("Acceso denegado");
+                [cite_start]localStorage.setItem('studio_auth', 'true'); [cite: 293]
+                localStorage.setItem('user_id', u);
+                CURRENT_USER = u;
+                [cite_start]startApp(); [cite: 294]
+            [cite_start]} else alert("Acceso denegado"); [cite: 294]
         }
 
         function handleLogout() {
             localStorage.removeItem('studio_auth');
-            location.reload();
+            localStorage.removeItem('user_id');
+            [cite_start]location.reload(); [cite: 295]
         }
 
         function startApp() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
-            renderEstructura();
-            updateAll();
+            [cite_start]document.getElementById('login-section').style.display = 'none'; [cite: 295]
+            [cite_start]document.getElementById('app-content').style.display = 'block'; [cite: 296]
+            
+            // SI EL USUARIO ES "ADMIN", HABILITAR AJUSTES
+            if (CURRENT_USER === "ADMIN") {
+                document.getElementById('btn-mantenimiento').style.display = 'block';
+                document.getElementById('footer-nav-bar').classList.add('is-admin');
+                loadMaintenanceView();
+            }
+
+            [cite_start]renderEstructura(); [cite: 296]
+            [cite_start]updateAll(); [cite: 296]
         }
 
         function renderEstructura() {
@@ -312,300 +429,297 @@
                 <div class="dia-item">
                     <div class="dia-header" onclick="toggleDia('${d}')">
                         <span style="font-weight:900; font-size:0.75rem; letter-spacing:1px;">${d.toUpperCase()}</span>
-                        <span id="badge-${d}" style="font-size:0.5rem; opacity:0.5; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:8px;">0</span>
+                        [cite_start]<span id="badge-${d}" style="font-size:0.5rem; opacity:0.5; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:8px;">0</span> [cite: 297]
                     </div>
                     <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
-                        <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px; letter-spacing:1px;" onclick="addClasePopup('${d}')">+ CLASE</button>
+                        [cite_start]<div id="clase-form-${d}"></div> [cite: 298]
+                        [cite_start]<button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px; letter-spacing:1px;" onclick="addClasePopup('${d}')">+ CLASE</button> [cite: 298]
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
-                </div>`).join('');
-        }
+                [cite_start]</div>`).join(''); [cite: 298]
+        [cite_start]} [cite: 299]
 
         function toggleDia(d) {
-            const el = document.getElementById(`cont-${d}`);
-            const vis = el.style.display === 'block';
+            [cite_start]const el = document.getElementById(`cont-${d}`); [cite: 299]
+            [cite_start]const vis = el.style.display === 'block'; [cite: 300]
             document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
-            el.style.display = vis ? 'none' : 'block';
-        }
+            el.style.display = vis ? [cite_start]'none' : 'block'; [cite: 300]
+        [cite_start]} [cite: 301]
 
         function addClasePopup(dia, editId = null, existingData = null) {
-            const p = existingData ? existingData.split('|') : ["", "", "", ""];
-            const isCrono = document.getElementById('modulo-cronograma').style.display === 'block';
-            const targetDiv = editId ? (isCrono ? 'edit-form-crono' : `clase-form-${dia}`) : `clase-form-${dia}`;
+            [cite_start]const p = existingData ? existingData.split('|') : ["", "", "", ""]; [cite: 301, 302]
+            [cite_start]const isCrono = document.getElementById('modulo-cronograma').style.display === 'block'; [cite: 302]
+            const targetDiv = editId ? (isCrono ? 'edit-form-crono' : `clase-form-${dia}`) [cite_start]: `clase-form-${dia}`; [cite: 302, 303]
             
             document.getElementById(targetDiv).innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:20px; margin-bottom:15px; border:1px solid #222; animation: fadeIn 0.3s ease;">
                     <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
                     <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
-                    <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
+                    [cite_start]<label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select> [cite: 304]
                     <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
-                    <button class="btn-principal" style="padding:12px; font-size:0.6rem; letter-spacing:1px;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
-                    ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white; padding:10px; font-size:0.5rem; border:none;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
-                    <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
-                </div>`;
-            if(editId) window.scrollTo({ top: 0, behavior: 'smooth' });
+                    [cite_start]<button class="btn-principal" style="padding:12px; font-size:0.6rem; letter-spacing:1px;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button> [cite: 304, 305]
+                    ${editId ? [cite_start]`<button class="btn-cancelar" style="background:var(--danger); color:white; padding:10px; font-size:0.5rem; border:none;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''} [cite: 305, 306]
+                    [cite_start]<button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button> [cite: 306, 307]
+                [cite_start]</div>`; [cite: 307]
+            [cite_start]if(editId) window.scrollTo({ top: 0, behavior: 'smooth' }); [cite: 308]
         }
 
         function generarHoras(selected = "") {
-            let res = "";
-            for(let i=7; i<=21; i++) {
-                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
-                let t1 = `${h}:00 ${ampm}`, t2 = `${h}:30 ${ampm}`;
-                res += `<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;
-            } return res;
-        }
+            [cite_start]let res = ""; [cite: 308]
+            [cite_start]for(let i=7; i<=21; i++) { [cite: 309]
+                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? [cite_start]"PM" : "AM"; [cite: 310]
+                [cite_start]let t1 = `${h}:00 ${ampm}`, t2 = `${h}:30 ${ampm}`; [cite: 311]
+                [cite_start]res += `<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`; [cite: 311]
+            [cite_start]} return res; [cite: 311]
+        [cite_start]} [cite: 312]
 
-        // FUNCIÓN CORREGIDA PARA MENSAJE DE WHATSAPP PERSONALIZADO
         function formatAlumnosAgenda(texto, horaClase, tipoClase) {
-            if(!texto) return '';
-            const alumnosArray = texto.split(',');
+            [cite_start]if(!texto) return ''; [cite: 312]
+            [cite_start]const alumnosArray = texto.split(','); [cite: 313]
             return alumnosArray.map((nombreRaw, i) => {
                 const nombreLimpio = nombreRaw.trim();
                 const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
                 
                 let linkWs = '';
-                if (alumnoDB) {
+                [cite_start]if (alumnoDB) { [cite: 313, 314]
                     const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
-                    
-                    // Construcción del mensaje solicitado
                     const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\n` +
-                                    `Tienes una reservación para recibir tu clase de ${tipoClase}\n` +
+                                   [cite_start]`Tienes una reservación para recibir tu clase de ${tipoClase}\n` + [cite: 314, 315]
                                     `Horario: ${horaClase}\n` +
-                                    `Por favor, confirmar asistencia.\n` +
+                                    [cite_start]`Por favor, confirmar asistencia.\n` + [cite: 315, 316]
                                     `Pilates Pulse.\n` +
-                                    `¡Te esperamos!`;
-                    
-                    const mensajeEncoded = encodeURIComponent(mensaje);
-
+                                    [cite_start]`¡Te esperamos!`; [cite: 316]
+                    [cite_start]const mensajeEncoded = encodeURIComponent(mensaje); [cite: 317]
                     linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensajeEncoded}" target="_blank">
                                 <img src="${WS_ICON_URL}" class="ws-agenda-icon">
-                            </a>`;
+                            [cite_start]</a>`; [cite: 318]
                 }
-
                 return `<div style="margin-bottom:6px; display:flex; align-items:center;">
                             <span>${i+1}-${nombreLimpio}</span>
                             ${linkWs}
-                        </div>`;
+                        [cite_start]</div>`; [cite: 319, 320]
             }).join('');
         }
 
         function a24h(horaStr) {
-            if (!horaStr) return 0;
-            let [tiempo, ampm] = horaStr.split(' ');
+            [cite_start]if (!horaStr) return 0; [cite: 320]
+            [cite_start]let [tiempo, ampm] = horaStr.split(' '); [cite: 321]
             let [hh, mm] = tiempo.split(':');
             hh = parseInt(hh);
-            mm = parseInt(mm);
-            if (ampm === "PM" && hh < 12) hh += 12;
-            if (ampm === "AM" && hh === 12) hh = 0;
-            return hh * 60 + mm;
-        }
+            [cite_start]mm = parseInt(mm); [cite: 321]
+            [cite_start]if (ampm === "PM" && hh < 12) hh += 12; [cite: 322]
+            [cite_start]if (ampm === "AM" && hh === 12) hh = 0; [cite: 323]
+            [cite_start]return hh * 60 + mm; [cite: 323]
+        [cite_start]} [cite: 324]
 
         async function pushClase(dia, editId = "null") {
-            const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
-            if (editId !== "null") {
-                await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            } else {
-                await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
+            [cite_start]const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`; [cite: 324]
+            [cite_start]if (editId !== "null") { [cite: 325]
+                [cite_start]await _sp.from('horarios').update({ contenido: content }).eq('id', editId); [cite: 325]
+            [cite_start]} else { [cite: 326]
+                [cite_start]await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]); [cite: 326]
             }
             document.getElementById('edit-form-crono').innerHTML = '';
             document.getElementById(`clase-form-${dia}`).innerHTML = '';
-            updateAll();
-        }
+            [cite_start]updateAll(); [cite: 327]
+        [cite_start]} [cite: 328]
 
         async function updateAll() {
-            const { data } = await _sp.from('horarios').select('*');
-            CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
+            [cite_start]const { data } = await _sp.from('horarios').select('*'); [cite: 328]
+            [cite_start]CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY'); [cite: 329]
             CACHE_HORARIOS = data.filter(x => x.celda_id !== 'DB_ENTRY').sort((a, b) => {
                 return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
-            });
-            DIAS.forEach(d => {
+            [cite_start]}); [cite: 329]
+            [cite_start]DIAS.forEach(d => { [cite: 330]
                 const filtrados = CACHE_HORARIOS.filter(x => x.celda_id === d);
                 document.getElementById(`badge-${d}`).innerText = filtrados.length;
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
-                    // PASAMOS p[0] (HORA) Y p[1] (CLASE) A LA FUNCIÓN
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3], p[0], p[1])}</div></span>
-                        <div style="display:flex; gap:10px; align-items:center;">
+                        [cite_start]<div style="display:flex; gap:10px; align-items:center;"> [cite: 331, 332]
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
-                            <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
+                            [cite_start]<span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span> [cite: 332, 333]
                         </div>
                     </div>`;
                 }).join('');
             });
             renderAlumnosList(CACHE_ALUMNOS);
-            processVencimientos();
-            renderCronograma();
+            [cite_start]processVencimientos(); [cite: 334]
+            [cite_start]renderCronograma(); [cite: 334]
         }
 
         function renderCronograma() {
-            const container = document.getElementById('render-cronograma');
+            [cite_start]const container = document.getElementById('render-cronograma'); [cite: 334]
             container.innerHTML = DIAS.map(dia => {
                 const clasesDelDia = CACHE_HORARIOS.filter(x => x.celda_id === dia);
-                return `
+                [cite_start]return ` [cite: 334, 335]
                     <div class="crono-row">
                         <div class="crono-dia-label">${dia}</div>
                         <div class="crono-list">
-                            ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
+                          [cite_start]${clasesDelDia.length > 0 ? clasesDelDia.map(c => { [cite: 335, 336]
                                 const p = c.contenido.split('|');
                                 return `
-                                <div class="crono-task">
+                                [cite_start]<div class="crono-task"> [cite: 336, 337]
                                     <div class="crono-task-main">
-                                        <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
+                                        [cite_start]<div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')"> [cite: 337, 338]
                                             <div class="crono-bullet"></div> 
                                             <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}
-                                        </div>
+                                        [cite_start]</div> [cite: 338, 339]
                                         <span class="crono-edit-icon" onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
-                                    </div>
+                                    [cite_start]</div> [cite: 339, 340]
                                     <div id="crono-detail-${c.id}" class="crono-detail-box">
                                         <b style="color:var(--celeste)">ALUMNOS:</b><br>
-                                        <div style="margin-top:5px; color:#fff;">${p[3].split(',').map((n, idx) => `${idx+1}-${n.trim()}`).join('<br>')}</div>
-                                        <div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div>
+                                        [cite_start]<div style="margin-top:5px; color:#fff;">${p[3].split(',').map((n, idx) => `${idx+1}-${n.trim()}`).join('<br>')}</div> [cite: 341, 342]
+                                        [cite_start]<div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div> [cite: 342, 343]
                                     </div>
                                 </div>`;
-                            }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px; font-style:italic;">Sin clases</div>'}
+                            [cite_start]}).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px; font-style:italic;">Sin clases</div>'} [cite: 343, 344]
                         </div>
                     </div>`;
             }).join('');
         }
 
         function toggleCronoDetail(id) {
-            const el = document.getElementById(`crono-detail-${id}`);
-            const isVisible = el.style.display === 'block';
+            [cite_start]const el = document.getElementById(`crono-detail-${id}`); [cite: 344]
+            [cite_start]const isVisible = el.style.display === 'block'; [cite: 345]
             document.querySelectorAll('.crono-detail-box').forEach(box => box.style.display = 'none');
-            el.style.display = isVisible ? 'none' : 'block';
+            el.style.display = isVisible ? [cite_start]'none' : 'block'; [cite: 345]
         }
 
         function checkVencimiento(fechaStr) {
-            if (!fechaStr) return false;
+            [cite_start]if (!fechaStr) return false; [cite: 345]
             const hoy = new Date();
-            const venc = new Date(fechaStr + "T23:59:59");
+            [cite_start]const venc = new Date(fechaStr + "T23:59:59"); [cite: 346]
             const diff = (venc - hoy) / (1000 * 60 * 60); 
-            return diff <= 48;
+            [cite_start]return diff <= 48; [cite: 346]
         }
 
         function renderAlumnosList(lista) {
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
-                const p = a.contenido.split('|');
-                const estaVencido = checkVencimiento(p[10]);
-                const telLimpio = p[2].replace(/\s+/g, '');
+                [cite_start]const p = a.contenido.split('|'); [cite: 346, 347]
+                [cite_start]const estaVencido = checkVencimiento(p[10]); [cite: 347]
+                [cite_start]const telLimpio = p[2].replace(/\s+/g, ''); [cite: 348]
                 
                 return `<div class="clase-box">
-                    <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b>
+                    <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || [cite_start]'SIN NOMBRE'}</b> [cite: 348, 349]
                     <br>
                     <a href="https://wa.me/${telLimpio}" target="_blank" class="ws-wrapper">
                         <img src="${WS_ICON_URL}" class="ws-icon">
-                        <span class="ws-number">${p[2]}</span>
+                        [cite_start]<span class="ws-number">${p[2]}</span> [cite: 349, 350]
                     </a>
                     <br>
                     <small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
-                        <p><b>EDAD:</b> ${p[11]} años</p>
+                        [cite_start]<p><b>EDAD:</b> ${p[11]} años</p> [cite: 350, 351]
                         <p><b>TELÉFONO:</b> ${p[2]}</p>
                         <p><b>MODALIDAD:</b> ${p[5]}</p>
-                        <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p>
+                        <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || [cite_start]'N/A'}</span></p> [cite: 351, 352]
                         <hr style="opacity:0.1; margin:10px 0;">
-                        <p><b>SALUD:</b> ${p[6] || 'Ninguna'}</p>
-                        <p><b>VISITA:</b> ${p[7] || 'N/A'}</p>
-                        <p><b>ORIGEN:</b> ${p[8] || 'N/A'}</p>
+                        <p><b>SALUD:</b> ${p[6] || [cite_start]'Ninguna'}</p> [cite: 352, 353]
+                        <p><b>VISITA:</b> ${p[7] || [cite_start]'N/A'}</p> [cite: 353, 354]
+                        <p><b>ORIGEN:</b> ${p[8] || [cite_start]'N/A'}</p> [cite: 354, 355]
                         <p><b>REFERIDO:</b> ${p[9]}</p>
-                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px; letter-spacing:1px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
+                        [cite_start]<button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px; letter-spacing:1px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button> [cite: 355, 356]
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between; align-items:center;">
-                        <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; background:#1a1a1c; border-color:#333; letter-spacing:1px;" onclick="toggleExtra('${a.id}')">DETALLES</button>
-                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900; cursor:pointer; opacity:0.8; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8" onclick="borrar('${a.id}')">BORRAR</button>
+                        [cite_start]<button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; background:#1a1a1c; border-color:#333; letter-spacing:1px;" onclick="toggleExtra('${a.id}')">DETALLES</button> [cite: 356, 357]
+                        [cite_start]<button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900; cursor:pointer; opacity:0.8; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8" onclick="borrar('${a.id}')">BORRAR</button> [cite: 357, 358]
                     </div>
-                </div>`;
-            }).join('');
+                [cite_start]</div>`; [cite: 358]
+            [cite_start]}).join(''); [cite: 359]
         }
 
         function processVencimientos() {
-            const listaNotif = document.getElementById('lista-notificaciones');
-            let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
-            document.getElementById('active-dot').style.display = alertas.length > 0 ? 'block' : 'none';
-            if (alertas.length === 0) {
-                listaNotif.innerHTML = `<p style="text-align:center; opacity:0.3; font-size:0.7rem; font-style:italic; margin-top:30px;">No hay vencimientos próximos.</p>`;
-            } else {
+            [cite_start]const listaNotif = document.getElementById('lista-notificaciones'); [cite: 359]
+            [cite_start]let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10])); [cite: 360]
+            document.getElementById('active-dot').style.display = alertas.length > 0 ? [cite_start]'block' : 'none'; [cite: 360]
+            [cite_start]if (alertas.length === 0) { [cite: 361]
+                [cite_start]listaNotif.innerHTML = `<p style="text-align:center; opacity:0.3; font-size:0.7rem; font-style:italic; margin-top:30px;">No hay vencimientos próximos.</p>`; [cite: 361]
+            [cite_start]} else { [cite: 362]
                 listaNotif.innerHTML = alertas.map(a => {
                     const p = a.contenido.split('|');
                     return `<div class="clase-box" style="border-left: 4px solid var(--danger); animation: cardPulse 3s infinite ease-in-out;">
-                        <b style="color:var(--danger)">${p[1]}</b><br>
+                        [cite_start]<b style="color:var(--danger)">${p[1]}</b><br> [cite: 362, 363]
                         <small>Vence: <b>${p[10]}</b></small>
                     </div>`;
-                }).join('');
+                [cite_start]}).join(''); [cite: 363, 364]
             }
         }
 
         function filtrarAlumnos() {
-            const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
-            const f = CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q));
-            renderAlumnosList(f);
+            [cite_start]const q = document.getElementById('buscadorAlumnos').value.toLowerCase(); [cite: 364]
+            [cite_start]const f = CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q)); [cite: 365]
+            [cite_start]renderAlumnosList(f); [cite: 365]
         }
 
         function toggleExtra(id) {
-            const el = document.getElementById(`extra-${id}`);
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+            [cite_start]const el = document.getElementById(`extra-${id}`); [cite: 365]
+            el.style.display = el.style.display === 'block' ? [cite_start]'none' : 'block'; [cite: 366]
         }
 
         function abrirFormNuevoAlumno(editId = null, existingData = null) {
-            const p = existingData ? existingData.split('|') : Array(12).fill('');
+            [cite_start]const p = existingData ? existingData.split('|') : Array(12).fill(''); [cite: 366, 367]
             let edades = ""; for(let i=1; i<=100; i++) edades += `<option value="${i}">${i}</option>`;
-            document.getElementById('btn-abrir-registro').style.display = 'none';
+            [cite_start]document.getElementById('btn-abrir-registro').style.display = 'none'; [cite: 367]
             document.getElementById('form-alumno-nuevo').innerHTML = `
                 <div style="background:#111; padding:20px; border-radius:30px; border:1px solid #222; margin-bottom:20px; animation: fadeIn 0.4s ease;">
                     <label>Nombre</label><input type="text" id="db-nom" value="${p[1]}">
                     <label>Edad</label><select id="db-edad">${edades}</select>
-                    <label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}">
+                    [cite_start]<label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"> [cite: 368, 369]
                     <label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select>
                     <label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select>
                     <label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select>
                     <label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}">
-                    <label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea>
+                    [cite_start]<label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea> [cite: 369, 370]
                     <label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea>
                     <label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea>
                     <label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select>
-                    <button class="btn-principal" style="letter-spacing:1px;" onclick="saveAlumno('${editId}')">GUARDAR</button>
+                    [cite_start]<button class="btn-principal" style="letter-spacing:1px;" onclick="saveAlumno('${editId}')">GUARDAR</button> [cite: 370, 371]
                     <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
-                </div>`;
-            if(editId) document.getElementById('db-edad').value = p[11];
+                [cite_start]</div>`; [cite: 371]
+            [cite_start]if(editId) document.getElementById('db-edad').value = p[11]; [cite: 372]
         }
 
         async function saveAlumno(editId = "null") {
-            const d = (id) => document.getElementById(id).value;
-            const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;
-            if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
+            [cite_start]const d = (id) => document.getElementById(id).value; [cite: 372]
+            [cite_start]const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`; [cite: 373]
+            [cite_start]if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId); [cite: 373]
+            [cite_start]else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]); [cite: 374]
             cerrarFormAlumno(); 
-            updateAll();
-        }
+            [cite_start]updateAll(); [cite: 374]
+        [cite_start]} [cite: 375]
 
         function cerrarFormAlumno() { 
-            document.getElementById('form-alumno-nuevo').innerHTML = '';
-            document.getElementById('btn-abrir-registro').style.display = 'block';
+            [cite_start]document.getElementById('form-alumno-nuevo').innerHTML = ''; [cite: 375]
+            [cite_start]document.getElementById('btn-abrir-registro').style.display = 'block'; [cite: 376]
         }
         
         function switchModulo(id) {
-            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
+            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? [cite_start]'block' : 'none'; [cite: 376, 377]
             document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? [cite_start]'block' : 'none'; [cite: 377, 378]
             document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+            document.getElementById('modulo-mantenimiento').style.display = id === 'modulo-mantenimiento' ? 'block' : 'none';
             
-            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+            document.getElementById('main-brand').style.display = (id === 'modulo-cronograma' || id === 'modulo-mantenimiento') ? [cite_start]'none' : 'flex'; [cite: 378, 379]
 
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
             document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
             document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
             document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+            const btnMant = document.getElementById('btn-mantenimiento');
+            [cite_start]if(btnMant) btnMant.classList.toggle('active-btn', id === 'modulo-mantenimiento'); [cite: 379, 380]
+
             if(id === 'modulo-cronograma') {
-                document.getElementById('edit-form-crono').innerHTML = '';
+                [cite_start]document.getElementById('edit-form-crono').innerHTML = ''; [cite: 380, 381]
             }
         }
 
         async function borrar(id) { 
             if(confirm("¿Borrar definitivamente?")) { 
-                await _sp.from('horarios').delete().eq('id', id);
-                document.getElementById('edit-form-crono').innerHTML = '';
+                [cite_start]await _sp.from('horarios').delete().eq('id', id); [cite: 381]
+                [cite_start]document.getElementById('edit-form-crono').innerHTML = ''; [cite: 382]
                 updateAll(); 
             } 
         }
