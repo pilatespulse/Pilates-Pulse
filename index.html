@@ -19,7 +19,6 @@
             --celeste: #a2d2ff;
             --danger: #ff2d55;
             --success: #25D366;
-            --whatsapp: #25D366;
             --border: rgba(255, 255, 255, 0.08);
             --font-main: 'Montserrat', sans-serif;
             --font-fancy: 'Playfair Display', serif;
@@ -27,21 +26,8 @@
 
         @keyframes bokehFloat {
             0% { transform: translateY(0) translateX(0); opacity: 0; }
-            10% { opacity: 0.03; }
-            50% { transform: translateY(-100px) translateX(20px); opacity: 0.05; }
-            90% { opacity: 0.03; }
+            50% { opacity: 0.05; }
             100% { transform: translateY(-200px) translateX(-20px); opacity: 0; }
-        }
-
-        @keyframes cardPulse {
-            0% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); }
-            50% { box-shadow: 0 0 15px rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); }
-            100% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); }
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-150%) skewX(-25deg); }
-            100% { transform: translateX(150%) skewX(-25deg); }
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -53,29 +39,13 @@
             color: #fff; 
             overflow-x: hidden; 
             letter-spacing: -0.02em; 
-            position: relative; 
         }
 
-        .bokeh-container {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .bokeh {
-            position: absolute;
-            background: rgba(255, 255, 255, 1);
-            border-radius: 50%;
-            filter: blur(30px);
-            opacity: 0;
-            animation: bokehFloat infinite linear;
-        }
+        .bokeh-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
+        .bokeh { position: absolute; background: #fff; border-radius: 50%; filter: blur(30px); opacity: 0; animation: bokehFloat infinite linear; }
 
         .logout-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
-        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
-        .btn-logout:active { background: var(--danger); color: white; border-color: var(--danger); }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px 12px; border-radius: 12px; font-size: 0.55rem; font-weight: 900; cursor: pointer; text-transform: uppercase; }
 
         #login-section {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -83,110 +53,58 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; position: relative; }
-        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; transition: transform 0.5s ease; }
+        .branding-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 0; }
+        .logo-pulse-circle { width: 80px; height: 80px; background: #fff; border-radius: 50%; overflow: hidden; border: 3px solid #1a1a1c; }
         .logo-pulse-circle img { width: 100%; height: 100%; object-fit: cover; }
         .brand-text { font-weight: 900; letter-spacing: 5px; margin-top: 15px; font-size: 1rem; text-transform: uppercase; }
 
         .search-container { margin-bottom: 20px; position: relative; }
-        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; transition: all 0.3s; }
-        .search-input:focus { border-color: rgba(255,255,255,0.3); background: #202022; }
+        .search-input { background: #1a1a1c; border: 1px solid var(--border); padding: 15px 20px 15px 45px; border-radius: 20px; color: #fff; width: 100%; }
         .search-icon { position: absolute; left: 18px; top: 16px; opacity: 0.3; }
 
         input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
         
         .btn-principal { 
-            background: #fff; 
-            color: #000; 
-            border: none; 
-            padding: 20px; 
-            border-radius: 20px; 
-            font-weight: 900; 
-            width: 100%; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            position: relative; 
-            overflow: hidden; 
-        }
-
-        .btn-principal::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            animation: shimmer 2s infinite;
-            animation-delay: 1s;
+            background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; 
+            font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; 
         }
 
         .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; }
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
         
-        .dia-item { 
-            background: var(--card); 
-            margin-bottom: 15px; 
-            border-radius: 30px; 
-            border: 1px solid var(--border); 
-            overflow: hidden; 
-            animation: cardPulse 4s infinite ease-in-out; 
-        }
-        .dia-item:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); transition: all 0.3s; }
-
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; }
         .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        .clase-box { 
-            background: rgba(255,255,255,0.03); 
-            padding: 20px; 
-            border-radius: 25px; 
-            margin-bottom: 12px; 
-            border: 1px solid var(--border); 
-            position: relative; 
-            animation: cardPulse 5s infinite ease-in-out; 
-            animation-delay: 1s;
-        }
+        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; }
 
-        .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
-
-        /* Botones de Asistencia */
+        /* Botones de Asistencia - Tamaño Reducido */
         .check-btn {
-            width: 22px;
-            height: 22px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.2);
-            margin-right: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-right: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 8px;
             font-weight: 900;
             transition: all 0.2s ease;
             flex-shrink: 0;
             background: rgba(255,255,255,0.05);
         }
-        .check-btn.presente { background: var(--success); border-color: var(--success); color: #000; box-shadow: 0 0 10px rgba(37, 211, 102, 0.3); }
-        .check-btn.ausente { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
+        .check-btn.presente { background: var(--success); border-color: var(--success); color: #000; }
+        .check-btn.ausente { background: var(--danger); border-color: var(--danger); color: #fff; }
 
-        .ws-agenda-icon {
-            width: 16px;
-            height: 16px;
-            margin-left: 8px;
-            vertical-align: middle;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .ws-agenda-icon:active { transform: scale(1.3); }
+        .ws-agenda-icon { width: 14px; height: 14px; margin-left: 6px; vertical-align: middle; cursor: pointer; opacity: 0.8; }
 
-        .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; }
+        .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; }
         .crono-row { border-bottom: 1px solid var(--border); padding: 20px 0; }
         .crono-dia-label { font-family: var(--font-fancy); font-size: 1.5rem; color: var(--celeste); margin-bottom: 10px; font-style: italic; }
-        .crono-task { padding: 10px 0; border-radius: 10px; }
         .crono-task-main { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
-        .crono-bullet { width: 6px; height: 6px; background: var(--celeste); border-radius: 50%; margin-right: 12px; }
-        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); animation: fadeIn 0.3s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .crono-detail-box { display: none; margin: 10px 0 10px 18px; padding: 15px; background: #1a1a1c; border-radius: 15px; border: 1px solid var(--border); }
 
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
         .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); text-align: center; }
@@ -267,7 +185,7 @@
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
-        const WS_ICON_URL = "https://i.postimg.cc/HWQkv6Qv/whatsapp-vector-logo-icono-logotipo-vector-redes-sociales-901408-406.avif";
+        const WS_ICON_URL = "https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
 
@@ -280,15 +198,15 @@
         function initBokeh() {
             const container = document.querySelector('.bokeh-container');
             for (let i = 0; i < 15; i++) {
-                const bokeh = document.createElement('div');
-                bokeh.className = 'bokeh';
-                const size = Math.random() * 150 + 50;
-                bokeh.style.width = bokeh.style.height = `${size}px`;
-                bokeh.style.left = `${Math.random() * 100}%`;
-                bokeh.style.top = `${Math.random() * 100 + 10}%`;
-                bokeh.style.animationDuration = `${Math.random() * 20 + 15}s`;
-                bokeh.style.animationDelay = `${Math.random() * 10}s`;
-                container.appendChild(bokeh);
+                const b = document.createElement('div');
+                b.className = 'bokeh';
+                const s = Math.random() * 150 + 50;
+                b.style.width = b.style.height = `${s}px`;
+                b.style.left = `${Math.random() * 100}%`;
+                b.style.top = `${Math.random() * 100 + 10}%`;
+                b.style.animationDuration = `${Math.random() * 20 + 15}s`;
+                b.style.animationDelay = `${Math.random() * 10}s`;
+                container.appendChild(b);
             }
         }
 
@@ -317,7 +235,7 @@
                     </div>
                     <div class="dia-content" id="cont-${d}" style="display:none; padding: 0 20px 20px 20px;">
                         <div id="clase-form-${d}"></div>
-                        <button class="btn-principal" id="btn-add-${d}" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
+                        <button class="btn-principal" style="font-size:0.55rem; background:#1a1a1c; color:#fff; padding:12px;" onclick="addClasePopup('${d}')">+ CLASE</button>
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
@@ -337,69 +255,63 @@
             document.getElementById(targetDiv).innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:20px; border:1px solid #222; margin-bottom:15px;">
                     <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
-                    <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
+                    <label>CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
                     <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
-                    <label>ALUMNO(S) - (Comas)</label><input type="text" id="n-${dia}" value="${p[3]}">
+                    <label>ALUMNOS</label><input type="text" id="n-${dia}" value="${p[3]}">
                     <button class="btn-principal" style="padding:12px; font-size:0.6rem;" onclick="pushClase('${dia}', '${editId}', '${p[4] || ''}')">GUARDAR</button>
                     ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
                     <button class="btn-cancelar" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
                 </div>`;
         }
 
-        function generarHoras(selected = "") {
-            let res = ""; for(let i=7; i<=21; i++) {
-                let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
-                let t1 = `${h}:00 ${ampm}`, t2 = `${h}:30 ${ampm}`;
-                res += `<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;
-            } return res;
+        function generarHoras(s = "") {
+            let r = ""; for(let i=7; i<=21; i++) {
+                let h = i > 12 ? i-12 : i; let ap = i >= 12 ? "PM" : "AM";
+                let t1 = `${h}:00 ${ap}`, t2 = `${h}:30 ${ap}`;
+                r += `<option ${s==t1?'selected':''}>${t1}</option><option ${s==t2?'selected':''}>${t2}</option>`;
+            } return r;
         }
 
-        // LOGICA ASISTENCIA CORREGIDA
-        async function toggleAsistencia(claseId, alumnoIdx) {
-            const clase = CACHE_HORARIOS.find(c => c.id == claseId);
-            if(!clase) return;
-            let parts = clase.contenido.split('|');
-            let asistenciaArr = (parts[4] && parts[4].trim() !== "") ? parts[4].split(',') : new Array(parts[3].split(',').length).fill('0');
-            
-            // Ciclo: 0 (pend) -> 1 (pres) -> 2 (aus) -> 0
-            let current = parseInt(asistenciaArr[alumnoIdx] || '0');
-            asistenciaArr[alumnoIdx] = (current + 1) % 3;
-            
-            parts[4] = asistenciaArr.join(',');
-            await _sp.from('horarios').update({ contenido: parts.join('|') }).eq('id', claseId);
+        async function toggleAsistencia(claseId, idx) {
+            const c = CACHE_HORARIOS.find(x => x.id == claseId);
+            if(!c) return;
+            let p = c.contenido.split('|');
+            let asis = (p[4] && p[4].trim() !== "") ? p[4].split(',') : new Array(p[3].split(',').length).fill('0');
+            asis[idx] = (parseInt(asis[idx] || '0') + 1) % 3;
+            p[4] = asis.join(',');
+            await _sp.from('horarios').update({ contenido: p.join('|') }).eq('id', claseId);
             updateAll();
         }
 
-        function formatAlumnosAgenda(texto, claseId, asistenciaStr) {
-            if(!texto || texto.trim() === "") return '';
-            const alumnosArray = texto.split(',');
-            const asistenciaArray = (asistenciaStr && asistenciaStr.trim() !== "") ? asistenciaStr.split(',') : [];
+        function formatAlumnosAgenda(txt, id, asisStr) {
+            if(!txt || txt.trim() === "") return '';
+            const alum = txt.split(',');
+            const asis = (asisStr && asisStr.trim() !== "") ? asisStr.split(',') : [];
             
-            return alumnosArray.map((nombreRaw, i) => {
-                const nombreLimpio = nombreRaw.trim();
-                const estado = asistenciaArray[i] || '0'; 
-                const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
-                
-                let checkClass = estado == '1' ? 'presente' : (estado == '2' ? 'ausente' : '');
-                let checkIcon = estado == '1' ? '✓' : (estado == '2' ? '×' : '');
-                let wsLink = alumnoDB ? `<a href="https://wa.me/${alumnoDB.contenido.split('|')[2].replace(/\s+/g, '')}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>` : '';
+            return alum.map((n, i) => {
+                const nl = n.trim();
+                const st = asis[i] || '0'; 
+                const db = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nl.toLowerCase());
+                let cls = st == '1' ? 'presente' : (st == '2' ? 'ausente' : '');
+                let ico = st == '1' ? '✓' : (st == '2' ? '×' : '');
+                let ws = db ? `<a href="https://wa.me/${db.contenido.split('|')[2].replace(/\s+/g, '')}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>` : '';
 
-                return `<div style="margin-bottom:10px; display:flex; align-items:center;">
-                            <div class="check-btn ${checkClass}" onclick="toggleAsistencia('${claseId}', ${i})">${checkIcon}</div>
-                            <span style="font-size:0.7rem; color:#eee;">${i+1}-${nombreLimpio}</span>
-                            ${wsLink}
+                return `<div style="margin-bottom:6px; display:flex; align-items:center;">
+                            <div class="check-btn ${cls}" onclick="toggleAsistencia('${id}', ${i})">${ico}</div>
+                            <span style="font-size:0.65rem; color:#eee;">${nl}</span>
+                            ${ws}
                         </div>`;
             }).join('');
         }
 
-        async function pushClase(dia, editId = "null", asistenciaActual = "") {
+        async function pushClase(dia, eid = "null", asisAct = "") {
             const h = document.getElementById('h-'+dia).value;
             const t = document.getElementById('t-'+dia).value;
             const m = document.getElementById('m-'+dia).value;
             const n = document.getElementById('n-'+dia).value;
-            const content = `${h}|${t}|${m}|${n}|${asistenciaActual}`;
-            if (editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            else await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
+            const c = `${h}|${t}|${m}|${n}|${asisAct}`;
+            if (eid !== "null") await _sp.from('horarios').update({ contenido: c }).eq('id', eid);
+            else await _sp.from('horarios').insert([{ celda_id: dia, contenido: c }]);
             updateAll();
         }
 
@@ -409,15 +321,15 @@
             CACHE_HORARIOS = data.filter(x => x.celda_id !== 'DB_ENTRY').sort((a, b) => a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]));
             
             DIAS.forEach(d => {
-                const filtrados = CACHE_HORARIOS.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = filtrados.length;
-                document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
+                const fil = CACHE_HORARIOS.filter(x => x.celda_id === d);
+                document.getElementById(`badge-${d}`).innerText = fil.length;
+                document.getElementById(`clases-${d}`).innerHTML = fil.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:start;">
                         <div>
                             <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}</span><br>
-                            <small style="opacity:0.4; font-size:0.6rem; text-transform:uppercase;">${p[2]}</small>
-                            <div style="margin-top:12px;">${formatAlumnosAgenda(p[3], i.id, p[4])}</div>
+                            <small style="opacity:0.4; font-size:0.55rem; text-transform:uppercase;">${p[2]}</small>
+                            <div style="margin-top:10px;">${formatAlumnosAgenda(p[3], i.id, p[4])}</div>
                         </div>
                         <div style="display:flex; gap:10px;">
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5;">📝</span>
@@ -432,78 +344,63 @@
         function renderCronograma() {
             const container = document.getElementById('render-cronograma');
             container.innerHTML = DIAS.map(dia => {
-                const clasesDelDia = CACHE_HORARIOS.filter(x => x.celda_id === dia);
-                return `
-                    <div class="crono-row">
-                        <div class="crono-dia-label">${dia}</div>
-                        <div class="crono-list">
-                            ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
-                                const p = c.contenido.split('|');
-                                const asisArr = p[4] ? p[4].split(',') : [];
-                                const countPres = asisArr.filter(x => x=='1').length;
-                                return `<div class="crono-task">
-                                    <div class="crono-task-main">
-                                        <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
-                                            <div class="crono-bullet" style="background:${countPres > 0 ? 'var(--success)' : 'var(--celeste)'}"></div> 
-                                            <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]} 
-                                            <small style="margin-left:10px; opacity:0.5">(${countPres}/${p[3].split(',').length})</small>
-                                        </div>
-                                        <span class="crono-edit-icon" onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
-                                    </div>
-                                    <div id="crono-detail-${c.id}" class="crono-detail-box">${formatAlumnosAgenda(p[3], c.id, p[4])}</div>
-                                </div>`;
-                            }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px;">Sin clases</div>'}
-                        </div>
-                    </div>`;
+                const clases = CACHE_HORARIOS.filter(x => x.celda_id === dia);
+                return `<div class="crono-row">
+                    <div class="crono-dia-label">${dia}</div>
+                    <div class="crono-list">${clases.length > 0 ? clases.map(c => {
+                        const p = c.contenido.split('|');
+                        const pres = (p[4]||'').split(',').filter(x=>x=='1').length;
+                        return `<div class="crono-task">
+                            <div class="crono-task-main">
+                                <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
+                                    <div style="width:5px; height:5px; border-radius:50%; background:${pres>0?'var(--success)':'var(--celeste)'}; margin-right:10px;"></div>
+                                    <b>${p[0]}</b> — ${p[1]} <small style="margin-left:8px; opacity:0.4">(${pres}/${p[3].split(',').length})</small>
+                                </div>
+                                <span onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')" style="opacity:0.5">📝</span>
+                            </div>
+                            <div id="crono-detail-${c.id}" class="crono-detail-box">${formatAlumnosAgenda(p[3], c.id, p[4])}</div>
+                        </div>`;
+                    }).join('') : '<div style="opacity:0.2; font-size:0.6rem; margin-left:15px;">Sin clases</div>'}</div>
+                </div>`;
             }).join('');
         }
 
         function toggleCronoDetail(id) {
             const el = document.getElementById(`crono-detail-${id}`);
             const vis = el.style.display === 'block';
-            document.querySelectorAll('.crono-detail-box').forEach(box => box.style.display = 'none');
+            document.querySelectorAll('.crono-detail-box').forEach(b => b.style.display = 'none');
             el.style.display = vis ? 'none' : 'block';
         }
 
-        function a24h(hStr) {
-            if(!hStr) return 0;
-            let [t, ap] = hStr.split(' '); let [h, m] = t.split(':'); h = parseInt(h);
+        function a24h(s) {
+            if(!s) return 0;
+            let [t, ap] = s.split(' '); let [h, m] = t.split(':'); h = parseInt(h);
             if(ap === "PM" && h < 12) h += 12; if(ap === "AM" && h === 12) h = 0;
             return h * 60 + parseInt(m);
         }
 
-        function renderAlumnosList(lista) {
-            document.getElementById('render-alumnos').innerHTML = lista.map(a => {
+        function renderAlumnosList(l) {
+            document.getElementById('render-alumnos').innerHTML = l.map(a => {
                 const p = a.contenido.split('|');
-                const venc = checkVencimiento(p[10]);
                 return `<div class="clase-box">
-                    <b style="font-size:0.85rem;" class="${venc ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b><br>
-                    <small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
-                    <div id="extra-${a.id}" class="ficha-detalles"><p>VENCIMIENTO: <span class="${venc ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p></div>
+                    <b style="font-size:0.8rem;">${p[1] || 'SIN NOMBRE'}</b><br>
+                    <small style="opacity:0.5; font-size:0.6rem;">${p[3]} — ${p[4]}</small>
                     <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between;">
-                        <button class="nav-btn" style="padding:10px 20px;" onclick="toggleExtra('${a.id}')">DETALLES</button>
-                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900;" onclick="borrar('${a.id}')">BORRAR</button>
+                        <button class="nav-btn" style="padding:8px 15px;">DETALLES</button>
+                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.5rem; font-weight:900;" onclick="borrar('${a.id}')">BORRAR</button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function checkVencimiento(f) { if(!f) return false; const h=new Date(); const v=new Date(f+"T23:59:59"); return (v-h)/(1000*60*60) <= 48; }
-
         function processVencimientos() {
-            const list = document.getElementById('lista-notificaciones');
-            let al = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
+            const al = CACHE_ALUMNOS.filter(a => {
+                const f = a.contenido.split('|')[10];
+                if(!f) return false;
+                return (new Date(f+"T23:59:59") - new Date())/(1000*60*60) <= 48;
+            });
             document.getElementById('active-dot').style.display = al.length > 0 ? 'block' : 'none';
-            list.innerHTML = al.length === 0 ? '<p style="text-align:center; opacity:0.3; font-size:0.7rem; margin-top:30px;">Sin vencimientos.</p>' : 
-            al.map(a => `<div class="clase-box" style="border-left: 4px solid var(--danger);"><b style="color:var(--danger)">${a.contenido.split('|')[1]}</b><br><small>Vence: ${a.contenido.split('|')[10]}</small></div>`).join('');
         }
-
-        function filtrarAlumnos() {
-            const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
-            renderAlumnosList(CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q)));
-        }
-
-        function toggleExtra(id) { const el=document.getElementById(`extra-${id}`); el.style.display = el.style.display==='block'?'none':'block'; }
 
         function switchModulo(id) {
             ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-notificaciones'].forEach(m => document.getElementById(m).style.display = (m===id?'block':'none'));
@@ -511,7 +408,7 @@
             ['btn-agenda','btn-crono','btn-db','btn-notif'].forEach(b => document.getElementById(b).classList.toggle('active-btn', b.includes(id.split('-')[1])));
         }
 
-        async function borrar(id) { if(confirm("¿Borrar definitivamente?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
+        async function borrar(id) { if(confirm("¿Borrar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
     </script>
 </body>
 </html>
