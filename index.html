@@ -362,9 +362,25 @@
             } return res;
         }
 
-        function formatAlumnos(texto) {
-            if(!texto || !texto.includes(',')) return texto;
-            return texto.split(',').map((n, i) => `${i+1}-${n.trim()}`).join('<br>');
+        function formatAlumnosAgenda(texto, hora) {
+            if(!texto) return '';
+            const alumnosArray = texto.split(',');
+            return alumnosArray.map((nombreRaw, i) => {
+                const nombreLimpio = nombreRaw.trim();
+                // Buscar en la base de datos de alumnos (CACHE_ALUMNOS)
+                const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
+                
+                let linkWs = '';
+                if (alumnoDB) {
+                    const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
+                    const mensaje = encodeURIComponent(`Recuerda tu clase a las ${hora}`);
+                    linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensaje}" target="_blank" style="margin-left:8px; vertical-align:middle;">
+                                <img src="${WS_ICON_URL}" style="width:14px; height:14px; display:inline-block;">
+                              </a>`;
+                }
+
+                return `<div style="margin-bottom:4px;">${i+1}-${nombreLimpio} ${linkWs}</div>`;
+            }).join('');
         }
 
         function a24h(horaStr) {
@@ -392,17 +408,19 @@
 
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
+            // IMPORTANTE: Primero cargamos los alumnos para que el render de agenda los reconozca
+            CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
             CACHE_HORARIOS = data.filter(x => x.celda_id !== 'DB_ENTRY').sort((a, b) => {
                 return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
             });
-            CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
+            
             DIAS.forEach(d => {
                 const filtrados = CACHE_HORARIOS.filter(x => x.celda_id === d);
                 document.getElementById(`badge-${d}`).innerText = filtrados.length;
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:5px;">${formatAlumnos(p[3])}</div></span>
+                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:5px;">${formatAlumnosAgenda(p[3], p[0])}</div></span>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
                             <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
@@ -436,7 +454,7 @@
                                     </div>
                                     <div id="crono-detail-${c.id}" class="crono-detail-box">
                                         <b style="color:var(--celeste)">ALUMNOS:</b><br>
-                                        <div style="margin-top:5px; color:#fff;">${formatAlumnos(p[3])}</div>
+                                        <div style="margin-top:5px; color:#fff;">${p[3].split(',').map((n, idx) => `${idx+1}-${n.trim()}`).join('<br>')}</div>
                                         <div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div>
                                     </div>
                                 </div>`;
