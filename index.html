@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
     
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>4
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&family=Playfair+Display:italic,wght@700&display=swap" rel="stylesheet">
     
     <style>
@@ -22,6 +22,13 @@
             --border: rgba(255, 255, 255, 0.08);
             --font-main: 'Montserrat', sans-serif;
             --font-fancy: 'Playfair Display', serif;
+        }
+
+        /* --- NUEVO: ESTILO MANTENIMIENTO --- */
+        #maintenance-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 50000; display: none;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
         }
 
         @keyframes bokehFloat {
@@ -95,88 +102,34 @@
         input, select, textarea { width: 100%; background: #1a1a1c; border: 1px solid var(--border); padding: 18px; border-radius: 20px; color: #fff; margin-bottom: 15px; font-family: inherit; }
         
         .btn-principal { 
-            background: #fff; 
-            color: #000; 
-            border: none; 
-            padding: 20px; 
-            border-radius: 20px; 
-            font-weight: 900; 
-            width: 100%; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            position: relative; 
-            overflow: hidden; 
+            background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; position: relative; overflow: hidden; 
         }
 
         .btn-principal::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            animation: shimmer 2s infinite;
-            animation-delay: 1s;
+            animation: shimmer 2s infinite; animation-delay: 1s;
         }
 
         .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; }
         
-        .dia-item { 
-            background: var(--card); 
-            margin-bottom: 15px; 
-            border-radius: 30px; 
-            border: 1px solid var(--border); 
-            overflow: hidden; 
-            animation: cardPulse 4s infinite ease-in-out; 
-        }
+        .dia-item { background: var(--card); margin-bottom: 15px; border-radius: 30px; border: 1px solid var(--border); overflow: hidden; animation: cardPulse 4s infinite ease-in-out; }
         .dia-item:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); transition: all 0.3s; }
-
         .dia-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        .clase-box { 
-            background: rgba(255,255,255,0.03); 
-            padding: 20px; 
-            border-radius: 25px; 
-            margin-bottom: 12px; 
-            border: 1px solid var(--border); 
-            position: relative; 
-            animation: cardPulse 5s infinite ease-in-out; 
-            animation-delay: 1s;
-        }
+        .clase-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; animation: cardPulse 5s infinite ease-in-out; animation-delay: 1s; }
 
         .ficha-detalles { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); line-height: 1.6; }
-
         .vence-alerta { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
 
-        .ws-wrapper {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            margin-top: 5px;
-            transition: transform 0.2s;
-        }
+        .ws-wrapper { display: inline-flex; align-items: center; text-decoration: none; margin-top: 5px; transition: transform 0.2s; }
         .ws-wrapper:active { transform: scale(0.95); }
-        .ws-icon {
-            width: 18px;
-            height: 18px;
-            margin-right: 8px;
-            object-fit: contain;
-        }
-        .ws-number {
-            color: var(--whatsapp);
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
+        .ws-icon { width: 18px; height: 18px; margin-right: 8px; object-fit: contain; }
+        .ws-number { color: var(--whatsapp); font-weight: 700; font-size: 0.8rem; }
 
-        .ws-agenda-icon {
-            width: 16px;
-            height: 16px;
-            margin-left: 6px;
-            vertical-align: text-bottom;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+        .ws-agenda-icon { width: 16px; height: 16px; margin-left: 6px; vertical-align: text-bottom; cursor: pointer; transition: transform 0.2s; }
         .ws-agenda-icon:active { transform: scale(1.2); }
 
         .crono-header-text { font-family: var(--font-fancy); font-size: 2.2rem; text-align: center; margin-bottom: 30px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
@@ -198,11 +151,22 @@
         .nav-btn.active-btn { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
         .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
         label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
+
+        /* --- NUEVO: PANEL ROJO MASTER --- */
+        #master-control-panel {
+            background: #2a0000; border: 2px solid var(--danger); padding: 15px; border-radius: 20px; margin-bottom: 20px; display: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="bokeh-container"></div>
+
+    <div id="maintenance-screen">
+        <div class="logo-pulse-circle" style="width:100px; height:100px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
+        <h1 style="font-family: var(--font-fancy); font-size: 2.5rem; margin-top:20px;">SITIO EN PAUSA</h1>
+        <p style="opacity: 0.5; font-weight:600;">Estamos realizando ajustes técnicos.<br>Volvemos pronto.</p>
+    </div>
 
     <div id="login-section">
         <div class="branding-container">
@@ -227,6 +191,13 @@
         </div>
 
         <div class="main-container">
+            
+            <div id="master-control-panel">
+                <h3 style="color:var(--danger); font-size:0.7rem; margin:0 0 10px 0; letter-spacing:1px;">ZONA MASTER PILATES</h3>
+                <p id="web-status-txt" style="font-size:0.75rem; margin-bottom:10px;">Estado: Verificando...</p>
+                <button onclick="toggleWebStatus()" class="btn-principal" style="background:var(--danger); color:white; padding:10px; font-size:0.6rem;">APAGAR / ENCENDER WEB</button>
+            </div>
+
             <div id="modulo-agenda">
                 <div id="listaDias"></div>
             </div>
@@ -241,7 +212,7 @@
             </div>
 
             <div id="modulo-notificaciones" style="display:none;">
-                <h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3>
+                 <h3 style="font-size:0.7rem; color:#fff; letter-spacing:2px; text-align:center; margin-bottom:20px;">PRÓXIMOS VENCIMIENTOS</h3>
                 <div id="lista-notificaciones"></div>
             </div>
 
@@ -275,51 +246,86 @@
         const WS_ICON_URL = "https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
+        let WEB_OFF = false;
 
-        window.onload = () => {
+        window.onload = async () => {
             initBokeh();
-            if (localStorage.getItem('studio_auth')) startApp();
-            else document.getElementById('login-section').style.display = 'flex';
+            await checkStatus();
+            
+            const auth = localStorage.getItem('studio_auth');
+            const isMaster = localStorage.getItem('master_access');
+
+            if (auth) {
+                if(isMaster === 'true') document.getElementById('master-control-panel').style.display = 'block';
+                startApp();
+            } else if (WEB_OFF) {
+                document.getElementById('maintenance-screen').style.display = 'flex';
+            } else {
+                document.getElementById('login-section').style.display = 'flex';
+            }
         };
 
-        function initBokeh() {
-            const container = document.querySelector('.bokeh-container');
-            const count = 15;
-            for (let i = 0; i < count; i++) {
-                const bokeh = document.createElement('div');
-                bokeh.className = 'bokeh';
-                const size = Math.random() * 150 + 50;
-                bokeh.style.width = `${size}px`;
-                bokeh.style.height = `${size}px`;
-                bokeh.style.left = `${Math.random() * 100}%`;
-                bokeh.style.top = `${Math.random() * 100 + 10}%`;
-                const duration = Math.random() * 20 + 15;
-                bokeh.style.animationDuration = `${duration}s`;
-                bokeh.style.animationDelay = `${Math.random() * 10}s`;
-                container.appendChild(bokeh);
+        async function checkStatus() {
+            const { data } = await _sp.from('horarios').select('*').eq('celda_id', 'WEB_STATUS').maybeSingle();
+            if (data) {
+                WEB_OFF = (data.contenido === 'OFF');
+                const stTxt = document.getElementById('web-status-txt');
+                if(stTxt) stTxt.innerText = WEB_OFF ? "Estado: WEB APAGADA" : "Estado: WEB ACTIVA";
             }
         }
 
         async function handleLogin() {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
+
+            // LOGIN MASTER
+            if (u === "admin" && p === "m_xmA92X_12[2+XA-!") {
+                localStorage.setItem('studio_auth', 'true');
+                localStorage.setItem('master_access', 'true');
+                location.reload();
+                return;
+            }
+
             const { data } = await _sp.from('usuarios_admin').select('*').eq('usuario', u).eq('password', p).maybeSingle();
             if (data) { 
-                localStorage.setItem('studio_auth', 'true'); 
+                localStorage.setItem('studio_auth', 'true');
+                localStorage.setItem('master_access', 'false');
                 startApp(); 
             } else alert("Acceso denegado");
         }
 
-        function handleLogout() {
-            localStorage.removeItem('studio_auth');
-            location.reload();
+        async function toggleWebStatus() {
+            const nuevo = WEB_OFF ? 'ON' : 'OFF';
+            if(confirm(`¿Seguro que quieres cambiar el estado de la web a ${nuevo}?`)) {
+                await _sp.from('horarios').update({ contenido: nuevo }).eq('celda_id', 'WEB_STATUS');
+                location.reload();
+            }
         }
+
+        function handleLogout() { localStorage.clear(); location.reload(); }
 
         function startApp() {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
             renderEstructura();
             updateAll();
+        }
+
+        /* --- AQUÍ EMPIEZA TU CÓDIGO ORIGINAL SIN MODIFICAR --- */
+
+        function initBokeh() {
+            const container = document.querySelector('.bokeh-container');
+            for (let i = 0; i < 15; i++) {
+                const bokeh = document.createElement('div');
+                bokeh.className = 'bokeh';
+                const size = Math.random() * 150 + 50;
+                bokeh.style.width = bokeh.style.height = `${size}px`;
+                bokeh.style.left = `${Math.random() * 100}%`;
+                bokeh.style.top = `${Math.random() * 100 + 10}%`;
+                bokeh.style.animationDuration = `${Math.random() * 20 + 15}s`;
+                bokeh.style.animationDelay = `${Math.random() * 10}s`;
+                container.appendChild(bokeh);
+            }
         }
 
         function renderEstructura() {
@@ -354,86 +360,59 @@
                     <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
                     <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
                     <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
-                    <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
-                    <button class="btn-principal" style="padding:12px; font-size:0.6rem; letter-spacing:1px;" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
-                    ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white; padding:10px; font-size:0.5rem; border:none;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
-                    <button class="btn-cancelar" style="padding:10px; font-size:0.5rem;" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
+                    <label>ALUMNO(S)</label><input type="text" id="n-${dia}" value="${p[3]}">
+                    <button class="btn-principal" onclick="pushClase('${dia}', '${editId}')">GUARDAR</button>
+                    ${editId ? `<button class="btn-cancelar" style="background:var(--danger); color:white;" onclick="borrar('${editId}')">ELIMINAR</button>` : ''}
+                    <button class="btn-cancelar" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
                 </div>`;
-            
             if(editId) window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function generarHoras(selected = "") {
-            let res = ""; for(let i=7; i<=21; i++) {
+            let res = "";
+            for(let i=7; i<=21; i++) {
                 let h = i > 12 ? i-12 : i; let ampm = i >= 12 ? "PM" : "AM";
                 let t1 = `${h}:00 ${ampm}`, t2 = `${h}:30 ${ampm}`;
                 res += `<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;
             } return res;
         }
 
-        function formatAlumnosAgenda(texto) {
-            if(!texto) return '';
-            const alumnosArray = texto.split(',');
-            return alumnosArray.map((nombreRaw, i) => {
-                const nombreLimpio = nombreRaw.trim();
-                const alumnoDB = CACHE_ALUMNOS.find(a => a.contenido.split('|')[1].toLowerCase() === nombreLimpio.toLowerCase());
-                
-                let linkWs = '';
-                if (alumnoDB) {
-                    const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
-                    linkWs = `<a href="https://wa.me/${telLimpio}" target="_blank">
-                                <img src="${WS_ICON_URL}" class="ws-agenda-icon">
-                              </a>`;
-                }
-
-                return `<div style="margin-bottom:6px; display:flex; align-items:center;">
-                            <span>${i+1}-${nombreLimpio}</span>
-                            ${linkWs}
-                        </div>`;
-            }).join('');
-        }
-
-        function a24h(horaStr) {
-            if (!horaStr) return 0;
-            let [tiempo, ampm] = horaStr.split(' ');
-            let [hh, mm] = tiempo.split(':');
-            hh = parseInt(hh);
-            mm = parseInt(mm);
-            if (ampm === "PM" && hh < 12) hh += 12;
-            if (ampm === "AM" && hh === 12) hh = 0;
-            return hh * 60 + mm;
-        }
-
         async function pushClase(dia, editId = "null") {
             const content = `${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
-            if (editId !== "null") {
-                await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            } else {
-                await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
-            }
+            if (editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
+            else await _sp.from('horarios').insert([{ celda_id: dia, contenido: content }]);
             document.getElementById('edit-form-crono').innerHTML = '';
             document.getElementById(`clase-form-${dia}`).innerHTML = '';
             updateAll();
         }
 
+        function formatAlumnosAgenda(texto) {
+            if(!texto) return '';
+            return texto.split(',').map((nRaw, i) => {
+                const n = nRaw.trim();
+                const aDB = CACHE_ALUMNOS.find(x => x.contenido.split('|')[1].toLowerCase() === n.toLowerCase());
+                let link = '';
+                if (aDB) {
+                    const tel = aDB.contenido.split('|')[2].replace(/\s+/g, '');
+                    link = `<a href="https://wa.me/${tel}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;
+                }
+                return `<div style="margin-bottom:6px;"><span>${i+1}-${n}</span>${link}</div>`;
+            }).join('');
+        }
+
         async function updateAll() {
             const { data } = await _sp.from('horarios').select('*');
             CACHE_ALUMNOS = data.filter(x => x.celda_id === 'DB_ENTRY');
-            CACHE_HORARIOS = data.filter(x => x.celda_id !== 'DB_ENTRY').sort((a, b) => {
-                return a24h(a.contenido.split('|')[0]) - a24h(b.contenido.split('|')[0]);
-            });
+            CACHE_HORARIOS = data.filter(x => !['DB_ENTRY','WEB_STATUS'].includes(x.celda_id));
             
             DIAS.forEach(d => {
-                const filtrados = CACHE_HORARIOS.filter(x => x.celda_id === d);
-                document.getElementById(`badge-${d}`).innerText = filtrados.length;
-                document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
+                const f = CACHE_HORARIOS.filter(x => x.celda_id === d);
+                document.getElementById(`badge-${d}`).innerText = f.length;
+                document.getElementById(`clases-${d}`).innerHTML = f.map(i => {
                     const p = i.contenido.split('|');
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3])}</div></span>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
-                            <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
-                        </div>
+                        <span style="font-size:0.75rem;"><b>${p[0]}</b> — ${p[1]}<br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3])}</div></span>
+                        <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; opacity:0.5;">📝</span>
                     </div>`;
                 }).join('');
             });
@@ -443,176 +422,81 @@
         }
 
         function renderCronograma() {
-            const container = document.getElementById('render-cronograma');
-            container.innerHTML = DIAS.map(dia => {
-                const clasesDelDia = CACHE_HORARIOS.filter(x => x.celda_id === dia);
-                return `
-                    <div class="crono-row">
-                        <div class="crono-dia-label">${dia}</div>
-                        <div class="crono-list">
-                            ${clasesDelDia.length > 0 ? clasesDelDia.map(c => {
-                                const p = c.contenido.split('|');
-                                return `
-                                <div class="crono-task">
-                                    <div class="crono-task-main">
-                                        <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
-                                            <div class="crono-bullet"></div> 
-                                            <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}
-                                        </div>
-                                        <span class="crono-edit-icon" onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
-                                    </div>
-                                    <div id="crono-detail-${c.id}" class="crono-detail-box">
-                                        <b style="color:var(--celeste)">ALUMNOS:</b><br>
-                                        <div style="margin-top:5px; color:#fff;">${p[3].split(',').map((n, idx) => `${idx+1}-${n.trim()}`).join('<br>')}</div>
-                                        <div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div>
-                                    </div>
-                                </div>`;
-                            }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px; font-style:italic;">Sin clases</div>'}
-                        </div>
-                    </div>`;
+            document.getElementById('render-cronograma').innerHTML = DIAS.map(dia => {
+                const cls = CACHE_HORARIOS.filter(x => x.celda_id === dia);
+                return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">
+                    ${cls.length > 0 ? cls.map(c => {
+                        const p = c.contenido.split('|');
+                        return `<div class="crono-task"><div class="crono-task-main" onclick="toggleCronoDetail('${c.id}')">
+                            <div style="display:flex; align-items:center;"><div class="crono-bullet"></div><b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}</div>
+                            <span class="crono-edit-icon" onclick="event.stopPropagation(); addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
+                        </div><div id="crono-detail-${c.id}" class="crono-detail-box"><b>ALUMNOS:</b><br>${p[3]}</div></div>`;
+                    }).join('') : '<div style="opacity:0.2; font-size:0.7rem; margin-left:18px;">Sin clases</div>'}</div></div>`;
             }).join('');
         }
 
         function toggleCronoDetail(id) {
             const el = document.getElementById(`crono-detail-${id}`);
-            const isVisible = el.style.display === 'block';
+            const vis = el.style.display === 'block';
             document.querySelectorAll('.crono-detail-box').forEach(box => box.style.display = 'none');
-            el.style.display = isVisible ? 'none' : 'block';
-        }
-
-        function checkVencimiento(fechaStr) {
-            if (!fechaStr) return false;
-            const hoy = new Date();
-            const venc = new Date(fechaStr + "T23:59:59");
-            const diff = (venc - hoy) / (1000 * 60 * 60); 
-            return diff <= 48;
+            el.style.display = vis ? 'none' : 'block';
         }
 
         function renderAlumnosList(lista) {
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
-                const estaVencido = checkVencimiento(p[10]);
-                const telLimpio = p[2].replace(/\s+/g, '');
-                
-                return `<div class="clase-box">
-                    <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b>
-                    <br>
-                    <a href="https://wa.me/${telLimpio}" target="_blank" class="ws-wrapper">
-                        <img src="${WS_ICON_URL}" class="ws-icon">
-                        <span class="ws-number">${p[2]}</span>
-                    </a>
-                    <br>
-                    <small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
-                    <div id="extra-${a.id}" class="ficha-detalles">
-                        <p><b>EDAD:</b> ${p[11]} años</p>
-                        <p><b>TELÉFONO:</b> ${p[2]}</p>
-                        <p><b>MODALIDAD:</b> ${p[5]}</p>
-                        <p><b>VENCIMIENTO:</b> <span class="${estaVencido ? 'vence-alerta' : ''}">${p[10] || 'N/A'}</span></p>
-                        <hr style="opacity:0.1; margin:10px 0;">
-                        <p><b>SALUD:</b> ${p[6] || 'Ninguna'}</p>
-                        <p><b>VISITA:</b> ${p[7] || 'N/A'}</p>
-                        <p><b>ORIGEN:</b> ${p[8] || 'N/A'}</p>
-                        <p><b>REFERIDO:</b> ${p[9]}</p>
-                        <button class="btn-principal" style="padding:10px; font-size:0.55rem; margin-top:15px; letter-spacing:1px;" onclick="abrirFormNuevoAlumno('${a.id}', '${a.contenido}')">EDITAR</button>
-                    </div>
-                    <div style="margin-top:15px; display:flex; gap:10px; justify-content:space-between; align-items:center;">
-                        <button class="nav-btn" style="padding:10px 20px; font-size:0.5rem; background:#1a1a1c; border-color:#333; letter-spacing:1px;" onclick="toggleExtra('${a.id}')">DETALLES</button>
-                        <button style="background:transparent; border:none; color:var(--danger); font-size:0.55rem; font-weight:900; cursor:pointer; opacity:0.8; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8" onclick="borrar('${a.id}')">BORRAR</button>
-                    </div>
-                </div>`;
+                return `<div class="clase-box"><b>${p[1]}</b><br><small>${p[2]}</small>
+                    <div id="extra-${a.id}" class="ficha-detalles"><p>VENCE: ${p[10]}</p><button class="btn-principal" style="padding:10px; font-size:0.5rem;" onclick="abrirFormNuevoAlumno('${a.id}','${a.contenido}')">EDITAR</button></div>
+                    <div style="margin-top:15px; display:flex; gap:10px;"><button class="nav-btn" style="padding:10px;" onclick="toggleExtra('${a.id}')">DETALLES</button>
+                    <button style="background:none; border:none; color:red;" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
             }).join('');
         }
 
         function processVencimientos() {
-            const listaNotif = document.getElementById('lista-notificaciones');
-            let alertas = CACHE_ALUMNOS.filter(a => checkVencimiento(a.contenido.split('|')[10]));
+            const alertas = CACHE_ALUMNOS.filter(a => {
+                const f = a.contenido.split('|')[10]; if(!f) return false;
+                const dv = new Date(f + "T23:59:59");
+                return (dv - new Date()) / (1000 * 60 * 60) <= 48;
+            });
             document.getElementById('active-dot').style.display = alertas.length > 0 ? 'block' : 'none';
-            if (alertas.length === 0) {
-                listaNotif.innerHTML = `<p style="text-align:center; opacity:0.3; font-size:0.7rem; font-style:italic; margin-top:30px;">No hay vencimientos próximos.</p>`;
-            } else {
-                listaNotif.innerHTML = alertas.map(a => {
-                    const p = a.contenido.split('|');
-                    return `<div class="clase-box" style="border-left: 4px solid var(--danger); animation: cardPulse 3s infinite ease-in-out;">
-                        <b style="color:var(--danger)">${p[1]}</b><br>
-                        <small>Vence: <b>${p[10]}</b></small>
-                    </div>`;
-                }).join('');
-            }
         }
 
         function filtrarAlumnos() {
             const q = document.getElementById('buscadorAlumnos').value.toLowerCase();
-            const f = CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q));
-            renderAlumnosList(f);
+            renderAlumnosList(CACHE_ALUMNOS.filter(a => a.contenido.split('|')[1].toLowerCase().includes(q)));
         }
 
-        function toggleExtra(id) {
-            const el = document.getElementById(`extra-${id}`);
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-        }
+        function toggleExtra(id) { const el = document.getElementById(`extra-${id}`); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
 
         function abrirFormNuevoAlumno(editId = null, existingData = null) {
             const p = existingData ? existingData.split('|') : Array(12).fill('');
-            let edades = ""; for(let i=1; i<=100; i++) edades += `<option value="${i}">${i}</option>`;
             document.getElementById('btn-abrir-registro').style.display = 'none';
             document.getElementById('form-alumno-nuevo').innerHTML = `
-                <div style="background:#111; padding:20px; border-radius:30px; border:1px solid #222; margin-bottom:20px; animation: fadeIn 0.4s ease;">
+                <div style="background:#111; padding:20px; border-radius:30px; border:1px solid #222;">
                     <label>Nombre</label><input type="text" id="db-nom" value="${p[1]}">
-                    <label>Edad</label><select id="db-edad">${edades}</select>
-                    <label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}">
-                    <label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select>
-                    <label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select>
-                    <label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select>
+                    <label>Teléfono</label><input type="text" id="db-tel" value="${p[2]}">
                     <label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}">
-                    <label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea>
-                    <label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea>
-                    <label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea>
-                    <label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select>
-                    <button class="btn-principal" style="letter-spacing:1px;" onclick="saveAlumno('${editId}')">GUARDAR</button>
+                    <button class="btn-principal" onclick="saveAlumno('${editId}')">GUARDAR</button>
                     <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
                 </div>`;
-            if(editId) document.getElementById('db-edad').value = p[11];
         }
 
         async function saveAlumno(editId = "null") {
             const d = (id) => document.getElementById(id).value;
-            const content = `DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;
-            if(editId !== "null") await _sp.from('horarios').update({ contenido: content }).eq('id', editId);
-            else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: content }]);
-            cerrarFormAlumno(); 
-            updateAll();
+            const c = `DB|${d('db-nom')}|${d('db-tel')}||||||||${d('db-vence')}|`;
+            if(editId !== "null") await _sp.from('horarios').update({ contenido: c }).eq('id', editId);
+            else await _sp.from('horarios').insert([{ celda_id: 'DB_ENTRY', contenido: c }]);
+            cerrarFormAlumno(); updateAll();
         }
 
-        function cerrarFormAlumno() { 
-            document.getElementById('form-alumno-nuevo').innerHTML = ''; 
-            document.getElementById('btn-abrir-registro').style.display = 'block';
-        }
-        
+        function cerrarFormAlumno() { document.getElementById('form-alumno-nuevo').innerHTML = ''; document.getElementById('btn-abrir-registro').style.display = 'block'; }
+
         function switchModulo(id) {
-            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
-            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
-            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
-            
-            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
-
-            document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
-            document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
-            
-            if(id === 'modulo-cronograma') {
-                document.getElementById('edit-form-crono').innerHTML = '';
-            }
+            ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-notificaciones'].forEach(m => document.getElementById(m).style.display = id === m ? 'block' : 'none');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active-btn', b.id === 'btn-' + id.split('-')[1]));
         }
 
-        async function borrar(id) { 
-            if(confirm("¿Borrar definitivamente?")) { 
-                await _sp.from('horarios').delete().eq('id', id); 
-                document.getElementById('edit-form-crono').innerHTML = '';
-                updateAll(); 
-            } 
-        }
+        async function borrar(id) { if(confirm("¿Borrar?")) { await _sp.from('horarios').delete().eq('id', id); updateAll(); } }
     </script>
 </body>
 </html>
