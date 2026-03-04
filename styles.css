@@ -1,4 +1,4 @@
-:root{--bg:#050505;--card:#121214;--accent:#fff;--celeste:#e7e7e7;--danger:#cfcfcf;--whatsapp:#25D366;--border:rgba(255,255,255,.08);--font-main:'Montserrat',sans-serif;--font-fancy:'Playfair Display',serif}
+﻿:root{--bg:#050505;--card:#121214;--accent:#fff;--celeste:#e7e7e7;--danger:#cfcfcf;--whatsapp:#25D366;--border:rgba(255,255,255,.08);--font-main:'Montserrat',sans-serif;--font-fancy:'Playfair Display',serif}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
     body{font-family:var(--font-main);margin:0;background:radial-gradient(circle at 20% 0%,#111111 0%,#050505 45%,#020202 100%);color:#fff;overflow-x:hidden;letter-spacing:-.02em}
     @keyframes bokehFloat{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.03}50%{transform:translateY(-100px) translateX(20px);opacity:.05}90%{opacity:.03}100%{transform:translateY(-200px) translateX(-20px);opacity:0}}
@@ -292,4 +292,95 @@
 
 @media (max-width: 640px){
   #landing-section .landing-breath{ height: 50px; margin: 6px auto 24px; }
+}
+
+/* Module transitions */
+@keyframes moduleFadeIn {
+  from { opacity: 0; transform: translateY(6px) scale(.998); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes moduleFadeOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-4px) scale(.998); }
+}
+  to { opacity: 0; transform: translateY(-10px) scale(.993); filter: blur(1px); }
+}
+  to { opacity: 0; transform: translateY(-8px) scale(.995); }
+}
+
+@keyframes itemStaggerIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+  to { opacity: 1; transform: translateY(0); }
+}
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.module-enter { animation: moduleFadeIn .28s cubic-bezier(.2,.9,.3,1) both; }
+.module-exit { animation: moduleFadeOut .2s cubic-bezier(.2,.9,.3,1) both; }
+.item-enter { animation: itemStaggerIn .46s cubic-bezier(.2,.9,.3,1) both; }
+
+.nav-btn { transition: transform .46s cubic-bezier(.22,.88,.24,1), background .42s ease, color .42s ease, border-color .42s ease; }
+.nav-btn.nav-bump { transform: translateY(-3px); }
+
+
+
+/* Simple gentle sequential load */
+@keyframes softSequentialIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.seq-item {
+  animation: softSequentialIn .72s cubic-bezier(.22,.88,.24,1) both;
+  will-change: opacity, transform;
+}
+
+/* Agenda day hero outside week box */
+.agenda-hero{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin: 4px 2px 12px;
+  padding: 2px 2px;
+}
+
+.agenda-day-hero{
+  font-family: var(--font-fancy);
+  font-size: clamp(1.35rem, 5.2vw, 2.15rem);
+  line-height: 1;
+  letter-spacing: .6px;
+  color: #f5f5f5;
+  opacity: .95;
+  text-transform: uppercase;
+}
+
+.agenda-time-hero{
+  font-size: clamp(.8rem, 2.8vw, 1rem);
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #cfcfcf;
+  opacity: .95;
+  min-width: 74px;
+  text-align: right;
+}
+
+@keyframes minuteShift {
+  0% { opacity: .25; transform: translateY(6px); filter: blur(1px); }
+  100% { opacity: .95; transform: translateY(0); filter: blur(0); }
+}
+
+.agenda-time-hero.minute-shift{
+  animation: minuteShift .7s cubic-bezier(.2,.9,.3,1);
+}
+
+@media (max-width: 640px){
+  .agenda-hero{ margin-bottom: 10px; }
 }
