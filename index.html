@@ -178,6 +178,39 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* additional entry animations for fluid movement */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        .fade-in { animation: fadeUp 0.4s ease-out forwards; }
+        .slide-in { animation: slideRight 0.4s ease-out forwards; }
+        .scale-in { animation: scaleIn 0.3s ease-out forwards; }
+
+        .dia-item {
+            background: var(--card);
+            margin-bottom: 15px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: cardPulse 4s infinite ease-in-out;
+            opacity: 0; /* start hidden for entry effect */
+        }
+        .dia-item.fade-in { animation: cardPulse 4s infinite ease-in-out, fadeUp 0.5s ease forwards; opacity:1; }
+
+        .clase-box {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 25px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            animation: cardPulse 5s infinite ease-in-out;
+            animation-delay: 1s;
+            opacity: 0; /* entry hidden */
+        }
+        .clase-box.fade-in { animation: cardPulse 5s infinite ease-in-out, fadeUp 0.5s ease forwards; opacity:1; }
+
         .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; z-index: 999; }
         .nav-btn { background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px; border-radius: 15px; border: 1px solid var(--border); font-weight: 800; font-size: 0.5rem; cursor: pointer; backdrop-filter: blur(20px); position: relative; text-align: center; transition: all 0.3s; }
         .nav-btn.active-btn { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
@@ -264,7 +297,11 @@
         window.onload = () => {
             initBokeh();
             if (localStorage.getItem('studio_auth')) startApp();
-            else document.getElementById('login-section').style.display = 'flex';
+            else {
+                const login = document.getElementById('login-section');
+                login.style.display = 'flex';
+                login.classList.add('scale-in');
+            }
         };
 
         function initBokeh() {
@@ -305,6 +342,11 @@
             document.getElementById('app-content').style.display = 'block';
             renderEstructura();
             updateAll();
+            // fade in the agenda panel on first load
+            const agendaEl = document.getElementById('modulo-agenda');
+            if (agendaEl) {
+                agendaEl.classList.add('fade-in');
+            }
         }
 
         function renderEstructura() {
@@ -320,13 +362,25 @@
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
+            // animate the day cards so they don't pop in abruptly
+            document.querySelectorAll('.dia-item').forEach((el, i) => {
+                el.classList.add('fade-in');
+                el.style.animationDelay = `${i * 0.1}s`;
+            });
         }
 
         function toggleDia(d) {
             const el = document.getElementById(`cont-${d}`);
             const vis = el.style.display === 'block';
             document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
-            el.style.display = vis ? 'none' : 'block';
+            if (vis) {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
+                el.classList.remove('slide-in');
+                void el.offsetWidth;
+                el.classList.add('slide-in');
+            }
         }
 
         function addClasePopup(dia, editId = null, existingData = null) {
@@ -434,6 +488,15 @@
                     </div>`;
                 }).join('');
             });
+            // after the DOM is updated, fade in any new clase-box elements
+            setTimeout(() => {
+                document.querySelectorAll('.clase-box').forEach((el, i) => {
+                    if (!el.classList.contains('fade-in')) {
+                        el.classList.add('fade-in');
+                        el.style.animationDelay = `${i * 0.05}s`;
+                    }
+                });
+            }, 50);
             renderAlumnosList(CACHE_ALUMNOS);
             processVencimientos();
             renderCronograma();
@@ -586,11 +649,20 @@
         }
         
         function switchModulo(id) {
-            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
-            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
-            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
-            
+            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
+            modules.forEach(m => {
+                const el = document.getElementById(m);
+                if (m === id) {
+                    el.style.display = 'block';
+                    // trigger animation by reflow
+                    el.classList.remove('fade-in');
+                    void el.offsetWidth;
+                    el.classList.add('fade-in');
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+
             document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
 
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
