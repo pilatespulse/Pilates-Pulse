@@ -1,4 +1,4 @@
-﻿:root{--bg:#050505;--card:#121214;--accent:#fff;--celeste:#e7e7e7;--danger:#cfcfcf;--whatsapp:#25D366;--border:rgba(255,255,255,.08);--font-main:'Montserrat',sans-serif;--font-fancy:'Playfair Display',serif}
+:root{--bg:#050505;--card:#121214;--accent:#fff;--celeste:#e7e7e7;--danger:#cfcfcf;--whatsapp:#25D366;--border:rgba(255,255,255,.08);--font-main:'Montserrat',sans-serif;--font-fancy:'Playfair Display',serif}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
     body{font-family:var(--font-main);margin:0;background:radial-gradient(circle at 20% 0%,#111111 0%,#050505 45%,#020202 100%);color:#fff;overflow-x:hidden;letter-spacing:-.02em}
     @keyframes bokehFloat{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.03}50%{transform:translateY(-100px) translateX(20px);opacity:.05}90%{opacity:.03}100%{transform:translateY(-200px) translateX(-20px);opacity:0}}
