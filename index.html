@@ -668,33 +668,99 @@
         }
         
         function switchModulo(id) {
-            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
-            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
-            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+            // animate main-brand visually toward target branding inside destination module
+            const mainBrand = document.getElementById('main-brand');
+            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
 
-            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+            // find target branding container inside destination module (if any)
+            const targetBrand = document.querySelector(`#${id} .branding-container`);
 
-            document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
-            document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
-            if(id === 'modulo-cronograma') {
-                document.getElementById('edit-form-crono').innerHTML = '';
+            // create visual clone of mainBrand to animate
+            function animateBrandToTarget(callback) {
+                if (!mainBrand) { callback(); return; }
+                const startRect = mainBrand.getBoundingClientRect();
+
+                // compute target rect: ensure target module is measurable
+                let targetRect = null;
+                if (targetBrand) {
+                    const moduleEl = document.getElementById(id);
+                    const prevDisplay = moduleEl.style.display;
+                    // make measurable without showing visually
+                    moduleEl.style.display = 'block';
+                    targetRect = targetBrand.getBoundingClientRect();
+                    moduleEl.style.display = prevDisplay;
+                }
+
+                // fallback target: move a bit to the right
+                if (!targetRect) {
+                    targetRect = {
+                        left: startRect.left + 120,
+                        top: startRect.top,
+                        width: startRect.width,
+                        height: startRect.height
+                    };
+                }
+
+                const clone = mainBrand.cloneNode(true);
+                clone.style.position = 'fixed';
+                clone.style.margin = '0';
+                clone.style.left = startRect.left + 'px';
+                clone.style.top = startRect.top + 'px';
+                clone.style.width = startRect.width + 'px';
+                clone.style.height = startRect.height + 'px';
+                clone.style.zIndex = 20000;
+                clone.style.pointerEvents = 'none';
+                clone.style.transition = 'transform 0.45s ease, opacity 0.35s ease';
+                document.body.appendChild(clone);
+
+                // hide original while animating
+                mainBrand.style.visibility = 'hidden';
+
+                const deltaX = (targetRect.left + (targetRect.width/2)) - (startRect.left + (startRect.width/2));
+                const deltaY = (targetRect.top + (targetRect.height/2)) - (startRect.top + (startRect.height/2));
+
+                requestAnimationFrame(() => {
+                    clone.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                });
+
+                const onEnd = () => {
+                    clone.removeEventListener('transitionend', onEnd);
+                    clone.style.opacity = '0';
+                    setTimeout(() => { try { document.body.removeChild(clone); } catch(e){}; mainBrand.style.visibility = 'visible'; callback(); }, 150);
+                };
+                clone.addEventListener('transitionend', onEnd);
             }
 
-            // trigger fade-in for the incoming module
-            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
-            modules.forEach(m => {
-                const el = document.getElementById(m);
-                if (m === id) {
-                    el.style.display = 'block';
-                    el.classList.remove('fade-in');
-                    void el.offsetWidth;
-                    el.classList.add('fade-in');
-                } else {
-                    el.style.display = 'none';
+            // first trigger visual brand animation, then swap modules with fade
+            animateBrandToTarget(() => {
+                document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
+                document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
+                document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+                document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
+
+                document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+
+                document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
+                document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
+                document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
+                document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
+                if(id === 'modulo-cronograma') {
+                    document.getElementById('edit-form-crono').innerHTML = '';
                 }
+
+                // trigger fade-in for the incoming module
+                const modulesArr = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
+                modulesArr.forEach(m => {
+                    const el = document.getElementById(m);
+                    if (m === id) {
+                        el.style.display = 'block';
+                        el.classList.remove('fade-in');
+                        void el.offsetWidth;
+                        el.classList.add('fade-in');
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
             });
         }
 
