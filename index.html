@@ -122,16 +122,24 @@
         .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; overflow: hidden; }
-        /* logo pulse float decor */
+        /* logo pulse float decor (moves in all directions slowly) */
         @keyframes logoFloat {
-            0%,100% { transform: translateY(0) translateX(0); }
-            25% { transform: translateY(-3px) translateX(1px); }
-            50% { transform: translateY(0) translateX(2px); }
-            75% { transform: translateY(3px) translateX(1px); }
+            0% { transform: translate(0,0); }
+            20% { transform: translate(10px,-8px); }
+            40% { transform: translate(-12px,6px); }
+            60% { transform: translate(8px,10px); }
+            80% { transform: translate(-10px,-6px); }
+            100% { transform: translate(0,0); }
         }
+        /* brand container and its logo/text slowly drift together */
+        .logo-animate,
         .logo-animate .logo-pulse-circle,
         .logo-animate .brand-text {
-            animation: logoFloat 6s ease-in-out infinite;
+            animation: logoFloat 8s ease-in-out infinite;
+        }
+        /* panels normally participate in layout; we'll position them absolutely only when animating */
+        .module {
+            transition: transform 0.4s ease;
         }
         
         .dia-item { 
@@ -662,21 +670,22 @@
             document.getElementById('btn-abrir-registro').style.display = 'block';
         }
         
+        let isSliding = false;
         function switchModulo(id) {
-            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
-            if (id === lastModule) return;
+            if (id === lastModule || isSliding) return;
+            isSliding = true;
 
+            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
             const curEl = document.getElementById(lastModule);
             const newEl = document.getElementById(id);
             const curIndex = modules.indexOf(lastModule);
             const newIndex = modules.indexOf(id);
-            const direction = newIndex > curIndex ? 'right' : 'left'; // right means navigating forward
+            const direction = newIndex > curIndex ? 'right' : 'left'; // right = forward
 
             const container = document.querySelector('.main-container');
             const origHeight = container.offsetHeight;
-            container.style.minHeight = origHeight + 'px';
 
-            // prepare positioning
+            // prepare panels for animation: take them out of flow
             [curEl, newEl].forEach(el => {
                 el.style.position = 'absolute';
                 el.style.top = '0';
@@ -684,42 +693,37 @@
                 el.style.width = '100%';
             });
 
-            // show new and position offscreen
+            // show new panel offscreen
             newEl.style.display = 'block';
-            newEl.style.transition = 'transform 0.4s ease';
-            curEl.style.transition = 'transform 0.4s ease';
-            // if going forward, new panel starts to right, current will move left
-            if (direction === 'right') {
-                newEl.style.transform = 'translateX(100%)';
-            } else {
-                newEl.style.transform = 'translateX(-100%)';
-            }
+            newEl.style.transform = direction === 'right' ? 'translateX(100%)' : 'translateX(-100%)';
+            // adjust container height in case new panel is taller
+            const newHeight = newEl.offsetHeight || 0;
+            container.style.minHeight = Math.max(origHeight, newHeight) + 'px';
 
-            // animate
-            requestAnimationFrame(() => {
-                if (direction === 'right') {
-                    curEl.style.transform = 'translateX(-100%)';
-                } else {
-                    curEl.style.transform = 'translateX(100%)';
-                }
-                newEl.style.transform = 'translateX(0)';
-            });
+            // force reflow to pick up starting transform
+            newEl.offsetWidth;
 
-            setTimeout(() => {
-                // cleanup
+            // animate both panels
+            curEl.style.transform = direction === 'right' ? 'translateX(-100%)' : 'translateX(100%)';
+            newEl.style.transform = 'translateX(0)';
+
+            // once new panel finishes sliding, clean up
+            const onEnd = () => {
                 curEl.style.display = 'none';
                 [curEl, newEl].forEach(el => {
                     el.style.transform = '';
-                    el.style.transition = '';
                     el.style.position = '';
                     el.style.top = '';
                     el.style.left = '';
                     el.style.width = '';
                 });
                 container.style.minHeight = '';
-            }, 400);
+                isSliding = false;
+                newEl.removeEventListener('transitionend', onEnd);
+            };
+            newEl.addEventListener('transitionend', onEnd);
 
-            // fade-in internal content
+            // fade internal content
             newEl.classList.remove('fade-in');
             void newEl.offsetWidth;
             newEl.classList.add('fade-in');
@@ -730,10 +734,13 @@
                     brand.style.display = 'none';
                 } else {
                     brand.style.display = 'flex';
-                    // small slide based on direction
                     brand.style.transition = 'transform 0.4s ease';
                     brand.style.transform = direction === 'right' ? 'translateX(20px)' : 'translateX(-20px)';
-                    setTimeout(() => { brand.style.transform = ''; brand.style.transition = ''; }, 400);
+                    brand.addEventListener('transitionend', function bDone() {
+                        brand.style.transform = '';
+                        brand.style.transition = '';
+                        brand.removeEventListener('transitionend', bDone);
+                    });
                 }
             }
 
