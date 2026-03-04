@@ -120,7 +120,6 @@ body {
     display: inline-block; margin-left: 3px; display: none; 
 }
 
-/* Base de Datos de Alumnos */
 .alumno-card-db { 
     background: var(--card); border: 1px solid var(--border); padding: 20px; 
     border-radius: 25px; margin-bottom: 12px; 
@@ -139,7 +138,6 @@ body {
 
 .vencido { color: var(--danger) !important; font-weight: 900; }
 
-/* Formularios */
 .form-container { background: #111; padding: 20px; border-radius: 25px; margin-bottom: 20px; border: 1px solid var(--border); }
 .form-container input, .form-container select { 
     width: 100%; padding: 12px; margin-bottom: 10px; background: #000; 
