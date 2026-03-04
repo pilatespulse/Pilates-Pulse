@@ -181,6 +181,21 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* slow multidirectional drift for branding (minimal and subtle) */
+        @keyframes brandingDrift {
+            0% { transform: translate(0px, 0px); }
+            20% { transform: translate(8px, -6px); }
+            40% { transform: translate(-10px, 5px); }
+            60% { transform: translate(6px, 8px); }
+            80% { transform: translate(-6px, -4px); }
+            100% { transform: translate(0px, 0px); }
+        }
+
+        .branding-drift {
+            animation: brandingDrift 12s ease-in-out infinite;
+            will-change: transform;
+        }
+
         /* additional entry animations for fluid movement */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
@@ -226,7 +241,7 @@
     <div class="bokeh-container"></div>
 
     <div id="login-section">
-        <div class="branding-container">
+        <div class="branding-container branding-drift">
             <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text">PILATES PULSE</div>
         </div>
@@ -242,7 +257,7 @@
             <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
         </div>
 
-        <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
+        <div class="branding-container branding-drift" id="main-brand" onclick="location.reload()" style="cursor:pointer">
             <div class="logo-pulse-circle" style="width: 60px; height: 60px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
             <div class="brand-text" style="font-size: 0.8rem;">PILATES PULSE</div>
         </div>
@@ -253,7 +268,7 @@
             </div>
 
             <div id="modulo-cronograma" class="module" style="display:none;">
-                <div class="branding-container" style="padding-top: 0;">
+                <div class="branding-container branding-drift" style="padding-top: 0;">
                     <div class="logo-pulse-circle" style="width: 50px; height: 50px;"><img src="https://i.postimg.cc/Xqs2VjT0/image.png"></div>
                 </div>
                 <div class="crono-header-text">Cronograma</div>
