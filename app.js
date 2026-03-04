@@ -212,5 +212,3 @@
     }
 
     async function borrar(id){if(confirm("¿Borrar definitivamente?")){await _sp.from('horarios').delete().eq('id',id);document.getElementById('edit-form-crono').innerHTML='';updateAll();}}
-
-
