@@ -183,6 +183,28 @@
         .nav-btn.active-btn { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
         .dot-notif { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 10px var(--danger); }
         label { display: block; font-size: 0.55rem; color: #888; margin-bottom: 6px; font-weight: 900; text-transform: uppercase; margin-left: 5px; }
+        /* --- Animaciones adicionales y utilidades --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes brandingDrift { 0% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(4px,-3px) rotate(.2deg); } 100% { transform: translate(0,0) rotate(0deg); } }
+
+        .fade-in { animation: fadeUp 420ms cubic-bezier(.2,.9,.3,1) both; }
+        .slide-in-right { animation: slideRight 380ms cubic-bezier(.2,.9,.3,1) both; }
+        .branding-drift { animation: brandingDrift 10s ease-in-out infinite; }
+        .nav-btn.fly { transform: translateY(-6px); transition: transform 0.45s cubic-bezier(.2,.9,.3,1); }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(8px) scale(0.996); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pageOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-8px) scale(0.994); } }
+        .page-in { animation: pageIn 520ms cubic-bezier(.16,.84,.28,1) both; }
+        .page-out { animation: pageOut 420ms cubic-bezier(.16,.84,.28,1) both; }
+        /* Reduce reflow by forcing will-change on panel transitions */
+        .module { will-change: transform, opacity; }
+        /* Staggered entrance for quick, fluid seguidilla */
+        @keyframes staggerUp { from { opacity: 0; transform: translateY(8px) scale(0.996); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .stagger-in { animation: staggerUp 480ms cubic-bezier(.16,.84,.28,1) both; }
+
+        /* Especial para Cronograma: entrada desde la izquierda con ligera elevación */
+        @keyframes cronoIn { from { opacity: 0; transform: translateX(-14px) translateY(6px) scale(0.996); } to { opacity: 1; transform: translateX(0) translateY(0) scale(1); } }
+        .crono-in { animation: cronoIn 520ms cubic-bezier(.16,.84,.28,1) both; }
     </style>
 </head>
 <body>
@@ -255,11 +277,19 @@
         const _sp = supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co", "sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
         const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const CLASES = ["Align Flow", "Power Flow", "Stretch&Release", "Aerial Balance", "Mega Core", "Life Align"];
+        // Usar siempre el color celeste del tema para el tipo de clase
+        function classColor(name) {
+            return 'var(--celeste)';
+        }
         const MODALIDADES = ["Grupales", "Privadas", "Masajes", "Cumpleaños"];
         const FRECUENCIAS = ["1/semana", "2/semana", "3/semana"];
         const WS_ICON_URL = "https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
+
+        // Opcional: prefijo por defecto para números que no incluyan código de país
+        // Si quieres que se aplique automáticamente, pon el código (ej '1' para USA, '54' para AR)
+        const DEFAULT_COUNTRY = '';
 
         // Normaliza teléfonos para construir enlaces wa.me
         function sanitizeTel(telRaw) {
@@ -270,6 +300,15 @@
             s = s.replace(/^00+/, '');
             // eliminar ceros a la izquierda residuales (ej: 0345 -> 345)
             s = s.replace(/^0+/, '');
+
+            // Si se definió DEFAULT_COUNTRY y el número parece corto, anteponerlo
+            if (DEFAULT_COUNTRY && s.length > 0) {
+                // si el número ya comienza con el código, no lo duplicamos
+                if (!s.startsWith(DEFAULT_COUNTRY) && s.length <= 9) {
+                    s = DEFAULT_COUNTRY + s;
+                }
+            }
+
             return s;
         }
         window.onload = () => {
@@ -331,6 +370,14 @@
                         <div id="clases-${d}" style="margin-top:15px;"></div>
                     </div>
                 </div>`).join('');
+
+            // Aplicar animación de entrada a los elementos recién creados
+            setTimeout(() => {
+                document.querySelectorAll('.dia-item').forEach((el, i) => {
+                    el.classList.add('fade-in');
+                    el.style.animationDelay = (i * 60) + 'ms';
+                });
+            }, 30);
         }
 
         function toggleDia(d) {
@@ -338,6 +385,13 @@
             const vis = el.style.display === 'block';
             document.querySelectorAll('.dia-content').forEach(c => c.style.display = 'none');
             el.style.display = vis ? 'none' : 'block';
+            if (!vis) {
+                // animación de aparición del contenido
+                el.classList.remove('slide-in-right');
+                void el.offsetWidth;
+                el.classList.add('slide-in-right');
+                setTimeout(() => el.classList.remove('slide-in-right'), 550);
+            }
         }
 
         function addClasePopup(dia, editId = null, existingData = null) {
@@ -395,7 +449,7 @@
                 }
 
                 return `<div style="margin-bottom:6px; display:flex; align-items:center;">
-                            <span>${i+1}-${nombreLimpio}</span>
+                            <span>• ${nombreLimpio}</span>
                             ${linkWs}
                         </div>`;
             }).join('');
@@ -436,8 +490,9 @@
                 document.getElementById(`clases-${d}`).innerHTML = filtrados.map(i => {
                     const p = i.contenido.split('|');
                     // PASAMOS p[0] (HORA) Y p[1] (CLASE) A LA FUNCIÓN
+                    const colorTipo = classColor(p[1]);
                     return `<div class="clase-box" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — ${p[1]}<br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3], p[0], p[1])}</div></span>
+                        <span style="font-size:0.75rem; line-height: 1.4;"><b>${p[0]}</b> — <span style="color:${colorTipo}; font-weight:800;">${p[1]}</span><br><small style="opacity:0.6;">${p[2]}</small><br><div style="margin-top:8px;">${formatAlumnosAgenda(p[3], p[0], p[1])}</div></span>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <span onclick="addClasePopup('${d}', '${i.id}', '${i.contenido}')" style="cursor:pointer; font-size:0.8rem; opacity:0.5; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">📝</span>
                             <span onclick="borrar('${i.id}')" style="opacity:0.1; cursor:pointer; font-weight:900; transition:0.3s;" onmouseover="this.style.opacity=1; this.style.color='var(--danger)'" onmouseout="this.style.opacity=0.1; this.style.color='white'">×</span>
@@ -462,16 +517,16 @@
                                 const p = c.contenido.split('|');
                                 return `
                                 <div class="crono-task">
-                                    <div class="crono-task-main">
+                                        <div class="crono-task-main">
                                         <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleCronoDetail('${c.id}')">
                                             <div class="crono-bullet"></div> 
-                                            <b>${p[0]}</b> &nbsp; — &nbsp; ${p[1]}
+                                            <b>${p[0]}</b> &nbsp; — &nbsp; <span style="color:${classColor(p[1])}; font-weight:800;">${p[1]}</span>
                                         </div>
                                         <span class="crono-edit-icon" onclick="addClasePopup('${dia}', '${c.id}', '${c.contenido}')">📝</span>
                                     </div>
                                     <div id="crono-detail-${c.id}" class="crono-detail-box">
                                         <b style="color:var(--celeste)">ALUMNOS:</b><br>
-                                        <div style="margin-top:5px; color:#fff;">${p[3].split(',').map((n, idx) => `${idx+1}-${n.trim()}`).join('<br>')}</div>
+                                        <div style="margin-top:5px; color:#fff;">${p[3].split(',').map(n => `• ${n.trim()}`).join('<br>')}</div>
                                         <div style="margin-top:8px; opacity:0.6;"><b>MODALIDAD:</b> ${p[2]}</div>
                                     </div>
                                 </div>`;
@@ -511,7 +566,7 @@
                         <span class="ws-number">${p[2]}</span>
                     </a>` : `<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]}</span></span>`}
                     <br>
-                    <small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
+                    <small style="opacity:0.5;"><span style="color:${classColor(p[3])}; font-weight:800;">${p[3]}</span> — ${p[4]}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
                         <p><b>EDAD:</b> ${p[11]} años</p>
                         <p><b>TELÉFONO:</b> ${p[2]}</p>
@@ -598,20 +653,98 @@
         }
         
         function switchModulo(id) {
-            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
-            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
-            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
-            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
-            
-            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+            const modules = ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-notificaciones'];
+            const btnMap = { 'modulo-agenda':'btn-agenda', 'modulo-cronograma':'btn-crono', 'modulo-alumnos':'btn-db', 'modulo-notificaciones':'btn-notif' };
+            const target = document.getElementById(id);
+            if (!target) return;
 
-            document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
-            document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
-            document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
-            document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
-            if(id === 'modulo-cronograma') {
-                document.getElementById('edit-form-crono').innerHTML = '';
+            // find currently visible module
+            const current = modules.map(m => document.getElementById(m)).find(el => el && getComputedStyle(el).display !== 'none');
+            // if same, do nothing (but still update buttons/brand)
+            if (current && current.id === id) {
+                // update buttons/brand quickly
+                document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+                Object.values(btnMap).forEach(bid => document.getElementById(bid).classList.remove('active-btn','fly'));
+                const activeIdQuick = btnMap[id];
+                if (activeIdQuick) document.getElementById(activeIdQuick).classList.add('active-btn');
+                return;
             }
+
+            const animateShow = (el) => {
+                el.style.display = 'block';
+                el.classList.remove('page-in');
+                void el.offsetWidth;
+                el.classList.add('page-in');
+                el.classList.add('module');
+                el.addEventListener('animationend', function once() { el.classList.remove('page-in'); el.removeEventListener('animationend', once); });
+            };
+
+            // Aplica una entrada en seguidilla (stagger) a elementos hijos visibles
+            function staggerEntrance(container, selector = '.clase-box, .crono-task, .dia-item, .clase-box', gap = 28, duration = 480, className = 'stagger-in') {
+                if (!container) return;
+                const nodes = Array.from(container.querySelectorAll(selector));
+                // limit nodes to reasonable amount to avoid long cascades
+                const max = 40;
+                const list = nodes.slice(0, max);
+                list.forEach((n, i) => {
+                    n.classList.remove(className);
+                    // set per-item duration and easing for very smooth feel
+                    n.style.animationDuration = duration + 'ms';
+                    n.style.animationTimingFunction = 'cubic-bezier(.16,.84,.28,1)';
+                    n.style.animationDelay = (i * gap) + 'ms';
+                    // ensure hardware-accelerated smoothness
+                    n.style.willChange = 'transform, opacity';
+                    // trigger reflow then add
+                    void n.offsetWidth;
+                    n.classList.add(className);
+                    const cleanup = () => { n.classList.remove(className); n.style.animationDelay = ''; n.style.animationDuration = ''; n.style.animationTimingFunction = ''; n.style.willChange = ''; n.removeEventListener('animationend', cleanup); };
+                    n.addEventListener('animationend', cleanup);
+                });
+            }
+
+            const animateHide = (el) => new Promise(resolve => {
+                if (!el) return resolve();
+                el.classList.remove('page-out');
+                void el.offsetWidth;
+                el.classList.add('page-out');
+                const onEnd = () => { el.style.display = 'none'; el.classList.remove('page-out'); el.removeEventListener('animationend', onEnd); resolve(); };
+                el.addEventListener('animationend', onEnd);
+            });
+
+            (async () => {
+                if (current) await animateHide(current);
+                animateShow(target);
+                // luego de mostrar el módulo, lanzar la entrada en seguidilla rápida y fluida
+                // pequeña pausa para que page-in empiece antes del stagger
+                setTimeout(() => {
+                    // Ajustar parámetros por módulo para equilibrar sensación de fluidez
+                    if (id === 'modulo-agenda') {
+                        // Agenda: más solapamiento y duración mayor para sensación muy suave
+                        staggerEntrance(target, '.dia-item, .clase-box', 18, 520, 'stagger-in');
+                    } else if (id === 'modulo-cronograma') {
+                        // Cronograma: usar animación específica (entrada desde la izquierda)
+                        staggerEntrance(target, '.crono-task', 22, 560, 'crono-in');
+                    } else {
+                        // Otros: cascada pausada pero con duración larga para smoothness
+                        staggerEntrance(target, '.crono-task, .clase-box, .branding-container', 28, 480, 'stagger-in');
+                    }
+                }, 60);
+
+                document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
+
+                // Botones activos + pequeño vuelo visual
+                Object.values(btnMap).forEach(bid => document.getElementById(bid).classList.remove('active-btn','fly'));
+                const activeId = btnMap[id];
+                if (activeId) {
+                    const btn = document.getElementById(activeId);
+                    btn.classList.add('active-btn','fly');
+                    setTimeout(() => btn.classList.remove('fly'), 480);
+                }
+
+                if(id === 'modulo-cronograma') {
+                    document.getElementById('edit-form-crono').innerHTML = '';
+                }
+            })();
         }
 
         async function borrar(id) { 
