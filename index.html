@@ -122,16 +122,8 @@
         .btn-cancelar { background: #1a1a1c; color: #777; border: 1px solid var(--border); padding: 15px; border-radius: 20px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 800; }
         
         .main-container { padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 1; overflow: hidden; }
-        /* logo pulse float decor */
-        @keyframes logoFloat {
-            0%,100% { transform: translateY(0) translateX(0); }
-            25% { transform: translateY(-3px) translateX(1px); }
-            50% { transform: translateY(0) translateX(2px); }
-            75% { transform: translateY(3px) translateX(1px); }
-        }
-        .logo-animate .logo-pulse-circle,
-        .logo-animate .brand-text {
-            animation: logoFloat 6s ease-in-out infinite;
+        .module {
+            transition: transform 0.4s ease;
         }
         
         .dia-item { 
@@ -314,8 +306,6 @@
                 login.style.display = 'flex';
                 login.classList.add('scale-in');
             }
-            // start logo animation right away (branding appears on login too)
-            document.querySelectorAll('.branding-container').forEach(el => el.classList.add('logo-animate'));
         };
 
         function initBokeh() {
@@ -663,79 +653,12 @@
         }
         
         function switchModulo(id) {
-            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
-            if (id === lastModule) return;
+            document.getElementById('modulo-agenda').style.display = id === 'modulo-agenda' ? 'block' : 'none';
+            document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
+            document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
+            document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
 
-            const curEl = document.getElementById(lastModule);
-            const newEl = document.getElementById(id);
-            const curIndex = modules.indexOf(lastModule);
-            const newIndex = modules.indexOf(id);
-            const direction = newIndex > curIndex ? 'right' : 'left'; // right means navigating forward
-
-            const container = document.querySelector('.main-container');
-            const origHeight = container.offsetHeight;
-            container.style.minHeight = origHeight + 'px';
-
-            // prepare positioning
-            [curEl, newEl].forEach(el => {
-                el.style.position = 'absolute';
-                el.style.top = '0';
-                el.style.left = '0';
-                el.style.width = '100%';
-            });
-
-            // show new and position offscreen
-            newEl.style.display = 'block';
-            newEl.style.transition = 'transform 0.4s ease';
-            curEl.style.transition = 'transform 0.4s ease';
-            // if going forward, new panel starts to right, current will move left
-            if (direction === 'right') {
-                newEl.style.transform = 'translateX(100%)';
-            } else {
-                newEl.style.transform = 'translateX(-100%)';
-            }
-
-            // animate
-            requestAnimationFrame(() => {
-                if (direction === 'right') {
-                    curEl.style.transform = 'translateX(-100%)';
-                } else {
-                    curEl.style.transform = 'translateX(100%)';
-                }
-                newEl.style.transform = 'translateX(0)';
-            });
-
-            setTimeout(() => {
-                // cleanup
-                curEl.style.display = 'none';
-                [curEl, newEl].forEach(el => {
-                    el.style.transform = '';
-                    el.style.transition = '';
-                    el.style.position = '';
-                    el.style.top = '';
-                    el.style.left = '';
-                    el.style.width = '';
-                });
-                container.style.minHeight = '';
-            }, 400);
-
-            // fade-in internal content
-            newEl.classList.remove('fade-in');
-            void newEl.offsetWidth;
-            newEl.classList.add('fade-in');
-
-            const brand = document.getElementById('main-brand');
-            if (brand) {
-                if (id === 'modulo-cronograma') {
-                    brand.style.display = 'none';
-                } else {
-                    brand.style.display = 'flex';
-                    // small slide based on direction
-                    brand.style.transition = 'transform 0.4s ease';
-                    brand.style.transform = direction === 'right' ? 'translateX(20px)' : 'translateX(-20px)';
-                    setTimeout(() => { brand.style.transform = ''; brand.style.transition = ''; }, 400);
-                }
-            }
+            document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
 
             document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
             document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
@@ -745,7 +668,19 @@
                 document.getElementById('edit-form-crono').innerHTML = '';
             }
 
-            lastModule = id;
+            // trigger fade-in for the incoming module
+            const modules = ['modulo-agenda', 'modulo-cronograma', 'modulo-alumnos', 'modulo-notificaciones'];
+            modules.forEach(m => {
+                const el = document.getElementById(m);
+                if (m === id) {
+                    el.style.display = 'block';
+                    el.classList.remove('fade-in');
+                    void el.offsetWidth;
+                    el.classList.add('fade-in');
+                } else {
+                    el.style.display = 'none';
+                }
+            });
         }
 
         async function borrar(id) { 
