@@ -1,4 +1,4 @@
-﻿const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Life Align"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumpleaños"];
