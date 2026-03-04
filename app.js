@@ -4,7 +4,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumpleaños"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
-    const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB";
+    const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET";
     const DEFAULT_COUNTRY='';
     let CACHE_ALUMNOS=[],CACHE_HORARIOS=[],CACHE_SOLICITUDES=[];
 
@@ -41,13 +41,13 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
     }
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
-    function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';renderEstructura();updateAll();}
+    async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';renderEstructura();await ensureWeeklyReset();await updateAll();}
 
     function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
     function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';}
 
     function renderEstructura(){
-      document.getElementById('listaDias').innerHTML=DIAS.map(d=>`
+      document.getElementById('listaDias').innerHTML=`<div style="display:flex;justify-content:flex-end;margin:0 0 14px 0;"><button class="btn-cancelar" style="max-width:220px;margin:0;font-size:.58rem;letter-spacing:1px" onclick="reiniciarSemana(true)">REINICIAR SEMANA</button></div>`+DIAS.map(d=>`
         <div class="dia-item">
           <div class="dia-header" onclick="toggleDia('${d}')"><span style="font-weight:900;font-size:.75rem;letter-spacing:1px">${d.toUpperCase()}</span><span id="badge-${d}" style="font-size:.5rem;opacity:.5;font-weight:800;background:rgba(255,255,255,.1);padding:4px 8px;border-radius:8px">0</span></div>
           <div class="dia-content" id="cont-${d}" style="display:none;padding:0 20px 20px"><div id="clase-form-${d}"></div><button class="btn-principal" id="btn-add-${d}" style="font-size:.55rem;background:#1a1a1c;color:#fff;padding:12px;letter-spacing:1px" onclick="addClasePopup('${d}')">+ CLASE</button><div id="clases-${d}" style="margin-top:15px;"></div></div>
@@ -91,12 +91,61 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       updateAll();
     }
 
+    
+    function getWeekStartKey(dateObj = new Date()) {
+      const d = new Date(dateObj);
+      d.setHours(0,0,0,0);
+      const day = d.getDay();
+      d.setDate(d.getDate() - day);
+      return d.toISOString().slice(0,10);
+    }
+
+    async function clearAgendaAndCronoRows() {
+      const { error } = await _sp.from('horarios').delete().in('celda_id', DIAS);
+      if (error) throw error;
+    }
+
+    async function saveResetWeekKey(weekKey) {
+      const { data: meta } = await _sp.from('horarios').select('id').eq('celda_id', CELDA_RESET_META).limit(1).maybeSingle();
+      if (meta?.id) {
+        await _sp.from('horarios').update({ contenido: weekKey }).eq('id', meta.id);
+      } else {
+        await _sp.from('horarios').insert([{ celda_id: CELDA_RESET_META, contenido: weekKey }]);
+      }
+    }
+
+    async function ensureWeeklyReset() {
+      const weekKey = getWeekStartKey(new Date());
+      const { data: meta } = await _sp.from('horarios').select('contenido').eq('celda_id', CELDA_RESET_META).limit(1).maybeSingle();
+      const lastKey = meta?.contenido || '';
+
+      // Primera ejecución: registrar semana actual sin borrar datos existentes.
+      if (!lastKey) {
+        await saveResetWeekKey(weekKey);
+        return;
+      }
+
+      // Solo reiniciar cuando realmente cambie la semana (domingo nuevo).
+      if (lastKey !== weekKey) {
+        await clearAgendaAndCronoRows();
+        await saveResetWeekKey(weekKey);
+      }
+    }
+
+    async function reiniciarSemana(manual = false) {
+      if (manual && !confirm('¿Reiniciar Agenda y Crono de esta semana?')) return;
+      await clearAgendaAndCronoRows();
+      await saveResetWeekKey(getWeekStartKey(new Date()));
+      document.getElementById('edit-form-crono').innerHTML='';
+      await updateAll();
+      if (manual) alert('Semana reiniciada. Agenda y Crono en 0.');
+    }
     async function updateAll(){
       const {data}=await _sp.from('horarios').select('*');
       const rows=data||[];
       CACHE_ALUMNOS=rows.filter(x=>x.celda_id===CELDA_DB);
       CACHE_SOLICITUDES=rows.filter(x=>x.celda_id===CELDA_SOLICITUD);
-      CACHE_HORARIOS=rows.filter(x=>x.celda_id!==CELDA_DB&&x.celda_id!==CELDA_SOLICITUD).sort((a,b)=>a24h(a.contenido.split('|')[0])-a24h(b.contenido.split('|')[0]));
+      CACHE_HORARIOS=rows.filter(x=>x.celda_id!==CELDA_DB&&x.celda_id!==CELDA_SOLICITUD&&x.celda_id!==CELDA_RESET_META).sort((a,b)=>a24h(a.contenido.split('|')[0])-a24h(b.contenido.split('|')[0]));
 
       DIAS.forEach(d=>{
         const filtrados=CACHE_HORARIOS.filter(x=>x.celda_id===d);
@@ -163,3 +212,5 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     }
 
     async function borrar(id){if(confirm("¿Borrar definitivamente?")){await _sp.from('horarios').delete().eq('id',id);document.getElementById('edit-form-crono').innerHTML='';updateAll();}}
+
+
