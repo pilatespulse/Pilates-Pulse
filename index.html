@@ -261,6 +261,17 @@
         let CACHE_ALUMNOS = [];
         let CACHE_HORARIOS = [];
 
+        // Normaliza teléfonos para construir enlaces wa.me
+        function sanitizeTel(telRaw) {
+            if (!telRaw) return '';
+            // eliminar todo lo que no sea dígito
+            let s = ('' + telRaw).replace(/\D/g, '');
+            // eliminar prefijos internacionales escritos como 00... (ej: 00123..)
+            s = s.replace(/^00+/, '');
+            // eliminar ceros a la izquierda residuales (ej: 0345 -> 345)
+            s = s.replace(/^0+/, '');
+            return s;
+        }
         window.onload = () => {
             initBokeh();
             if (localStorage.getItem('studio_auth')) startApp();
@@ -366,21 +377,21 @@
                 
                 let linkWs = '';
                 if (alumnoDB) {
-                    const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
-                    
-                    // Construcción del mensaje solicitado
-                    const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\n` +
-                                    `Tienes una reservación para recibir tu clase de ${tipoClase}\n` +
-                                    `Horario: ${horaClase}\n` +
-                                    `Por favor, confirmar asistencia.\n` +
-                                    `Pilates Pulse.\n` +
-                                    `¡Te esperamos!`;
-                    
-                    const mensajeEncoded = encodeURIComponent(mensaje);
+                    const telRaw = alumnoDB.contenido.split('|')[2] || '';
+                    const telLimpio = sanitizeTel(telRaw);
 
-                    linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensajeEncoded}" target="_blank">
-                                <img src="${WS_ICON_URL}" class="ws-agenda-icon">
-                            </a>`;
+                    if (telLimpio.length >= 8) {
+                        const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\n` +
+                                        `Tienes una reservación para recibir tu clase de ${tipoClase}\n` +
+                                        `Horario: ${horaClase}\n` +
+                                        `Por favor, confirmar asistencia.\n` +
+                                        `Pilates Pulse.\n` +
+                                        `¡Te esperamos!`;
+                        const mensajeEncoded = encodeURIComponent(mensaje);
+                        linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensajeEncoded}" target="_blank">
+                                    <img src="${WS_ICON_URL}" class="ws-agenda-icon">
+                                </a>`;
+                    }
                 }
 
                 return `<div style="margin-bottom:6px; display:flex; align-items:center;">
@@ -489,15 +500,16 @@
             document.getElementById('render-alumnos').innerHTML = lista.map(a => {
                 const p = a.contenido.split('|');
                 const estaVencido = checkVencimiento(p[10]);
-                const telLimpio = p[2].replace(/\s+/g, '');
-                
+                const telSan = sanitizeTel(p[2] || '');
+                const hasTel = telSan && telSan.length >= 8;
+
                 return `<div class="clase-box">
                     <b style="font-size:0.85rem;" class="${estaVencido ? 'vence-alerta' : ''}">${p[1] || 'SIN NOMBRE'}</b>
                     <br>
-                    <a href="https://wa.me/${telLimpio}" target="_blank" class="ws-wrapper">
+                    ${hasTel ? `<a href="https://wa.me/${telSan}" target="_blank" class="ws-wrapper">
                         <img src="${WS_ICON_URL}" class="ws-icon">
                         <span class="ws-number">${p[2]}</span>
-                    </a>
+                    </a>` : `<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]}</span></span>`}
                     <br>
                     <small style="opacity:0.5;">${p[3]} — ${p[4]}</small>
                     <div id="extra-${a.id}" class="ficha-detalles">
