@@ -1,0 +1,162 @@
+:root { 
+    --bg: #050505;
+    --card: #121214;
+    --accent: #ffffff;
+    --celeste: #a2d2ff;
+    --danger: #ff2d55;
+    --whatsapp: #25D366;
+    --border: rgba(255, 255, 255, 0.08);
+    --font-main: 'Montserrat', sans-serif;
+    --font-fancy: 'Playfair Display', serif;
+}
+
+@keyframes bokehFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    50% { transform: translateY(-100px) translateX(20px); opacity: 0.05; }
+    100% { transform: translateY(-200px) translateX(-20px); opacity: 0; }
+}
+
+@keyframes cardPulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.08); }
+    50% { box-shadow: 0 0 15px rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-150%) skewX(-25deg); }
+    100% { transform: translateX(150%) skewX(-25deg); }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+body { 
+    font-family: var(--font-main); margin: 0; background: var(--bg); color: #fff; 
+    overflow-x: hidden; letter-spacing: -0.02em; position: relative;
+}
+
+.bokeh-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+.bokeh { position: absolute; background: #fff; border-radius: 50%; filter: blur(30px); opacity: 0; animation: bokehFloat infinite linear; }
+
+#login-section {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg); z-index: 10000; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+}
+
+#login-section input {
+    width: 100%; padding: 20px; margin-bottom: 12px;
+    background: #111; border: 1px solid var(--border);
+    border-radius: 20px; color: #fff; font-family: var(--font-main);
+    font-weight: 600; text-align: center; font-size: 0.9rem;
+}
+
+.branding-container {
+    display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 40px; padding-top: 40px;
+}
+
+.logo-pulse-circle {
+    width: 80px; height: 80px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+.logo-pulse-circle img { width: 45px; height: 45px; }
+
+.brand-text { font-weight: 900; font-size: 1.2rem; letter-spacing: 5px; color: #fff; }
+
+.btn-principal { 
+    background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; 
+    font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; 
+    letter-spacing: 2px; position: relative; overflow: hidden; 
+}
+
+.btn-principal::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.main-container { width: 95%; max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
+
+.dia-section { margin-bottom: 30px; }
+.dia-header { 
+    font-family: var(--font-fancy); font-size: 2.2rem; margin-bottom: 15px; 
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+
+.dia-header span { font-size: 0.8rem; font-family: var(--font-main); font-style: normal; font-weight: 400; opacity: 0.5; }
+
+.clase-box { 
+    background: rgba(255,255,255,0.03); padding: 20px; border-radius: 25px; 
+    margin-bottom: 12px; border: 1px solid var(--border); animation: cardPulse 5s infinite ease-in-out; 
+}
+
+.clase-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.hora { font-weight: 900; font-size: 0.8rem; opacity: 0.6; }
+.tipo-clase { font-family: var(--font-fancy); font-size: 1.1rem; color: var(--celeste); }
+.modalidad { font-size: 0.6rem; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; opacity: 0.4; }
+
+.alumnos-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.alumno-pill { 
+    background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 30px; 
+    font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border);
+}
+
+.footer-nav { 
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+    width: 95%; max-width: 500px; z-index: 999; 
+}
+
+.nav-btn { 
+    background: rgba(15, 15, 15, 0.85); color: #fff; padding: 12px 2px;
+    border-radius: 15px; border: 1px solid var(--border); font-weight: 800; 
+    font-size: 0.5rem; backdrop-filter: blur(20px); text-align: center; transition: all 0.3s;
+}
+
+.nav-btn.active-btn { background: #fff; color: #000; }
+
+.dot-notif { 
+    width: 6px; height: 6px; background: var(--danger); border-radius: 50%; 
+    display: inline-block; margin-left: 3px; display: none; 
+}
+
+/* Base de Datos de Alumnos */
+.alumno-card-db { 
+    background: var(--card); border: 1px solid var(--border); padding: 20px; 
+    border-radius: 25px; margin-bottom: 12px; 
+}
+
+.db-info { display: flex; justify-content: space-between; align-items: center; }
+.db-nombre { font-weight: 800; font-size: 0.9rem; }
+.db-detalle { font-size: 0.6rem; opacity: 0.5; margin-top: 4px; }
+
+.ws-btn { 
+    background: #25D366; width: 35px; height: 35px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.ws-btn img { width: 20px; }
+
+.vencido { color: var(--danger) !important; font-weight: 900; }
+
+/* Formularios */
+.form-container { background: #111; padding: 20px; border-radius: 25px; margin-bottom: 20px; border: 1px solid var(--border); }
+.form-container input, .form-container select { 
+    width: 100%; padding: 12px; margin-bottom: 10px; background: #000; 
+    border: 1px solid var(--border); border-radius: 12px; color: #fff; font-size: 0.8rem;
+}
+
+.search-container { position: relative; margin-bottom: 20px; }
+.search-input { 
+    width: 100%; background: #111; border: 1px solid var(--border); padding: 15px 40px; 
+    border-radius: 20px; color: #fff; font-size: 0.8rem;
+}
+.search-icon { position: absolute; left: 15px; top: 15px; opacity: 0.3; }
+
+.logout-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+.btn-logout { background: none; border: 1px solid var(--border); color: #555; font-size: 0.6rem; padding: 5px 10px; border-radius: 10px; cursor: pointer; }
+
+.crono-header-text { font-family: var(--font-fancy); font-size: 1.5rem; text-align: center; margin-bottom: 30px; font-style: italic; }
+.crono-card { border-left: 2px solid #fff; padding-left: 15px; margin-bottom: 25px; }
+.crono-hora { font-size: 0.7rem; font-weight: 900; opacity: 0.4; margin-bottom: 5px; }
+.crono-clase { font-family: var(--font-fancy); font-size: 1.2rem; }
