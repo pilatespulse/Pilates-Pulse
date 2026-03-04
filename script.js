@@ -196,7 +196,6 @@ function renderCronograma() {
     }).join('');
 }
 
-// Funciones de Formulario (Registro de Alumno)
 function abrirFormNuevoAlumno() {
     const cont = document.getElementById('form-alumno-nuevo');
     cont.innerHTML = `
@@ -238,7 +237,6 @@ async function eliminarAlumno(id) {
     }
 }
 
-// Funciones de Cronograma (Añadir/Editar Clases)
 function abrirFormCrono(dia) {
     const cont = document.getElementById('edit-form-crono');
     cont.innerHTML = `
@@ -311,14 +309,11 @@ function switchModulo(id) {
     document.getElementById('modulo-cronograma').style.display = id === 'modulo-cronograma' ? 'block' : 'none';
     document.getElementById('modulo-alumnos').style.display = id === 'modulo-alumnos' ? 'block' : 'none';
     document.getElementById('modulo-notificaciones').style.display = id === 'modulo-notificaciones' ? 'block' : 'none';
-    
     document.getElementById('main-brand').style.display = id === 'modulo-cronograma' ? 'none' : 'flex';
-
     document.getElementById('btn-agenda').classList.toggle('active-btn', id === 'modulo-agenda');
     document.getElementById('btn-crono').classList.toggle('active-btn', id === 'modulo-cronograma');
     document.getElementById('btn-db').classList.toggle('active-btn', id === 'modulo-alumnos');
     document.getElementById('btn-notif').classList.toggle('active-btn', id === 'modulo-notificaciones');
-    
     if(id === 'modulo-cronograma') {
         document.getElementById('edit-form-crono').innerHTML = '';
     }
