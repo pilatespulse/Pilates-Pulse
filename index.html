@@ -366,21 +366,27 @@
                 
                 let linkWs = '';
                 if (alumnoDB) {
-                    const telLimpio = alumnoDB.contenido.split('|')[2].replace(/\s+/g, '');
-                    
-                    // Construcción del mensaje solicitado
-                    const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\n` +
-                                    `Tienes una reservación para recibir tu clase de ${tipoClase}\n` +
-                                    `Horario: ${horaClase}\n` +
-                                    `Por favor, confirmar asistencia.\n` +
-                                    `Pilates Pulse.\n` +
-                                    `¡Te esperamos!`;
-                    
-                    const mensajeEncoded = encodeURIComponent(mensaje);
+                    // sanitize phone: remove non-digits, strip international '00' or leading zeros
+                    const telRaw = alumnoDB.contenido.split('|')[2] || '';
+                    let telLimpio = ('' + telRaw).replace(/\D/g, '');
+                    // remove leading international 00 or single leading zeros
+                    telLimpio = telLimpio.replace(/^00+/, '');
+                    telLimpio = telLimpio.replace(/^0+/, '');
 
-                    linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensajeEncoded}" target="_blank">
-                                <img src="${WS_ICON_URL}" class="ws-agenda-icon">
-                            </a>`;
+                    // if after sanitizing we have a plausible number, build the wa.me link
+                    if (telLimpio.length >= 8) {
+                        // Construcción del mensaje solicitado
+                        const mensaje = `Buenas tardes ${nombreLimpio}!! 👋🏻🌤️\n` +
+                                        `Tienes una reservación para recibir tu clase de ${tipoClase}\n` +
+                                        `Horario: ${horaClase}\n` +
+                                        `Por favor, confirmar asistencia.\n` +
+                                        `Pilates Pulse.\n` +
+                                        `¡Te esperamos!`;
+                        const mensajeEncoded = encodeURIComponent(mensaje);
+                        linkWs = `<a href="https://wa.me/${telLimpio}?text=${mensajeEncoded}" target="_blank">
+                                    <img src="${WS_ICON_URL}" class="ws-agenda-icon">
+                                </a>`;
+                    }
                 }
 
                 return `<div style="margin-bottom:6px; display:flex; align-items:center;">
