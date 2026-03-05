@@ -1,6 +1,6 @@
 const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Life Align"];
+    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumpleaños"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
@@ -12,6 +12,10 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let ACTIVE_WEEK_KEY='';
     let CLOCK_TIMER=null;
     let LAST_MIN_MARK='';
+    let LAST_CAL_KEY='';
+    let CACHE_ALUMNOS_IDX={};
+    let CACHE_HORARIOS_BY_DIA={};
+    let AGENDA_DATA_VERSION=0;
 
     function classColor(){return 'var(--celeste)';}
     function sanitizeTel(t){if(!t)return '';let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=9)s=DEFAULT_COUNTRY+s;return s;}
@@ -22,6 +26,31 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     function openLanding(){hidePublicScreens();document.getElementById('landing-section').style.display='flex';}
     function openLogin(){hidePublicScreens();document.getElementById('login-section').style.display='flex';}
     function openAgendaPublica(){hidePublicScreens();document.getElementById('agenda-publica-section').style.display='flex';}
+    function ensureModalRoot(){
+      let root=document.getElementById('app-modal-root');
+      if(root) return root;
+      root=document.createElement('div');
+      root.id='app-modal-root';
+      document.body.appendChild(root);
+      return root;
+    }
+    function openModal(title,bodyHtml){
+      const root=ensureModalRoot();
+      root.innerHTML=`
+      <div class="app-modal-backdrop" onclick="if(event.target===this)closeModal()">
+        <div class="app-modal-panel" role="dialog" aria-modal="true" aria-label="${title}">
+          <button class="app-modal-close" onclick="closeModal()">&times;</button>
+          <div class="app-modal-title">${title}</div>
+          <div class="app-modal-body">${bodyHtml}</div>
+        </div>
+      </div>`;
+      document.body.classList.add('modal-open');
+    }
+    function closeModal(){
+      const root=document.getElementById('app-modal-root');
+      if(root) root.remove();
+      document.body.classList.remove('modal-open');
+    }
 
     function initBokeh(){const c=document.querySelector('.bokeh-container');for(let i=0;i<15;i++){const b=document.createElement('div');b.className='bokeh';const s=Math.random()*150+50;b.style.width=`${s}px`;b.style.height=`${s}px`;b.style.left=`${Math.random()*100}%`;b.style.top=`${Math.random()*100+10}%`;b.style.animationDuration=`${Math.random()*20+15}s`;b.style.animationDelay=`${Math.random()*10}s`;c.appendChild(b);}}
 
@@ -49,17 +78,20 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');}
 
     function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
-    function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';}
+    function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';if(vis){toggleMiniCalendar(false);return;}renderAgendaDay(d);}
 
     function renderEstructura(){
       document.getElementById('listaDias').innerHTML=`
         <div class="agenda-hero">
-          <div id="current-day-hero" class="agenda-day-hero"></div>
-          <div id="current-time-hero" class="agenda-time-hero"></div>
+          <div class="agenda-hero-main">
+            <div id="current-day-hero" class="agenda-day-hero"></div>
+            <div id="current-time-hero" class="agenda-time-hero"></div>
+          </div>
+          <div id="mini-calendar" class="mini-calendar"></div>
         </div>
-        <div class="clase-box" style="padding:14px 16px; margin-bottom:14px;">
-          <div id="fecha-actual" style="font-size:.62rem; opacity:.8; letter-spacing:1px; margin-bottom:8px;"></div>
-          <div id="week-range" style="font-size:.72rem; font-weight:900; letter-spacing:1px; margin-bottom:12px;"></div>
+        <div class="clase-box week-card" style="padding:14px 16px; margin-bottom:14px;">
+          <div id="fecha-actual" class="date-main"></div>
+          <div id="week-range" class="date-week"></div>
           <div style="display:flex; gap:8px;">
             <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px;" onclick="goPrevWeek()">VOLVER</button>
             <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px;" onclick="goNextWeek()">SIGUIENTE SEMANA</button>
@@ -72,38 +104,70 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     }
     function addClasePopup(dia,editId=null,existingData=null){
       const p=existingData?existingData.split('|'):['','','',''];
-      const isCrono=document.getElementById('modulo-cronograma').style.display==='block';
-      const targetDiv=editId?(isCrono?'edit-form-crono':`clase-form-${dia}`):`clase-form-${dia}`;
-      document.getElementById(targetDiv).innerHTML=`
-      <div style="background:#000;padding:15px;border-radius:20px;margin-bottom:15px;border:1px solid #222;">
+      const formHtml=`
+      <div class="modal-form-shell">
         <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
         <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
         <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
         <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
         <button class="btn-principal" style="padding:12px;font-size:.6rem;letter-spacing:1px" onclick="pushClase('${dia}','${editId}')">GUARDAR</button>
         ${editId?`<button class="btn-cancelar" style="background:var(--danger);color:#fff;padding:10px;font-size:.5rem;border:none" onclick="borrar('${editId}')">ELIMINAR</button>`:''}
-        <button class="btn-cancelar" style="padding:10px;font-size:.5rem" onclick="document.getElementById('${targetDiv}').innerHTML=''">CANCELAR</button>
+        <button class="btn-cancelar" style="padding:10px;font-size:.5rem" onclick="closeModal()">CANCELAR</button>
       </div>`;
-      if(editId)window.scrollTo({top:0,behavior:'smooth'});
+      openModal(editId?'Editar clase':'Nueva clase',formHtml);
     }
 
     function formatAlumnosAgenda(texto,horaClase,tipoClase){
       if(!texto)return '';
       return texto.split(',').map(nombreRaw=>{
         const nombreLimpio=nombreRaw.trim();
-        const alumnoDB=CACHE_ALUMNOS.find(a=>a.contenido.split('|')[1].toLowerCase()===nombreLimpio.toLowerCase());
+        const alumnoDB=CACHE_ALUMNOS_IDX[nombreLimpio.toLowerCase()];
         let linkWs='';
-        if(alumnoDB){const telLimpio=sanitizeTel(alumnoDB.contenido.split('|')[2]||'');if(telLimpio.length>=8){const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}!!\nTienes una reservación para recibir tu clase de ${tipoClase}\nHorario: ${horaClase}\nPor favor, confirmar asistencia.\nPilates Pulse.\n¡Te esperamos!`);linkWs=`<a href="https://wa.me/${telLimpio}?text=${msg}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;}}
-        return `<div style="margin-bottom:6px;display:flex;align-items:center"><span>• ${nombreLimpio}</span>${linkWs}</div>`;
+        if(alumnoDB&&alumnoDB.tel){const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}!!\nTienes una reservación para recibir tu clase de ${tipoClase}\nHorario: ${horaClase}\nPor favor, confirmar asistencia.\nPilates Pulse.\n¡Te esperamos!`);linkWs=`<a href="https://wa.me/${alumnoDB.tel}?text=${msg}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;}
+        return `<div style="margin-bottom:6px;display:flex;align-items:center"><span>&#8226; ${nombreLimpio}</span>${linkWs}</div>`;
       }).join('');
+    }
+
+    function buildAlumnoIndex(){
+      const idx={};
+      CACHE_ALUMNOS.forEach(a=>{
+        const p=a.contenido.split('|');
+        const name=(p[1]||'').trim().toLowerCase();
+        if(!name) return;
+        const tel=sanitizeTel(p[2]||'');
+        idx[name]={ tel: tel&&tel.length>=8?tel:'' };
+      });
+      CACHE_ALUMNOS_IDX=idx;
+    }
+
+    function buildHorariosByDia(){
+      const byDia={};
+      DIAS.forEach(d=>byDia[d]=[]);
+      CACHE_HORARIOS.forEach(item=>{
+        if(byDia[item.celda_id]) byDia[item.celda_id].push(item);
+      });
+      CACHE_HORARIOS_BY_DIA=byDia;
+      AGENDA_DATA_VERSION++;
+    }
+
+    function renderAgendaDay(dia,force=false){
+      const box=document.getElementById(`clases-${dia}`);
+      if(!box) return;
+      const ver=String(AGENDA_DATA_VERSION);
+      if(!force&&box.dataset.ver===ver) return;
+      const filtrados=CACHE_HORARIOS_BY_DIA[dia]||[];
+      box.innerHTML=filtrados.map(i=>{
+        const p=i.contenido.split('|');
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.75rem;line-height:1.4"><b>${p[0]}</b> — <span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${p[2]}</small><br><div style="margin-top:8px">${formatAlumnosAgenda(p[3],p[0],p[1])}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${i.contenido}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+      }).join('');
+      box.dataset.ver=ver;
     }
 
     async function pushClase(dia,editId="null"){
       const content=`${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
       if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
       else await _sp.from('horarios').insert([{celda_id:weekCeldaId(dia),contenido:content}]);
-      document.getElementById('edit-form-crono').innerHTML='';
-      document.getElementById(`clase-form-${dia}`).innerHTML='';
+      closeModal();
       updateAll();
     }
 
@@ -152,17 +216,69 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       const b = sat.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
       return `Semana: ${a} - ${b}`;
     }
+    function getTodayAgendaInfo(){
+      const dayMap = { 1:'Lunes', 2:'Martes', 3:'Miércoles', 4:'Jueves', 5:'Viernes', 6:'Sábado' };
+      const dia = dayMap[new Date().getDay()] || null;
+      const count = dia ? CACHE_HORARIOS.filter(x=>x.celda_id===dia).length : 0;
+      return { dia, count, hasAgendaDay: !!dia };
+    }
 
+    function bindMiniCalendarInteractions(){
+      const miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl || miniCalEl.dataset.bound==='1') return;
+      miniCalEl.dataset.bound = '1';
+      miniCalEl.setAttribute('role','button');
+      miniCalEl.setAttribute('tabindex','0');
+      miniCalEl.setAttribute('aria-expanded','false');
+      miniCalEl.addEventListener('click', ()=>toggleMiniCalendar());
+      miniCalEl.addEventListener('keydown', e=>{
+        if(e.key==='Enter' || e.key===' '){
+          e.preventDefault();
+          toggleMiniCalendar();
+        }
+      });
+    }
+
+    function toggleMiniCalendar(forceState=null){
+      const miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl) return;
+      const shouldExpand = forceState===null ? !miniCalEl.classList.contains('expanded') : !!forceState;
+      miniCalEl.classList.toggle('expanded', shouldExpand);
+      miniCalEl.setAttribute('aria-expanded', shouldExpand?'true':'false');
+    }
     function updateWeekIndicators(){
       const now = new Date();
       const todayEl = document.getElementById('fecha-actual');
       const rangeEl = document.getElementById('week-range');
       const dayHeroEl = document.getElementById('current-day-hero');
       const timeHeroEl = document.getElementById('current-time-hero');
+      const cronoTodayEl = document.getElementById('crono-fecha-actual');
+      const cronoRangeEl = document.getElementById('crono-week-range');
+      let miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl){
+        const hero = document.querySelector('.agenda-hero');
+        if(hero){
+          miniCalEl = document.createElement('div');
+          miniCalEl.id = 'mini-calendar';
+          miniCalEl.className = 'mini-calendar';
+          hero.appendChild(miniCalEl);
+        }
+      }
 
-      if(todayEl) todayEl.textContent = formatTodayLabel();
+      if(todayEl){ todayEl.textContent = ""; todayEl.style.display = "none"; }
       if(rangeEl) rangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
+      if(cronoTodayEl) cronoTodayEl.textContent = formatTodayLabel();
+      if(cronoRangeEl) cronoRangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
       if(dayHeroEl) dayHeroEl.textContent = formatHeroDayLabel();
+      bindMiniCalendarInteractions();
+      if(miniCalEl){
+        const todayInfo = getTodayAgendaInfo();
+        const calKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${ACTIVE_WEEK_KEY}-${todayInfo.count}`;
+        if(LAST_CAL_KEY !== calKey){
+          miniCalEl.innerHTML = buildMiniCalendar(now);
+          LAST_CAL_KEY = calKey;
+        }
+      }
 
       if(timeHeroEl){
         const minuteMark = now.toISOString().slice(0,16);
@@ -268,15 +384,16 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
         .filter(Boolean)
         .sort((a,b)=>a24h(a.contenido.split('|')[0])-a24h(b.contenido.split('|')[0]));
 
+      buildAlumnoIndex();
+      buildHorariosByDia();
+
       DIAS.forEach(d=>{
-        const filtrados=CACHE_HORARIOS.filter(x=>x.celda_id===d);
+        const filtrados=CACHE_HORARIOS_BY_DIA[d]||[];
         document.getElementById(`badge-${d}`).innerText=filtrados.length;
-        document.getElementById(`clases-${d}`).innerHTML=filtrados.map(i=>{
-          const p=i.contenido.split('|');
-          return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.75rem;line-height:1.4"><b>${p[0]}</b> — <span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${p[2]}</small><br><div style="margin-top:8px">${formatAlumnosAgenda(p[3],p[0],p[1])}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${d}','${i.id}','${i.contenido}')" style="cursor:pointer;font-size:.8rem;opacity:.5">✏️</span><span onclick="borrar('${i.id}')" style="opacity:.2;cursor:pointer;font-weight:900">×</span></div></div>`;
-        }).join('');
+        const dayContent=document.getElementById(`cont-${d}`);
+        if(dayContent&&dayContent.style.display==='block') renderAgendaDay(d,true);
       });
-      renderAlumnosList(CACHE_ALUMNOS);processVencimientos();renderCronograma();renderSolicitudes();updateSolicitudesDot();
+      renderAlumnosList(CACHE_ALUMNOS);processVencimientos();renderCronograma();renderSolicitudes();updateSolicitudesDot();updateWeekIndicators();
       const visible = ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-solicitudes','modulo-notificaciones'].map(id=>document.getElementById(id)).find(el=>el && getComputedStyle(el).display!=='none');
       if(visible) animateSequentialLoad(visible);
     }
@@ -314,7 +431,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
 
     function renderCronograma(){
       const container=document.getElementById('render-cronograma');
-      container.innerHTML=DIAS.map(dia=>{const clasesDelDia=CACHE_HORARIOS.filter(x=>x.celda_id===dia);return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${clasesDelDia.length>0?clasesDelDia.map(c=>{const p=c.contenido.split('|');return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]}</b>&nbsp;—&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.7" onclick="addClasePopup('${dia}','${c.id}','${c.contenido}')">✏️</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${p[3].split(',').map(n=>`• ${n.trim()}`).join('<br>')}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]}</div></div></div>`;}).join(''):'<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>'}</div></div>`;}).join('');
+      container.innerHTML=DIAS.map(dia=>{const clasesDelDia=CACHE_HORARIOS.filter(x=>x.celda_id===dia);return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${clasesDelDia.length>0?clasesDelDia.map(c=>{const p=c.contenido.split('|');return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]}</b>&nbsp;—&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${c.contenido}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${p[3].split(',').map(n=>`• ${n.trim()}`).join('<br>')}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]}</div></div></div>`;}).join(''):'<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>'}</div></div>`;}).join('');
     }
     function toggleCronoDetail(id){const el=document.getElementById(`crono-detail-${id}`),v=el.style.display==='block';document.querySelectorAll('.crono-detail-box').forEach(b=>b.style.display='none');el.style.display=v?'none':'block';}
     function checkVencimiento(f){if(!f)return false;const h=new Date(),v=new Date(f+"T23:59:59");return (v-h)/(1000*60*60)<=48;}
@@ -338,13 +455,13 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
 
     function abrirFormNuevoAlumno(editId=null,existingData=null){
       const p=existingData?existingData.split('|'):Array(12).fill('');let edades="";for(let i=1;i<=100;i++)edades+=`<option value="${i}">${i}</option>`;
-      document.getElementById('btn-abrir-registro').style.display='none';
-      document.getElementById('form-alumno-nuevo').innerHTML=`<div style="background:#111;padding:20px;border-radius:30px;border:1px solid #222;margin-bottom:20px"><label>Nombre</label><input type="text" id="db-nom" value="${p[1]}"><label>Edad</label><select id="db-edad">${edades}</select><label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"><label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select><label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select><label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select><label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}"><label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea><label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea><label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea><label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select><button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button><button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button></div>`;
+      const formHtml=`<div class="modal-form-shell"><label>Nombre</label><input type="text" id="db-nom" value="${p[1]}"><label>Edad</label><select id="db-edad">${edades}</select><label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"><label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select><label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select><label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select><label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}"><label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea><label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea><label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea><label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select><button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button><button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button></div>`;
+      openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
       if(editId)document.getElementById('db-edad').value=p[11];
     }
 
     async function saveAlumno(editId="null"){const d=id=>document.getElementById(id).value;const content=`DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;if(editId!=="null")await _sp.from('horarios').update({contenido:content}).eq('id',editId);else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);cerrarFormAlumno();updateAll();}
-    function cerrarFormAlumno(){document.getElementById('form-alumno-nuevo').innerHTML='';document.getElementById('btn-abrir-registro').style.display='block';}
+    function cerrarFormAlumno(){closeModal();}
     function animateSequentialLoad(container){
       if(!container) return;
       const items = Array.from(container.querySelectorAll('.dia-item,.clase-box,.crono-row,.crono-task,.search-container,h3,.crono-header-text')).slice(0,36);
@@ -378,6 +495,53 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     }
 
     async function borrar(id){if(confirm("¿Borrar definitivamente?")){await _sp.from('horarios').delete().eq('id',id);document.getElementById('edit-form-crono').innerHTML='';updateAll();}}
+
+
+
+
+
+
+
+
+
+
+
+
+function buildMiniCalendar(dateObj){
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const weekDays = ['D','L','M','X','J','V','S'];
+  const y = dateObj.getFullYear();
+  const m = dateObj.getMonth();
+  const d = dateObj.getDate();
+  const first = new Date(y, m, 1);
+  const firstDay = first.getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayInfo = getTodayAgendaInfo();
+  const classLabel = todayInfo.count===1 ? 'clase' : 'clases';
+  const dayLabel = dateObj.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+
+  let cells = '';
+  for(let i=0;i<firstDay;i++) cells += '<span class="mini-cal-cell empty"></span>';
+  for(let day=1; day<=daysInMonth; day++){
+    const active = day===d ? ' active' : '';
+    cells += `<span class="mini-cal-cell${active}">${day}</span>`;
+  }
+
+  return `
+    <div class="mini-cal-topline">${dayLabel}</div>
+    <div class="mini-cal-summary">Hoy: <b>${todayInfo.count}</b> ${classLabel}</div>
+    <div class="mini-cal-expand-hint">Toca para ver detalle</div>
+    <div class="mini-cal-details">
+      <div class="mini-cal-week">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
+      <div class="mini-cal-grid">${cells}</div>
+      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
+    </div>`;
+}
+
+
+
+
+
 
 
 
