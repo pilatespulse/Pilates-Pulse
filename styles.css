@@ -384,3 +384,321 @@
 @media (max-width: 640px){
   .agenda-hero{ margin-bottom: 10px; }
 }
+
+/* Date cards: clearer and subtle contrast */
+.week-card{
+  background: linear-gradient(180deg, rgba(255,255,255,.038), rgba(255,255,255,.02)) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.date-main{
+  font-size: .68rem;
+  letter-spacing: 1.35px;
+  text-transform: uppercase;
+  color: #d1d1d1;
+  opacity: .95;
+  margin-bottom: 8px;
+}
+
+.date-week{
+  font-size: .96rem;
+  letter-spacing: .4px;
+  font-weight: 900;
+  color: #f4f4f4;
+  margin-bottom: 12px;
+}
+
+#modulo-cronograma .week-card{
+  margin-top: 4px;
+  margin-bottom: 20px !important;
+}
+
+#modulo-cronograma .date-week{
+  font-size: 1rem;
+}
+
+/* Mini calendar next to current day */
+.agenda-hero{
+  align-items: stretch;
+  gap: 14px;
+}
+
+.agenda-hero-main{
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.agenda-hero-main .agenda-time-hero{
+  text-align: left;
+  margin-top: 6px;
+  letter-spacing: 1.4px;
+}
+
+.mini-calendar{
+  width: 168px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  padding: 10px 10px 9px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  animation: fadeLift .45s ease both;
+}
+
+.mini-cal-head{
+  font-size: .62rem;
+  text-transform: capitalize;
+  letter-spacing: 1px;
+  color: #f1f1f1;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.mini-cal-week,
+.mini-cal-grid{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mini-cal-week span{
+  font-size: .54rem;
+  color: #9f9f9f;
+  text-align: center;
+  font-weight: 700;
+}
+
+.mini-cal-cell{
+  height: 16px;
+  font-size: .56rem;
+  color: #cdcdcd;
+  text-align: center;
+  line-height: 16px;
+  border-radius: 5px;
+}
+
+.mini-cal-cell.empty{
+  opacity: .18;
+}
+
+.mini-cal-cell.active{
+  background: #f4f4f4;
+  color: #0b0b0b;
+  font-weight: 900;
+}
+
+@media (max-width: 640px){
+  .mini-calendar{
+    width: 152px;
+    padding: 9px 8px 8px;
+  }
+  .agenda-day-hero{
+    font-size: clamp(1.2rem, 6.2vw, 1.9rem);
+  }
+}
+
+
+
+/* Mini calendar visibility guard */
+.mini-calendar{
+  flex: 0 0 auto;
+  display: block;
+}
+
+/* Expandable mini calendar */
+.mini-calendar{
+  cursor: pointer;
+  user-select: none;
+  max-height: 96px;
+  overflow: hidden;
+  transition: max-height .44s cubic-bezier(.22,.88,.24,1), width .44s cubic-bezier(.22,.88,.24,1), transform .32s ease, box-shadow .35s ease, border-color .35s ease, background .35s ease;
+}
+
+.mini-calendar:hover{
+  border-color: rgba(255,255,255,.26);
+}
+
+.mini-calendar.expanded{
+  width: 220px;
+  max-height: 360px;
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.34);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+  box-shadow: 0 16px 36px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.mini-cal-topline{
+  font-size: .52rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #a7a7a7;
+  margin-bottom: 3px;
+}
+
+.mini-cal-summary{
+  font-size: .68rem;
+  color: #e8e8e8;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.mini-cal-summary b{
+  color: #fff;
+}
+
+.mini-cal-expand-hint{
+  font-size: .52rem;
+  opacity: .55;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.mini-cal-details{
+  opacity: 0;
+  transform: translateY(8px);
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity .34s ease, transform .34s ease, max-height .34s ease;
+}
+
+.mini-calendar.expanded .mini-cal-details{
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 280px;
+  margin-top: 10px;
+}
+
+.mini-cal-daynote{
+  margin-top: 10px;
+  text-align: center;
+  font-size: .58rem;
+  letter-spacing: .4px;
+  color: #b9b9b9;
+}
+
+@media (max-width: 640px){
+  .agenda-hero{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .agenda-hero-main{
+    width: 100%;
+  }
+
+  .agenda-hero-main .agenda-time-hero{
+    text-align: left;
+  }
+
+  .mini-calendar{
+    width: 100%;
+    max-height: 88px;
+  }
+
+  .mini-calendar.expanded{
+    width: 100%;
+    max-height: 380px;
+  }
+}
+
+/* Shared centered modal (class + alumno) */
+body.modal-open{
+  overflow: hidden;
+}
+
+#app-modal-root{
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+}
+
+.app-modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(4,4,6,.48);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  animation: modalBackdropIn .26s ease both;
+}
+
+.app-modal-panel{
+  width: min(720px, 94vw);
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(180deg, rgba(15,15,17,.98), rgba(10,10,12,.98));
+  box-shadow: 0 26px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  padding: 22px 18px 16px;
+  position: relative;
+  animation: modalCardIn .3s cubic-bezier(.22,.88,.24,1) both;
+}
+
+.app-modal-close{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.04);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.app-modal-title{
+  font-size: .78rem;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+  font-weight: 900;
+  color: #ececec;
+  margin: 2px 34px 14px 2px;
+}
+
+.app-modal-body{
+  padding: 2px;
+}
+
+.modal-form-shell{
+  background: transparent;
+  border: 0;
+}
+
+@keyframes modalBackdropIn{
+  from{ opacity: 0; }
+  to{ opacity: 1; }
+}
+
+@keyframes modalCardIn{
+  from{ opacity: 0; transform: translateY(10px) scale(.985); }
+  to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px){
+  .app-modal-panel{
+    width: 96vw;
+    max-height: 90vh;
+    border-radius: 20px;
+    padding: 20px 14px 14px;
+  }
+}
+
+/* Safety: modal root should not block UI when empty */
+#app-modal-root{
+  pointer-events: none;
+}
+#app-modal-root:not(:empty){
+  pointer-events: auto;
+}
