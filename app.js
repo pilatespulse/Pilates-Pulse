@@ -71,7 +71,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
 
     async function handleLogin(){
       const u=document.getElementById('adminUser').value,p=document.getElementById('adminPass').value;
-      const {data}=await _sp.from('usuarios_admin').select('*').eq('usuario',u).eq('password',p).maybeSingle();
+      const {data}=await _sp.from('usuarios_admin').select('id').eq('usuario',u).eq('password',p).maybeSingle();
       if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
     }
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
@@ -366,7 +366,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       await goNextWeek();
     }
     async function updateAll(){
-      const {data}=await _sp.from('horarios').select('*');
+      const {data}=await _sp.from('horarios').select('id,celda_id,contenido');
       const rows=data||[];
       CACHE_ALUMNOS=rows.filter(x=>x.celda_id===CELDA_DB);
       CACHE_SOLICITUDES=rows.filter(x=>x.celda_id===CELDA_SOLICITUD);
@@ -537,6 +537,7 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
+
 
 
 
