@@ -8,6 +8,9 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const DEFAULT_COUNTRY='';
     const SOL_SEEN_KEY='sol_seen_count';
     const WEEK_ACTIVE_KEY='week_active_key';
+    const NOTIF_DISMISSED_KEY='notif_dismissed_keys';
+    const BIRTHDAY_INTERVAL_MS=2*60*60*1000;
+    const BIRTHDAY_LAST_SHOWN_KEY='birthday_last_shown_at';
     let CACHE_ALUMNOS=[],CACHE_HORARIOS=[],CACHE_SOLICITUDES=[];
     let ACTIVE_WEEK_KEY='';
     let CLOCK_TIMER=null;
@@ -16,9 +19,19 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let CACHE_ALUMNOS_IDX={};
     let CACHE_HORARIOS_BY_DIA={};
     let AGENDA_DATA_VERSION=0;
+    let BIRTHDAY_TIMER=null;
+    const BIRTHDAY_DISMISSED=new Set();
+    const NOTIF_DISMISSED=new Set();
+    const BIRTHDAY_HANDLED_BY_DAY={};
+    let BIRTHDAY_PROMPT_TIMER=null;
+    let BIRTHDAY_FIREWORKS_CTRL=null;
+    let CURRENT_NOTIF_SIGNATURE='';
+    let LAST_SEEN_NOTIF_SIGNATURE='';
 
     function classColor(){return 'var(--celeste)';}
     function sanitizeTel(t){if(!t)return '';let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=9)s=DEFAULT_COUNTRY+s;return s;}
+    function normalizeTelForWhatsapp(t){return (''+(t||'')).replace(/[^\d]/g,'');}
+    function decodeHtmlEntities(txt){const el=document.createElement('textarea');el.innerHTML=txt||'';return el.value||'';}
     function a24h(h){if(!h)return 0;let[t,ap]=h.split(' ');let[hh,mm]=t.split(':').map(Number);if(ap==="PM"&&hh<12)hh+=12;if(ap==="AM"&&hh===12)hh=0;return hh*60+mm;}
 
     window.onload=()=>{initBokeh();localStorage.getItem('studio_auth')?startApp():openLanding();};
@@ -75,7 +88,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
     }
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
-    async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');}
+    async function startApp(){hydrateDismissedNotifications();hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');showBirthdayNotices();if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);}
 
     function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
     function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';if(vis){toggleMiniCalendar(false);return;}renderAgendaDay(d);}
@@ -443,24 +456,388 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       }).join('');
     }
 
-    function processVencimientos(){
-      const listaNotif=document.getElementById('lista-notificaciones');
-      const alertas=CACHE_ALUMNOS.filter(a=>checkVencimiento(a.contenido.split('|')[10]));
-      document.getElementById('active-dot').style.display=alertas.length>0?'block':'none';
-      listaNotif.innerHTML=alertas.length===0?`<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos próximos.</p>`:alertas.map(a=>{const p=a.contenido.split('|');return `<div class="clase-box" style="border-left:4px solid var(--danger)"><b style="color:var(--danger)">${p[1]}</b><br><small>Vence: <b>${p[10]}</b></small></div>`}).join('');
+
+    function hydrateDismissedNotifications(){
+      NOTIF_DISMISSED.clear();
+      try{
+        const raw=localStorage.getItem(NOTIF_DISMISSED_KEY)||'[]';
+        const arr=JSON.parse(raw);
+        if(Array.isArray(arr)) arr.forEach(k=>NOTIF_DISMISSED.add(String(k)));
+      }catch{}
     }
 
+    function persistDismissedNotifications(){
+      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(Array.from(NOTIF_DISMISSED)));
+    }
+
+        function processVencimientos(){
+      const listaNotif=document.getElementById('lista-notificaciones');
+      if(!listaNotif) return;
+
+      const alertas=CACHE_ALUMNOS.filter(a=>checkVencimiento(a.contenido.split('|')[10])&&!NOTIF_DISMISSED.has(`v:${a.id}`));
+      const cumplePend=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre)&&!NOTIF_DISMISSED.has(`c:${(c.nombre||'').trim().toLowerCase()}`));
+
+      document.getElementById('active-dot').style.display=(alertas.length+cumplePend.length)>0?'block':'none';
+      CURRENT_NOTIF_SIGNATURE=[
+        ...alertas.map(a=>`v:${a.id}`).sort(),
+        ...cumplePend.map(c=>`c:${(c.nombre||'').trim().toLowerCase()}`).sort()
+      ].join('|');
+      updateNotifAttention();
+
+      const htmlCumple=cumplePend.map(c=>{
+        const tel=sanitizeTel(c.tel||'');
+        const hasWs=tel&&tel.length>=8;
+        const ws=hasWs?`<a class="birthday-ws-link" href="https://wa.me/${tel}" target="_blank"><img src="${WS_ICON_URL}" class="ws-icon"></a>`:`<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
+        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">🎉 Cumpleaños</b><br><small>${c.nombre} está cumpliendo años</small></div>${ws}</div>`;
+      }).join('');
+
+      const htmlVence=alertas.map(a=>{
+        const p=a.contenido.split('|');
+        return `<div class="clase-box" style="border-left:4px solid var(--danger)"><b style="color:var(--danger)">${p[1]}</b><br><small>Vence: <b>${p[10]}</b></small></div>`;
+      }).join('');
+
+      const empty=(alertas.length===0&&cumplePend.length===0)?'<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>':'';
+      listaNotif.innerHTML = htmlCumple + htmlVence + empty;
+    }
+
+    function updateNotifAttention(){
+      const btn=document.getElementById('btn-notif');
+      if(!btn) return;
+      const viewing=document.getElementById('modulo-notificaciones')?.style.display==='block';
+      const hasPending=!!CURRENT_NOTIF_SIGNATURE;
+      const shouldShake=hasPending && CURRENT_NOTIF_SIGNATURE!==LAST_SEEN_NOTIF_SIGNATURE && !viewing;
+      btn.classList.toggle('notif-shake', shouldShake);
+    }
+
+    function clearNotifications(){
+      CACHE_ALUMNOS
+        .filter(a=>checkVencimiento(a.contenido.split('|')[10]))
+        .forEach(a=>NOTIF_DISMISSED.add('v:'+a.id));
+      getCumpleanerosHoy()
+        .forEach(c=>NOTIF_DISMISSED.add('c:'+(c.nombre||'').trim().toLowerCase()));
+      persistDismissedNotifications();
+      LAST_SEEN_NOTIF_SIGNATURE='';
+      processVencimientos();
+    }
+
+    function getCumpleanerosHoy(){
+      const now=new Date();
+      const md=`${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      return CACHE_ALUMNOS.map(a=>{
+        const p=a.contenido.split('|');
+        return { nombre:p[1]||'', tel:p[2]||'', nac:p[12]||'' };
+      }).filter(x=>{
+        if(!x.nombre || !x.nac) return false;
+        const raw=(x.nac||'').trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw.slice(5,10)===md;
+        if(/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) return `${raw.slice(3,5)}-${raw.slice(0,2)}`===md;
+        return false;
+      });
+    }
+
+    function getTodayKey(){
+      return new Date().toISOString().slice(0,10);
+    }
+
+    function isBirthdayHandledToday(nombre){
+      const day=getTodayKey();
+      const list=Array.isArray(BIRTHDAY_HANDLED_BY_DAY[day])?BIRTHDAY_HANDLED_BY_DAY[day]:[];
+      return list.includes((nombre||'').trim().toLowerCase());
+    }
+
+    function markBirthdayHandledToday(nombre){
+      const n=(nombre||'').trim().toLowerCase();
+      if(!n) return;
+      const day=getTodayKey();
+      const list=Array.isArray(BIRTHDAY_HANDLED_BY_DAY[day])?BIRTHDAY_HANDLED_BY_DAY[day]:[];
+      if(!list.includes(n)) list.push(n);
+      BIRTHDAY_HANDLED_BY_DAY[day]=list;
+    }
+
+    function shouldShowBirthdayCycle(force=false){
+      if(force) return true;
+      const last=parseInt(localStorage.getItem(BIRTHDAY_LAST_SHOWN_KEY)||'0',10);
+      if(!Number.isFinite(last)||last<=0) return true;
+      return (Date.now()-last)>=BIRTHDAY_INTERVAL_MS;
+    }
+
+    function markBirthdayCycleNow(){
+      localStorage.setItem(BIRTHDAY_LAST_SHOWN_KEY,String(Date.now()));
+    }
+
+    function closeBirthdayPrompt(runAfterClose=null,mode='normal'){
+      const root=document.getElementById('birthday-prompt-root');
+      scheduleBirthdayFireworksStop(2000);
+      if(!root){
+        if(typeof runAfterClose==='function') runAfterClose();
+        return;
+      }
+      root.classList.remove('birthday-prompt-root-explode','birthday-prompt-root-hide');
+      root.classList.add(mode==='explode'?'birthday-prompt-root-explode':'birthday-prompt-root-hide');
+      setTimeout(()=>{
+        if(root) root.remove();
+        if(typeof runAfterClose==='function') runAfterClose();
+      }, mode==='explode'?760:640);
+    }
+
+    function scheduleBirthdayFireworksStop(ms=2000){
+      if(BIRTHDAY_FIREWORKS_CTRL && typeof BIRTHDAY_FIREWORKS_CTRL.stopAfter==='function'){
+        BIRTHDAY_FIREWORKS_CTRL.stopAfter(ms);
+      }
+    }
+
+    function triggerIgnoreBirthday(btn,nombre){
+      if(btn && btn.classList.contains('ignore-exploding')) return;
+      if(btn) btn.classList.add('ignore-exploding');
+      setTimeout(()=>ignoreBirthday(nombre), 560);
+    }
+
+    function ignoreBirthday(nombre){
+      markBirthdayHandledToday(nombre);
+      closeBirthdayPrompt(()=>processVencimientos(),'explode');
+    }
+
+    function sendBirthdayWhatsapp(nombre,telRaw){
+      const nombrePlano=decodeHtmlEntities(nombre||'').trim();
+      let tel=normalizeTelForWhatsapp(telRaw||'');
+
+      if((!tel||tel.length<8) && nombrePlano){
+        const found=CACHE_ALUMNOS.find(a=>{
+          const p=a.contenido.split('|');
+          return (p[1]||'').trim().toLowerCase()===nombrePlano.toLowerCase();
+        });
+        if(found){
+          const p=found.contenido.split('|');
+          tel=normalizeTelForWhatsapp(p[2]||'');
+        }
+      }
+
+      if(!tel||tel.length<8){
+        alert('Este alumno no tiene un número válido para WhatsApp.');
+        return;
+      }
+
+      const msg=encodeURIComponent(`¡Feliz cumple, ${nombrePlano||nombre}! 🥂 Gracias por ser parte de la comunidad de Pilates Pulse. Te deseamos un año lleno de equilibrio y buenos momentos. ¡Disfruta mucho tu día! ✨🧘‍♀️`);
+      window.open(`https://wa.me/${tel}?text=${msg}`,'_blank','noopener');
+      markBirthdayHandledToday(nombrePlano||nombre);
+      closeBirthdayPrompt(()=>processVencimientos());
+    }
+
+    function openBirthdayPrompt(cumple){
+      let root=document.getElementById('birthday-prompt-root');
+      if(root) root.remove();
+      root=document.createElement('div');
+      root.id='birthday-prompt-root';
+      root.className='birthday-prompt-root';
+      const safeName=(cumple.nombre||'').replace(/'/g,'&#39;');
+      const safeTel=(cumple.tel||'').replace(/'/g,'&#39;');
+      root.innerHTML=`
+      <div class="birthday-prompt-backdrop">
+        <div class="birthday-prompt-card">
+          <button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>
+          <div class="birthday-prompt-title">🎉 Cumpleaños hoy</div>
+          <div class="birthday-prompt-sub">${safeName} está cumpliendo años</div>
+          <div class="birthday-prompt-actions">
+            <button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}')">Mandar mensaje</button>
+            <button class="btn-cancelar btn-fuse btn-ignore" style="margin:0" onclick="triggerIgnoreBirthday(this,'${safeName}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.appendChild(root);
+    }
+    function launchBirthdayFireworks(){
+      if(BIRTHDAY_FIREWORKS_CTRL && typeof BIRTHDAY_FIREWORKS_CTRL.stopNow==='function'){
+        BIRTHDAY_FIREWORKS_CTRL.stopNow();
+      }
+
+      let canvas=document.getElementById('birthday-fireworks-canvas');
+      if(canvas) canvas.remove();
+      canvas=document.createElement('canvas');
+      canvas.id='birthday-fireworks-canvas';
+      canvas.className='birthday-fireworks-layer';
+      document.body.appendChild(canvas);
+
+      const ctx=canvas.getContext('2d');
+      if(!ctx){ canvas.remove(); return null; }
+
+      const DPR=Math.max(1,window.devicePixelRatio||1);
+      let w=0,h=0,raf=0;
+      let active=true;
+      let stopping=false;
+      let stopAt=Infinity;
+      let launchCooldown=0;
+      let launchWave=0;
+      const rockets=[];
+      const sparks=[];
+      const colors=['#ff4d4d','#ffae45','#ffe66a','#73ffbc','#73b8ff','#d289ff','#ff74cb','#8bffec'];
+
+      function resize(){
+        w=window.innerWidth;
+        h=window.innerHeight;
+        canvas.width=Math.floor(w*DPR);
+        canvas.height=Math.floor(h*DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+      }
+      resize();
+      window.addEventListener('resize',resize,{passive:true});
+
+      function spawnRocket(){
+        const sideBias=(launchWave++ % 2)===0 ? 0.22 : 0.78;
+        const x=(Math.random()*0.45 + sideBias-0.22) * w;
+        rockets.push({
+          x:Math.max(20,Math.min(w-20,x)),
+          y:h+8,
+          vx:(Math.random()-.5)*1.05,
+          vy:-(8.0+Math.random()*2.2),
+          targetY:h*(0.14+Math.random()*0.34),
+          color:colors[(Math.random()*colors.length)|0],
+          trail:[]
+        });
+      }
+
+      function explode(r){
+        const rings=2 + ((Math.random()*3)|0);
+        for(let ring=0; ring<rings; ring++){
+          const count=42 + ((Math.random()*26)|0);
+          const base=1.35 + ring*0.95;
+          for(let i=0;i<count;i++){
+            const a=(Math.PI*2*i)/count + (Math.random()-.5)*0.1;
+            const sp=base + Math.random()*2.1;
+            sparks.push({
+              x:r.x,y:r.y,
+              vx:Math.cos(a)*sp,
+              vy:Math.sin(a)*sp,
+              life:118 + ((Math.random()*58)|0),
+              age:0,
+              color:r.color,
+              twinkle:Math.random()*0.7 + 0.3
+            });
+          }
+        }
+      }
+
+      function drawTrail(trail,color){
+        for(let i=0;i<trail.length;i++){
+          const t=trail[i];
+          const k=i/trail.length;
+          ctx.globalAlpha=0.022 + k*0.145;
+          ctx.fillStyle=color;
+          ctx.beginPath();
+          ctx.arc(t.x,t.y,1.1 + k*1.55,0,Math.PI*2);
+          ctx.fill();
+        }
+        ctx.globalAlpha=1;
+      }
+
+      function tick(ts){
+        if(!active) return;
+        ctx.globalCompositeOperation='source-over';
+        ctx.fillStyle='rgba(0,0,0,0.18)';
+        ctx.fillRect(0,0,w,h);
+
+        if(!stopping){
+          if(ts>launchCooldown){
+            const burst=1 + ((Math.random()*2)|0);
+            for(let i=0;i<burst;i++){ if(rockets.length<4) spawnRocket(); }
+            launchCooldown=ts + 80 + Math.random()*55;
+          }
+        }
+
+        for(let i=rockets.length-1;i>=0;i--){
+          const r=rockets[i];
+          r.trail.push({x:r.x,y:r.y});
+          if(r.trail.length>18) r.trail.shift();
+          r.x+=r.vx;
+          r.y+=r.vy;
+          r.vy+=0.042;
+
+          drawTrail(r.trail,r.color);
+          ctx.fillStyle=r.color;
+          ctx.beginPath();
+          ctx.shadowColor=r.color;
+          ctx.shadowBlur=10;
+          ctx.arc(r.x,r.y,2.05,0,Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur=0;
+
+          if(r.y<=r.targetY || r.vy>=-0.95){
+            explode(r);
+            rockets.splice(i,1);
+          }
+        }
+
+        for(let i=sparks.length-1;i>=0;i--){
+          const p=sparks[i];
+          p.age++;
+          p.x+=p.vx;
+          p.y+=p.vy;
+          p.vy+=0.022;
+          p.vx*=0.994;
+          const lifeT=Math.max(0,1-p.age/p.life);
+          const pulse=(0.7 + Math.sin((p.age*0.14)+p.twinkle)*0.3);
+          const alpha=lifeT*pulse;
+          ctx.globalAlpha=alpha;
+          ctx.fillStyle=p.color;
+          ctx.beginPath();
+          ctx.shadowColor=p.color;
+          ctx.shadowBlur=7;
+          ctx.arc(p.x,p.y,0.7 + lifeT*1.9,0,Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur=0;
+          if(p.age>=p.life) sparks.splice(i,1);
+        }
+        ctx.globalAlpha=1;
+
+        if(stopping && ts>=stopAt && rockets.length===0 && sparks.length===0){
+          stopNow();
+          return;
+        }
+        raf=requestAnimationFrame(tick);
+      }
+
+      function stopAfter(ms=2000){
+        if(!active) return;
+        stopping=true;
+        stopAt=Math.min(stopAt, performance.now()+Math.max(0,ms));
+      }
+
+      function stopNow(){
+        if(!active) return;
+        active=false;
+        cancelAnimationFrame(raf);
+        window.removeEventListener('resize',resize);
+        if(canvas&&canvas.parentNode) canvas.remove();
+        if(BIRTHDAY_FIREWORKS_CTRL&&BIRTHDAY_FIREWORKS_CTRL.stopNow===stopNow) BIRTHDAY_FIREWORKS_CTRL=null;
+      }
+
+      raf=requestAnimationFrame(tick);
+      BIRTHDAY_FIREWORKS_CTRL={ stopAfter, stopNow };
+      return BIRTHDAY_FIREWORKS_CTRL;
+    }
+
+    function showBirthdayNotices(force=false){
+      const pendientes=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre));
+      if(!pendientes.length) return;
+      if(!shouldShowBirthdayCycle(force)) return;
+      markBirthdayCycleNow();
+
+      if(BIRTHDAY_PROMPT_TIMER) clearTimeout(BIRTHDAY_PROMPT_TIMER);
+      BIRTHDAY_PROMPT_TIMER=setTimeout(()=>{
+        try{ launchBirthdayFireworks(); }catch(e){ console.error('fireworks error',e); }
+        openBirthdayPrompt(pendientes[0]);
+      }, 900);
+    }
     function filtrarAlumnos(){const q=document.getElementById('buscadorAlumnos').value.toLowerCase();renderAlumnosList(CACHE_ALUMNOS.filter(a=>a.contenido.split('|')[1].toLowerCase().includes(q)));}
     function toggleExtra(id){const el=document.getElementById(`extra-${id}`);el.style.display=el.style.display==='block'?'none':'block';}
 
     function abrirFormNuevoAlumno(editId=null,existingData=null){
-      const p=existingData?existingData.split('|'):Array(12).fill('');let edades="";for(let i=1;i<=100;i++)edades+=`<option value="${i}">${i}</option>`;
-      const formHtml=`<div class="modal-form-shell"><label>Nombre</label><input type="text" id="db-nom" value="${p[1]}"><label>Edad</label><select id="db-edad">${edades}</select><label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"><label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select><label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select><label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select><label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}"><label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea><label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea><label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea><label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select><button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button><button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button></div>`;
+      const p=existingData?existingData.split('|'):Array(13).fill('');let edades="";for(let i=1;i<=100;i++)edades+=`<option value="${i}">${i}</option>`;
+      const formHtml=`<div class="modal-form-shell"><label>Nombre</label><input type="text" id="db-nom" value="${p[1]}"><label>Edad</label><select id="db-edad">${edades}</select><label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"><label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select><label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select><label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select><label>Fecha de nacimiento</label><input type="date" id="db-nac" value="${p[12]||''}"><label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}"><label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea><label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea><label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea><label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select><button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button><button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button></div>`;
       openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
       if(editId)document.getElementById('db-edad').value=p[11];
     }
 
-    async function saveAlumno(editId="null"){const d=id=>document.getElementById(id).value;const content=`DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}`;if(editId!=="null")await _sp.from('horarios').update({contenido:content}).eq('id',editId);else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);cerrarFormAlumno();updateAll();}
+    async function saveAlumno(editId="null"){const d=id=>document.getElementById(id).value;const content=`DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}|${d('db-nac')}`;if(editId!=="null")await _sp.from('horarios').update({contenido:content}).eq('id',editId);else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);cerrarFormAlumno();updateAll();}
     function cerrarFormAlumno(){closeModal();}
     function animateSequentialLoad(container){
       if(!container) return;
@@ -490,6 +867,10 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
 
       if(id==='modulo-cronograma') document.getElementById('edit-form-crono').innerHTML='';
       if(id==='modulo-solicitudes') markSolicitudesAsSeen();
+      if(id==='modulo-notificaciones'){
+        LAST_SEEN_NOTIF_SIGNATURE=CURRENT_NOTIF_SIGNATURE;
+        updateNotifAttention();
+      }
 
       animateSequentialLoad(target);
     }
@@ -537,6 +918,34 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
