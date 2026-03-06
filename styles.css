@@ -703,3 +703,19 @@ body.modal-open{
   pointer-events: auto;
 }
 
+
+/* Refresh icon button */
+.btn-refresh{
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  border-radius: 999px;
+  margin-right: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
