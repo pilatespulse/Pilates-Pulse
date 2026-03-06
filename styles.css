@@ -719,3 +719,13 @@ body.modal-open{
   text-transform: none;
   letter-spacing: 0;
 }
+
+
+/* Refresh button placement override */
+.btn-refresh{
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;
+  margin-right: 0;
+}
