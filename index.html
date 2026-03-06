@@ -63,7 +63,7 @@
     <div class="main-container">
       <div id="modulo-agenda"><div id="listaDias"></div></div>
       <div id="modulo-cronograma" style="display:none;"><div class="branding-container" style="padding-top:0"><div class="logo-pulse-circle" style="width:50px;height:50px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div></div><div class="crono-header-text">Cronograma</div><div class="clase-box week-card" style="padding:14px 16px; margin-bottom:16px;"><div id="crono-fecha-actual" class="date-main"></div><div id="crono-week-range" class="date-week"></div></div><div id="edit-form-crono" style="margin-bottom:20px;"></div><div id="render-cronograma"></div></div>
-      <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:20px">PRÓXIMOS VENCIMIENTOS</h3><div id="lista-notificaciones"></div></div>
+      <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:10px">PRÓXIMOS VENCIMIENTOS</h3><button class="btn-cancelar btn-clear-notif" onclick="clearNotifications()">VACIAR NOTIFICACIONES</button><div id="lista-notificaciones"></div></div>
       <div id="modulo-alumnos" style="display:none;"><div class="search-container"><span class="search-icon">&#128269;</span><input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()"></div><button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px;font-size:.7rem" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button><div id="form-alumno-nuevo"></div><div id="render-alumnos"></div></div>
       <div id="modulo-solicitudes" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:20px">SOLICITUDES WEB</h3><div id="lista-solicitudes"></div></div>
 
@@ -80,6 +80,7 @@
   <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
