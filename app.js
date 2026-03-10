@@ -272,6 +272,16 @@ async function pushClase(dia,editId="null"){
       closeModal();
       updateAll();
     }
+    async function borrar(id){
+      if(!id) return;
+      const confirmar=confirm('Seguro que quieres borrar este registro?');
+      if(!confirmar) return;
+      const {error}=await _sp.from('horarios').delete().eq('id',id);
+      if(error){alert('No se pudo borrar. Intenta nuevamente.');return;}
+      closeModal();
+      await updateAll();
+    }
+
 
     
     function getWeekStartKey(dateObj = new Date()) {
@@ -1409,6 +1419,8 @@ function renderCronograma(){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `DÃ­a activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
+
+
 
 
 
