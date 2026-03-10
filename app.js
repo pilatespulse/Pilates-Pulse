@@ -789,7 +789,7 @@ function renderCronograma(){
       }).join('');
 
       const empty=(alertas.length===0&&cumplePend.length===0)
-        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleanos hoy.</p>'
+        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>'
         : '';
       listaNotif.innerHTML = htmlCumple + htmlVence + empty;
       normalizeDomText(listaNotif);
