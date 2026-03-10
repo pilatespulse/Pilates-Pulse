@@ -1,104 +1,1487 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pilates Pulse | Luxury Admin</title>
-  <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
-  <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Montserrat:wght@400;600;900&family=Playfair+Display:ital,wght@1,700&family=Cormorant+Garamond:ital,wght@0,500;1,600&family=Raleway:wght@300;500;700&family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="bokeh-container"></div>
+const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+    const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
+    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
+    const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
+    const FRECUENCIAS=["1/semana","2/semana","3/semana"];
+    const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
+    const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
+    const DEFAULT_COUNTRY='';
+    const SOL_SEEN_KEY='sol_seen_count';
+    const WEEK_ACTIVE_KEY='week_active_key';
+    const BIRTHDAY_INTERVAL_MS=30*60*1000;
+    const BIRTHDAY_LAST_SHOWN_KEY='birthday_last_shown_at';
+    const WEEK_TRASH_PREFIX='WEEK_TRASH|';
+    const WEEK_TRASH_WINDOW_MS=2*60*60*1000;
+    let CACHE_ALUMNOS=[],CACHE_HORARIOS=[],CACHE_SOLICITUDES=[];
+    let ACTIVE_WEEK_KEY='';
+    let CLOCK_TIMER=null;
+    let LAST_MIN_MARK='';
+    let LAST_CAL_KEY='';
+    let CACHE_ALUMNOS_IDX={};
+    let CACHE_HORARIOS_BY_DIA={};
+    let AGENDA_DATA_VERSION=0;
+    let BIRTHDAY_TIMER=null;
+    const BIRTHDAY_DISMISSED=new Set();
+    const NOTIF_DISMISSED=new Set();
+    const BIRTHDAY_HANDLED_BY_DAY={};
+    let NOTIF_STATE_ROW_ID=null;
+    let BIRTHDAY_PROMPT_TIMER=null;
+    let BIRTHDAY_FIREWORKS_CTRL=null;
+    let CURRENT_NOTIF_SIGNATURE='';
+    let LAST_SEEN_NOTIF_SIGNATURE='';
+    let WEEK_TRASH_CACHE={};
 
-  <div id="landing-section">  
-    <div class="pp-hero-shell">
-      <header class="pp-topbar">
-        <div class="pp-brand-left">
-          <img class="pp-brand-icon" src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse">
-          <div class="pp-brand-word">pilates pulse</div>
+    function classColor(){return 'var(--celeste)';}
+    function sanitizeTel(t){if(!t)return '';let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=9)s=DEFAULT_COUNTRY+s;return s;}
+    function normalizeTelForWhatsapp(t){return (''+(t||'')).replace(/[^\d]/g,'');}
+    function decodeHtmlEntities(txt){const el=document.createElement('textarea');el.innerHTML=txt||'';return el.value||'';}
+        function normalizeText(v){
+      let s=(v==null?'':String(v));
+      const pairs=[
+        ['\u00C3\u00A1','\u00E1'],['\u00C3\u00A9','\u00E9'],['\u00C3\u00AD','\u00ED'],['\u00C3\u00B3','\u00F3'],['\u00C3\u00BA','\u00FA'],
+        ['\u00C3\u00B1','\u00F1'],['\u00C3\u2018','\u00D1'],['\u00C3\u0081','\u00C1'],['\u00C3\u0089','\u00C9'],['\u00C3\u008D','\u00CD'],
+        ['\u00C3\u0093','\u00D3'],['\u00C3\u009A','\u00DA'],['\u00C2\u00BF','\u00BF'],['\u00C2\u00A1','\u00A1'],
+        ['\u00E2\u20AC\u201D','\u2014'],['\u00E2\u20AC\u201C','\u2013'],['\u00E2\u20AC\u0153','\u201C'],['\u00E2\u20AC\u009D','\u201D'],
+        ['\u00E2\u20AC\u02DC','\u2018'],['\u00E2\u20AC\u2122','\u2019'],['\u00E2\u20AC\u00A6','\u2026'],['\u00C2\u00B7','\u2022']
+      ];
+      const decodeLatin1Utf8=(text)=>{
+        try{
+          const bytes=new Uint8Array(Array.from(text,ch=>ch.charCodeAt(0)&255));
+          return new TextDecoder('utf-8').decode(bytes);
+        }catch(_){
+          return text;
+        }
+      };
+      for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
+      for(let i=0;i<3;i++){
+        if(!/[ÃƒÃ‚Ã¢]/.test(s)) break;
+        const decoded=decodeLatin1Utf8(s);
+        if(!decoded||decoded===s) break;
+        s=decoded;
+        for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
+      }
+      s=s.replace(/\u00C2(?=[^\w]|$)/g,'');
+      s=s.replace(/Ã‚(?=[^\w]|$)/g,'');
+      return s;
+    }
+    function cleanField(v,maxLen=120){
+      return normalizeText(v).replace(/[<>`]/g,'').trim().slice(0,maxLen);
+    }
+    function normalizeDomText(root){
+      const base=root||document.body;
+      if(!base) return;
+      const walker=document.createTreeWalker(base, NodeFilter.SHOW_TEXT);
+      let n;
+      while((n=walker.nextNode())){
+        const fixed=normalizeText(n.nodeValue||'');
+        if(fixed!==n.nodeValue) n.nodeValue=fixed;
+      }
+    }
+    function a24h(h){if(!h)return 0;let[t,ap]=h.split(' ');let[hh,mm]=t.split(':').map(Number);if(ap==="PM"&&hh<12)hh+=12;if(ap==="AM"&&hh===12)hh=0;return hh*60+mm;}
+
+    window.onload=()=>{initBokeh();bindLandingScrollState();localStorage.getItem('studio_auth')?startApp():openLanding();};
+    function hidePublicScreens(){['landing-section','agenda-publica-section','login-section','app-content'].forEach(id=>document.getElementById(id).style.display='none');}
+    function openLanding(){hidePublicScreens();const landing=document.getElementById('landing-section');landing.style.display='flex';landing.classList.remove('about-open');landing.scrollTop=0;}
+    function openLogin(){hidePublicScreens();document.getElementById('login-section').style.display='flex';}
+    function openAgendaPublica(){hidePublicScreens();document.getElementById('agenda-publica-section').style.display='flex';}
+    function bindLandingScrollState(){
+      const landing=document.getElementById('landing-section');
+      if(!landing||landing.dataset.aboutBound==='1') return;
+      landing.dataset.aboutBound='1';
+      landing.addEventListener('scroll',()=>{
+        landing.classList.toggle('about-open',landing.scrollTop>120);
+      },{passive:true});
+    }
+    function smoothScrollContainer(el,targetTop,duration=1000){
+      const start=el.scrollTop;
+      const end=Math.max(0,targetTop);
+      const delta=end-start;
+      if(Math.abs(delta)<2) return;
+      const t0=performance.now();
+      const ease=t=>t<0.5?16*t*t*t*t*t:1-Math.pow(-2*t+2,5)/2;
+      const step=now=>{
+        const p=Math.min(1,(now-t0)/duration);
+        el.scrollTop=start+delta*ease(p);
+        if(p<1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    function openAboutSection(){
+      const landing=document.getElementById('landing-section');
+      const target=document.getElementById('about-us-section');
+      if(!landing||!target) return;
+      if(getComputedStyle(landing).display==='none') openLanding();
+      landing.classList.add('about-open');
+      const top=target.offsetTop-14;
+      setTimeout(()=>smoothScrollContainer(landing,top,1450),35);
+    }
+    function ensureModalRoot(){
+      let root=document.getElementById('app-modal-root');
+      if(root) return root;
+      root=document.createElement('div');
+      root.id='app-modal-root';
+      document.body.appendChild(root);
+      normalizeDomText(root);
+      return root;
+    }
+    function openModal(title,bodyHtml){
+      const root=ensureModalRoot();
+      root.innerHTML=`
+      <div class="app-modal-backdrop" onclick="if(event.target===this)closeModal()">
+        <div class="app-modal-panel" role="dialog" aria-modal="true" aria-label="${title}">
+          <button class="app-modal-close" onclick="closeModal()">&times;</button>
+          <div class="app-modal-title">${title}</div>
+          <div class="app-modal-body">${bodyHtml}</div>
         </div>
-        <nav class="pp-nav-right">
-          <button class="pp-nav-link" onclick="openAboutSection()">Sobre nosotros</button>
-          <button class="pp-nav-link pp-nav-access" onclick="openLogin()">Acceso</button>
-        </nav>
-      </header>
+      </div>`;
+      document.body.classList.add('modal-open');
+    }
+    function closeModal(){
+      const root=document.getElementById('app-modal-root');
+      if(root) root.remove();
+      document.body.classList.remove('modal-open');
+    }
 
-      <section class="pp-hero-content">
-        <h1 class="pp-hero-title">Tu momento de equilibrio</h1>
-        <p class="pp-hero-sub">Transforma tu cuerpo y mente con expertos en el metodo Pilates</p>
-        <button class="pp-hero-cta" onclick="openAgendaPublica()">&Uacute;NETE AHORA</button>
-      </section>
-      <section id="about-us-section" class="pp-about-section">
-        <div class="pp-about-section-header">SOBRE NOSOTROS</div>
-        <div class="pp-about-section-card">
-          <div class="pp-about-carousel" aria-label="Galeria Sobre nosotros">
-            <img class="pp-about-slide s1" src="https://i.postimg.cc/cJVWVxRp/IMG-0048.jpg" width="800" height="600" alt="Pilates Pulse 1" loading="eager" decoding="async">
-            <img class="pp-about-slide s2" src="https://i.postimg.cc/hPrSfqnL/IMG-0068.jpg" width="800" height="600" alt="Pilates Pulse 2" loading="lazy" decoding="async">
-            <img class="pp-about-slide s3" src="https://i.postimg.cc/cJVWVxRp/IMG-0048.jpg" width="800" height="600" alt="Pilates Pulse 3" loading="lazy" decoding="async">
+    function initBokeh(){const c=document.querySelector('.bokeh-container');for(let i=0;i<15;i++){const b=document.createElement('div');b.className='bokeh';const s=Math.random()*150+50;b.style.width=`${s}px`;b.style.height=`${s}px`;b.style.left=`${Math.random()*100}%`;b.style.top=`${Math.random()*100+10}%`;b.style.animationDuration=`${Math.random()*20+15}s`;b.style.animationDelay=`${Math.random()*10}s`;c.appendChild(b);}}
+
+    async function enviarSolicitudAgenda(){
+      const nombre=document.getElementById('ag-nombre').value.trim();
+      const telefono=document.getElementById('ag-telefono').value.trim();
+      const edad=document.getElementById('ag-edad').value.trim();
+      const razon=document.getElementById('ag-razon').value.trim();
+      const salud=document.getElementById('ag-salud').value.trim();
+      if(!nombre||!telefono||!edad||!razon||!salud){alert('Completa todos los campos para enviar tu solicitud.');return;}
+      const payload=`REQ|${nombre}|${telefono}|${edad}|${razon}|${salud}|${new Date().toISOString()}`;
+      const {error}=await _sp.from('horarios').insert([{celda_id:CELDA_SOLICITUD,contenido:payload}]);
+      if(error){alert('No se pudo enviar la solicitud. Intenta nuevamente.');return;}
+      alert('Solicitud enviada. Te contactaremos pronto.');
+      ['ag-nombre','ag-telefono','ag-edad','ag-razon','ag-salud'].forEach(id=>document.getElementById(id).value='');
+      openLanding();
+    }
+
+    async function handleLogin(){
+      const u=document.getElementById('adminUser').value,p=document.getElementById('adminPass').value;
+      const {data}=await _sp.from('usuarios_admin').select('id').eq('usuario',u).eq('password',p).maybeSingle();
+      if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
+    }
+    function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
+    async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');normalizeDomText(document.getElementById('app-content'));showBirthdayNotices();if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);}
+
+    function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
+    function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';if(vis){toggleMiniCalendar(false);return;}renderAgendaDay(d);}
+
+    function renderEstructura(){
+      document.getElementById('listaDias').innerHTML=`
+        <div class="agenda-hero">
+          <div class="agenda-hero-main">
+            <div class="agenda-hero-topline">
+              <div id="current-day-hero" class="agenda-day-hero"></div>
+              <button class="btn-cancelar agenda-delete-week-btn" onclick="eliminarSemanaActiva()">ELIMINAR SEMANA</button>
+            </div>
+            <div id="current-time-hero" class="agenda-time-hero"></div>
           </div>
-          <div class="pp-about-copy">
-            <h3>Somos Pilates Pulse</h3>
-            <p>Un espacio dedicado al movimiento consciente, la fuerza inteligente y el bienestar integral. Acompanamos a cada alumno con sesiones personalizadas y una energia cercana para transformar cuerpo y mente.</p>
-          </div>
+          <div id="mini-calendar" class="mini-calendar"></div>
         </div>
-      </section>
-    </div>
-  </div>
+        <div class="clase-box week-card" style="padding:14px 16px; margin-bottom:14px;">
+          <div id="fecha-actual" class="date-main"></div>
+          <div class="week-range-row"><div id="week-range" class="date-week"></div><div id="week-status-indicator" class="week-status-indicator" aria-live="polite"></div></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px; width:auto; padding:12px 16px;" onclick="goPrevWeek()">VOLVER</button>
+            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px; width:auto; padding:12px 16px;" onclick="goNextWeek()">SIGUIENTE SEMANA</button>
+            <button id="btn-recuperar-semana" class="btn-principal" style="display:none; margin:0; width:auto; padding:12px 16px; font-size:.56rem; letter-spacing:1px;" onclick="recuperarSemanaEliminada()">RECUPERAR SEMANA</button>
+          </div>
+          <div id="week-trash-note" style="display:none; margin-top:10px; font-size:.62rem; opacity:.68;"></div>
+        </div>`+DIAS.map(d=>`
+        <div class="dia-item">
+          <div class="dia-header" onclick="toggleDia('${d}')"><span style="font-weight:900;font-size:.75rem;letter-spacing:1px">${d.toUpperCase()}</span><span id="badge-${d}" style="font-size:.5rem;opacity:.5;font-weight:800;background:rgba(255,255,255,.1);padding:4px 8px;border-radius:8px">0</span></div>
+          <div class="dia-content" id="cont-${d}" style="display:none;padding:0 20px 20px"><div id="clase-form-${d}"></div><button class="btn-principal" id="btn-add-${d}" style="font-size:.55rem;background:#1a1a1c;color:#fff;padding:12px;letter-spacing:1px" onclick="addClasePopup('${d}')">+ CLASE</button><div id="clases-${d}" style="margin-top:15px;"></div></div>
+        </div>`).join('');
+    }
+    function addClasePopup(dia,editId=null,existingData=null){
+      const p=existingData?existingData.split('|'):['','','',''];
+      const formHtml=`
+      <div class="modal-form-shell">
+        ${editId?`<button class="btn-cancelar" style="margin:0 0 12px 0;background:#b3261e;color:#fff;padding:12px;font-size:.56rem;border:none;font-weight:900;letter-spacing:1px" onclick="borrar('${editId}')">ELIMINAR CLASE</button>`:''}
+        <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
+        <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
+        <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
+        <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
+        <button class="btn-principal" style="padding:12px;font-size:.6rem;letter-spacing:1px" onclick="pushClase('${dia}','${editId}')">GUARDAR</button>
+        <button class="btn-cancelar" style="padding:10px;font-size:.5rem" onclick="closeModal()">CANCELAR</button>
+      </div>`;
+      openModal(editId?'Editar clase':'Nueva clase',formHtml);
+    }
+            function formatAlumnosAgenda(texto,horaClase,tipoClase){
+      if(!texto) return '';
+      return texto.split(',').map(nombreRaw=>{
+        const nombreLimpio=normalizeText(nombreRaw).trim();
+        if(!nombreLimpio) return '';
+        const alumnoDB=CACHE_ALUMNOS_IDX[nombreLimpio.toLowerCase()];
+        let linkWs='';
+        if(alumnoDB&&alumnoDB.tel){
+          const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}.\nTienes una reservacion para recibir tu clase de ${tipoClase}.\nHorario: ${horaClase}.\nPor favor, confirma tu asistencia.\nPilates Pulse.\nTe esperamos.`);
+          linkWs=` <a href="https://wa.me/${alumnoDB.tel}?text=${msg}" target="_blank" rel="noopener"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;
+        }
+        return `<div style="margin-bottom:6px;display:flex;align-items:center;gap:8px"><span>${nombreLimpio}</span>${linkWs}</div>`;
+      }).join('');
+    }
+function buildAlumnoIndex(){
+      const idx={};
+      CACHE_ALUMNOS.forEach(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        const name=normalizeText(p[1]||'').trim().toLowerCase();
+        if(!name) return;
+        const tel=sanitizeTel(p[2]||'');
+        idx[name]={ tel: tel&&tel.length>=8?tel:'' };
+      });
+      CACHE_ALUMNOS_IDX=idx;
+    }
 
-  <div id="agenda-publica-section">
-    <div style="width:100%;max-width:520px">
-      <div class="branding-container"><div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div><div class="brand-text">AGENDA INICIAL</div></div>
-      <div class="public-form-shell">
-        <label>Nombre</label><input type="text" id="ag-nombre" placeholder="Tu nombre completo">
-        <label>Telefono</label><input type="text" id="ag-telefono" placeholder="Ej: +52...">
-        <label>Edad</label><input type="number" id="ag-edad" min="1" max="110" placeholder="Tu edad">
-        <label>Razon de su visita</label><textarea id="ag-razon" rows="3" placeholder="Que te gustaria trabajar?"></textarea>
-        <label>Salud</label><textarea id="ag-salud" rows="3" placeholder="Lesiones, condiciones o notas importantes"></textarea>
-        <button class="btn-principal" onclick="enviarSolicitudAgenda()">Enviar solicitud</button>
-      </div>
-      <button class="back-btn" onclick="openLanding()">Volver</button>
-    </div>
-  </div>
+    function buildHorariosByDia(){
+      const byDia={};
+      DIAS.forEach(d=>byDia[d]=[]);
+      CACHE_HORARIOS.forEach(item=>{
+        if(byDia[item.celda_id]) byDia[item.celda_id].push(item);
+      });
+      CACHE_HORARIOS_BY_DIA=byDia;
+      AGENDA_DATA_VERSION++;
+    }
 
-  <div id="login-section">
-    <div class="branding-container"><div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div><div class="brand-text">PILATES PULSE</div></div>
-    <div style="width:90%;max-width:380px">
-      <input type="text" id="adminUser" placeholder="ADMIN ID">
-      <input type="password" id="adminPass" placeholder="PASSWORD">
-      <button onclick="handleLogin()" class="btn-principal">ACCEDER</button>
-      <button class="back-btn" onclick="openLanding()">Volver</button>
-    </div>
-  </div>
+            function renderAgendaDay(dia,force=false){
+      const box=document.getElementById(`clases-${dia}`);
+      if(!box) return;
+      const ver=String(AGENDA_DATA_VERSION);
+      if(!force&&box.dataset.ver===ver) return;
+      const filtrados=CACHE_HORARIOS_BY_DIA[dia]||[];
+      box.innerHTML=filtrados.map(i=>{
+        const p=i.contenido.split('|').map(normalizeText);
+        const hora=p[0]||'';
+        const tipo=p[1]||'';
+        const modalidad=p[2]||'';
+        const alumnos=formatAlumnosAgenda(p[3]||'',hora,tipo);
+        const contenidoSeguro=(i.contenido||'').replace(/'/g,'&#39;');
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;•&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+      }).join('');
+      box.dataset.ver=ver;
+      normalizeDomText(box);
+    }
+async function pushClase(dia,editId="null"){
+      const content=`${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
+      if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
+      else await _sp.from('horarios').insert([{celda_id:weekCeldaId(dia),contenido:content}]);
+      closeModal();
+      updateAll();
+    }
 
-  <div id="app-content" style="display:none;">
-    <div class="logout-container"><button class="btn-logout" onclick="handleLogout()">Cerrar Sesion</button> <button class="btn-logout btn-refresh" aria-label="Refrescar" title="Refrescar" onclick="location.reload()">&#10227;</button></div>
-    <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
-      <div class="logo-pulse-circle" style="width:60px;height:60px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div>
-      <div class="brand-text" style="font-size:.8rem">PILATES PULSE</div>
-    </div>
+    
+    function getWeekStartKey(dateObj = new Date()) {
+      const d = new Date(dateObj);
+      d.setHours(0,0,0,0);
+      const dayMondayBase = (d.getDay() + 6) % 7; // lunes=0 ... domingo=6
+      d.setDate(d.getDate() - dayMondayBase);
+      return d.toISOString().slice(0,10);
+    }
 
-    <div class="main-container">
-      <div id="modulo-agenda"><div id="listaDias"></div></div>
-      <div id="modulo-cronograma" style="display:none;"><div class="branding-container" style="padding-top:0"><div class="logo-pulse-circle" style="width:50px;height:50px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div></div><div class="crono-header-text">Cronograma</div><div class="clase-box week-card" style="padding:14px 16px; margin-bottom:16px;"><div id="crono-fecha-actual" class="date-main"></div><div id="crono-week-range" class="date-week"></div></div><div id="edit-form-crono" style="margin-bottom:20px;"></div><div id="render-cronograma"></div></div>
-      <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:10px">PROXIMOS VENCIMIENTOS</h3><button class="btn-cancelar btn-clear-notif" onclick="clearNotifications()">VACIAR NOTIFICACIONES</button><div id="lista-notificaciones"></div></div>
-      <div id="modulo-alumnos" style="display:none;"><div class="search-container"><span class="search-icon">&#128269;</span><input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()"></div><button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px;font-size:.7rem" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button><div id="form-alumno-nuevo"></div><div id="render-alumnos"></div></div>
-      <div id="modulo-solicitudes" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:20px">SOLICITUDES WEB</h3><div id="lista-solicitudes"></div></div>
+    function addDaysToWeekKey(weekKey, days){
+      const d = new Date(weekKey + 'T00:00:00');
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0,10);
+    }
 
-      <div class="footer-nav">
-        <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>
-        <button class="nav-btn" id="btn-crono" onclick="switchModulo('modulo-cronograma')">CRONO</button>
-        <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DATOS</button>
-        <button class="nav-btn" id="btn-solicitudes" onclick="switchModulo('modulo-solicitudes')">SOLICITUDES<div class="dot-notif" id="active-dot-solicitudes"></div></button>
-        <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">NOTIF.<div class="dot-notif" id="active-dot"></div></button>
-      </div>
-    </div>
-  </div>
-  <script src="app.js"></script>
-</body>
-</html>
+    function weekCeldaId(dia, weekKey = ACTIVE_WEEK_KEY){
+      return `WEEK|${weekKey}|${dia}`;
+    }
+
+    function parseWeekCeldaId(celdaId){
+      const m = /^WEEK\|(\d{4}-\d{2}-\d{2})\|(.+)$/.exec(String(celdaId||''));
+      if(!m) return null;
+      return { week: m[1], dia: m[2] };
+    }
+
+    function getWeekTrashCeldaId(weekKey){
+      return `${WEEK_TRASH_PREFIX}${weekKey}`;
+    }
+
+    function parseWeekTrashRow(row){
+      if(!row || !String(row.celda_id||'').startsWith(WEEK_TRASH_PREFIX)) return null;
+      try{
+        const data=JSON.parse(row.contenido||'{}');
+        const weekKey=data.weekKey||String(row.celda_id).slice(WEEK_TRASH_PREFIX.length);
+        const expiresMs=new Date(data.expiresAt||0).getTime();
+        if(!weekKey || !Array.isArray(data.rows) || !Number.isFinite(expiresMs) || expiresMs<=0) return null;
+        return { rowId: row.id, weekKey, rows: data.rows, deletedAt: data.deletedAt||'', expiresAt: data.expiresAt, expiresMs };
+      }catch(_){
+        return null;
+      }
+    }
+
+    function getAgendaRowsForWeek(rows, weekKey){
+      const currentWeekKey=getWeekStartKey(new Date());
+      return (rows||[]).filter(r=>{
+        const rawId=String(r.celda_id||'');
+        if(DIAS.includes(rawId)) return weekKey===currentWeekKey;
+        const parsed=parseWeekCeldaId(rawId);
+        return !!(parsed && parsed.week===weekKey && DIAS.includes(parsed.dia));
+      });
+    }
+
+    function formatRemainingTrashTime(expiresMs){
+      const diff=Math.max(0,expiresMs-Date.now());
+      const totalMin=Math.ceil(diff/60000);
+      const hours=Math.floor(totalMin/60);
+      const mins=totalMin%60;
+      if(hours<=0) return `${mins} min`;
+      return `${hours}h ${String(mins).padStart(2,'0')}m`;
+    }
+
+    function updateWeekTrashUI(){
+      const btn=document.getElementById('btn-recuperar-semana');
+      const note=document.getElementById('week-trash-note');
+      if(!btn||!note) return;
+      const trash=WEEK_TRASH_CACHE[ACTIVE_WEEK_KEY];
+      if(!trash){
+        btn.style.display='none';
+        note.style.display='none';
+        note.textContent='';
+        return;
+      }
+      btn.style.display='inline-flex';
+      btn.textContent=`RECUPERAR SEMANA (${formatRemainingTrashTime(trash.expiresMs)})`;
+      note.style.display='block';
+      note.textContent='La semana eliminada puede recuperarse durante 2 horas.';
+    }
+    function formatTodayLabel(){
+      return new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+    }
+
+    function formatHeroDayLabel(){
+      return new Date().toLocaleDateString('es-MX', { weekday:'long' }).toUpperCase();
+    }
+
+    function formatHeroTimeLabel(){
+      return new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function isViewingCurrentWeek(){
+      return ACTIVE_WEEK_KEY===getWeekStartKey(new Date());
+    }
+
+    function formatWeekRange(weekKey){
+      const mon = new Date(weekKey + 'T00:00:00');
+      const sat = new Date(weekKey + 'T00:00:00');
+      sat.setDate(sat.getDate() + 5);
+      const a = mon.toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
+      const b = sat.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+      return `Semana: ${a} - ${b}`;
+    }
+    function getTodayAgendaInfo(){
+      const dayMap = { 1:DIAS[0], 2:DIAS[1], 3:DIAS[2], 4:DIAS[3], 5:DIAS[4], 6:DIAS[5] };
+      const dia = dayMap[new Date().getDay()] || null;
+      const count = dia ? CACHE_HORARIOS.filter(x=>x.celda_id===dia).length : 0;
+      return { dia, count, hasAgendaDay: !!dia };
+    }
+
+    function bindMiniCalendarInteractions(){
+      const miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl || miniCalEl.dataset.bound==='1') return;
+      miniCalEl.dataset.bound = '1';
+      miniCalEl.setAttribute('role','button');
+      miniCalEl.setAttribute('tabindex','0');
+      miniCalEl.setAttribute('aria-expanded','false');
+      miniCalEl.addEventListener('click', ()=>toggleMiniCalendar());
+      miniCalEl.addEventListener('keydown', e=>{
+        if(e.key==='Enter' || e.key===' '){
+          e.preventDefault();
+          toggleMiniCalendar();
+        }
+      });
+    }
+
+    function toggleMiniCalendar(forceState=null){
+      const miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl) return;
+      const shouldExpand = forceState===null ? !miniCalEl.classList.contains('expanded') : !!forceState;
+      miniCalEl.classList.toggle('expanded', shouldExpand);
+      miniCalEl.setAttribute('aria-expanded', shouldExpand?'true':'false');
+    }
+    function updateWeekIndicators(){
+      const now = new Date();
+      const todayEl = document.getElementById('fecha-actual');
+      const rangeEl = document.getElementById('week-range');
+      const dayHeroEl = document.getElementById('current-day-hero');
+      const timeHeroEl = document.getElementById('current-time-hero');
+      const cronoTodayEl = document.getElementById('crono-fecha-actual');
+      const cronoRangeEl = document.getElementById('crono-week-range');
+      const weekStatusEl = document.getElementById('week-status-indicator');
+      let miniCalEl = document.getElementById('mini-calendar');
+      if(!miniCalEl){
+        const hero = document.querySelector('.agenda-hero');
+        if(hero){
+          miniCalEl = document.createElement('div');
+          miniCalEl.id = 'mini-calendar';
+          miniCalEl.className = 'mini-calendar';
+          hero.appendChild(miniCalEl);
+        }
+      }
+
+      if(todayEl){ todayEl.textContent = ""; todayEl.style.display = "none"; }
+      if(rangeEl) rangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
+      if(cronoTodayEl) cronoTodayEl.textContent = formatTodayLabel();
+      if(cronoRangeEl) cronoRangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
+      const weekIsCurrent=isViewingCurrentWeek();
+      const weekColor=weekIsCurrent ? '#5ee27a' : '#ff6b6b';
+      if(rangeEl) rangeEl.style.color=weekColor;
+      if(cronoRangeEl) cronoRangeEl.style.color=weekColor;
+      if(weekStatusEl){
+        weekStatusEl.textContent=weekIsCurrent ? '✓' : '✕';
+        weekStatusEl.className='week-status-indicator '+(weekIsCurrent ? 'is-current' : 'is-other');
+        weekStatusEl.setAttribute('aria-label', weekIsCurrent ? 'Semana actual' : 'Semana distinta');
+      }
+      updateWeekTrashUI();
+      if(dayHeroEl) dayHeroEl.textContent = formatHeroDayLabel();
+      bindMiniCalendarInteractions();
+      if(miniCalEl){
+        const todayInfo = getTodayAgendaInfo();
+        const calKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${ACTIVE_WEEK_KEY}-${todayInfo.count}`;
+        if(LAST_CAL_KEY !== calKey){
+          miniCalEl.innerHTML = buildMiniCalendar(now);
+          LAST_CAL_KEY = calKey;
+        }
+      }
+
+      if(timeHeroEl){
+        const minuteMark = now.toISOString().slice(0,16);
+        const timeText = formatHeroTimeLabel();
+        if(timeHeroEl.textContent !== timeText) timeHeroEl.textContent = timeText;
+        if(LAST_MIN_MARK !== minuteMark){
+          timeHeroEl.classList.remove('minute-shift');
+          void timeHeroEl.offsetWidth;
+          timeHeroEl.classList.add('minute-shift');
+          LAST_MIN_MARK = minuteMark;
+        }
+      }
+    }
+
+    async function goNextWeek(){
+      ACTIVE_WEEK_KEY = addDaysToWeekKey(ACTIVE_WEEK_KEY, 7);
+      localStorage.setItem(WEEK_ACTIVE_KEY, ACTIVE_WEEK_KEY);
+      updateWeekIndicators();
+      await updateAll();
+    }
+
+    async function goPrevWeek(){
+      ACTIVE_WEEK_KEY = addDaysToWeekKey(ACTIVE_WEEK_KEY, -7);
+      localStorage.setItem(WEEK_ACTIVE_KEY, ACTIVE_WEEK_KEY);
+      updateWeekIndicators();
+      await updateAll();
+    }
+
+    async function deleteWeekTrashRow(rowId){
+      if(!rowId) return;
+      await _sp.from('horarios').delete().eq('id',rowId);
+    }
+
+    async function cleanupExpiredWeekTrash(rows){
+      const expired=(rows||[])
+        .map(parseWeekTrashRow)
+        .filter(x=>x && x.expiresMs<=Date.now());
+      if(!expired.length) return;
+      await _sp.from('horarios').delete().in('id', expired.map(x=>x.rowId));
+    }
+
+    async function upsertWeekTrash(weekKey,payload,rows=[]){
+      const current=(rows||[]).find(r=>String(r.celda_id||'')===getWeekTrashCeldaId(weekKey));
+      const contenido=JSON.stringify(payload);
+      if(current?.id){
+        await _sp.from('horarios').update({contenido}).eq('id',current.id);
+        return;
+      }
+      await _sp.from('horarios').insert([{celda_id:getWeekTrashCeldaId(weekKey),contenido}]);
+    }
+
+    async function eliminarSemanaActiva(){
+      const weekKey=ACTIVE_WEEK_KEY;
+      const {data,error}=await _sp.from('horarios').select('id,celda_id,contenido');
+      if(error){ alert('No se pudo leer la agenda de esta semana.'); return; }
+      const rows=data||[];
+      const weekRows=getAgendaRowsForWeek(rows,weekKey);
+      if(!weekRows.length){
+        alert('No hay clases en esta semana para eliminar.');
+        return;
+      }
+      const ok=confirm(`Se eliminara temporalmente la semana ${formatWeekRange(weekKey)}. Podras recuperarla durante 2 horas. ¿Deseas continuar?`);
+      if(!ok) return;
+
+      const expiresAt=new Date(Date.now()+WEEK_TRASH_WINDOW_MS).toISOString();
+      const payload={
+        weekKey,
+        deletedAt:new Date().toISOString(),
+        expiresAt,
+        rows:weekRows.map(r=>({celda_id:r.celda_id,contenido:r.contenido}))
+      };
+
+      await upsertWeekTrash(weekKey,payload,rows);
+      await _sp.from('horarios').delete().in('id',weekRows.map(r=>r.id));
+      await updateAll();
+      alert('La semana se elimino temporalmente. Puedes recuperarla durante 2 horas.');
+    }
+
+    async function recuperarSemanaEliminada(){
+      const trash=WEEK_TRASH_CACHE[ACTIVE_WEEK_KEY];
+      if(!trash){
+        alert('No hay una semana eliminada para recuperar.');
+        return;
+      }
+      if(trash.expiresMs<=Date.now()){
+        await deleteWeekTrashRow(trash.rowId);
+        await updateAll();
+        alert('El tiempo para recuperar esta semana ya vencio.');
+        return;
+      }
+
+      const {data,error}=await _sp.from('horarios').select('id,celda_id,contenido');
+      if(error){ alert('No se pudo preparar la recuperacion de la semana.'); return; }
+      const rows=data||[];
+      const existentes=getAgendaRowsForWeek(rows,ACTIVE_WEEK_KEY);
+      if(existentes.length){
+        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. ¿Deseas continuar?');
+        if(!reemplazar) return;
+        await _sp.from('horarios').delete().in('id',existentes.map(r=>r.id));
+      }
+
+      await _sp.from('horarios').insert(trash.rows.map(r=>({celda_id:r.celda_id,contenido:r.contenido})));
+      await deleteWeekTrashRow(trash.rowId);
+      await updateAll();
+      alert('La semana se recupero correctamente.');
+    }
+    async function clearAgendaAndCronoRows() {
+      const { error } = await _sp.from('horarios').delete().in('celda_id', DIAS);
+      if (error) throw error;
+    }
+
+    async function saveResetWeekKey(weekKey) {
+      const { data: meta } = await _sp.from('horarios').select('id').eq('celda_id', CELDA_RESET_META).limit(1).maybeSingle();
+      if (meta?.id) {
+        await _sp.from('horarios').update({ contenido: weekKey }).eq('id', meta.id);
+      } else {
+        await _sp.from('horarios').insert([{ celda_id: CELDA_RESET_META, contenido: weekKey }]);
+      }
+    }
+
+    async function archiveCurrentWeek(weekKey) {
+      const { data: rows } = await _sp.from('horarios').select('celda_id, contenido').in('celda_id', DIAS);
+      const list = rows || [];
+      if (!list.length) return;
+      const payload = list.map(r => ({ celda_id: `ARCHIVE_${weekKey}_${r.celda_id}`, contenido: r.contenido }));
+      await _sp.from('horarios').insert(payload);
+    }
+
+    async function restoreLatestArchivedWeekIfAgendaEmpty() {
+      const { data: active } = await _sp.from('horarios').select('id').in('celda_id', DIAS).limit(1);
+      if ((active || []).length > 0) return;
+
+      const { data: archived } = await _sp.from('horarios').select('celda_id, contenido').like('celda_id', 'ARCHIVE_%');
+      const rows = archived || [];
+      if (!rows.length) return;
+
+      let latestWeek = '';
+      const parsed = rows.map(r => {
+        const m = /^ARCHIVE_(\d{4}-\d{2}-\d{2})_(.+)$/.exec(r.celda_id || '');
+        if (!m) return null;
+        const wk = m[1];
+        const day = m[2];
+        if (wk > latestWeek) latestWeek = wk;
+        return { week: wk, day, contenido: r.contenido };
+      }).filter(Boolean);
+
+      if (!latestWeek) return;
+      const restore = parsed.filter(x => x.week === latestWeek && DIAS.includes(x.day)).map(x => ({ celda_id: x.day, contenido: x.contenido }));
+      if (!restore.length) return;
+
+      await _sp.from('horarios').insert(restore);
+    }
+
+    async function ensureWeeklyReset() {
+      const weekKey = getWeekStartKey(new Date());
+      const { data: meta } = await _sp.from('horarios').select('contenido').eq('celda_id', CELDA_RESET_META).limit(1).maybeSingle();
+      const lastKey = meta?.contenido || '';
+      if (lastKey !== weekKey) await saveResetWeekKey(weekKey);
+    }
+
+    async function reiniciarSemana(manual = false) {
+      // Compatibilidad: ahora "reiniciar" avanza a una semana nueva sin borrar historial.
+      await goNextWeek();
+    }
+    async function updateAll(){
+      const {data}=await _sp.from('horarios').select('id,celda_id,contenido');
+      const rows=data||[];
+      await cleanupExpiredWeekTrash(rows);
+      const {data: freshData}=await _sp.from('horarios').select('id,celda_id,contenido');
+      const activeRows=freshData||rows;
+      hydrateDismissedNotifications(activeRows);
+      WEEK_TRASH_CACHE={};
+      activeRows.forEach(r=>{
+        const trash=parseWeekTrashRow(r);
+        if(trash && trash.expiresMs>Date.now()) WEEK_TRASH_CACHE[trash.weekKey]=trash;
+      });
+      CACHE_ALUMNOS=activeRows.filter(x=>x.celda_id===CELDA_DB);
+      CACHE_SOLICITUDES=activeRows.filter(x=>x.celda_id===CELDA_SOLICITUD);
+      const currentWeekKey = getWeekStartKey(new Date());
+      CACHE_HORARIOS=activeRows
+        .filter(x=>x.celda_id!==CELDA_DB&&x.celda_id!==CELDA_SOLICITUD&&x.celda_id!==CELDA_RESET_META&&x.celda_id!==CELDA_NOTIF_STATE&&!String(x.celda_id).startsWith('ARCHIVE_')&&!String(x.celda_id).startsWith(WEEK_TRASH_PREFIX))
+        .map(x=>{
+          const rawId = String(x.celda_id||'');
+          if (DIAS.includes(rawId) && ACTIVE_WEEK_KEY===currentWeekKey) return { ...x, celda_id: rawId };
+          const parsed = parseWeekCeldaId(rawId);
+          if (parsed && parsed.week===ACTIVE_WEEK_KEY && DIAS.includes(parsed.dia)) return { ...x, celda_id: parsed.dia };
+          return null;
+        })
+        .filter(Boolean)
+        .sort((a,b)=>a24h(a.contenido.split('|')[0])-a24h(b.contenido.split('|')[0]));
+
+      buildAlumnoIndex();
+      buildHorariosByDia();
+
+      DIAS.forEach(d=>{
+        const filtrados=CACHE_HORARIOS_BY_DIA[d]||[];
+        document.getElementById(`badge-${d}`).innerText=filtrados.length;
+        const dayContent=document.getElementById(`cont-${d}`);
+        if(dayContent&&dayContent.style.display==='block') renderAgendaDay(d,true);
+      });
+      renderAlumnosList(CACHE_ALUMNOS);processVencimientos();renderCronograma();renderSolicitudes();updateSolicitudesDot();updateWeekIndicators();
+      const visible = ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-solicitudes','modulo-notificaciones'].map(id=>document.getElementById(id)).find(el=>el && getComputedStyle(el).display!=='none');
+      if(visible) animateSequentialLoad(visible);
+      normalizeDomText(document.getElementById('app-content'));
+    }
+    function getSeenSolicitudesCount(){
+      const n = parseInt(localStorage.getItem(SOL_SEEN_KEY) || '0', 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function updateSolicitudesDot(){
+      const dot = document.getElementById('active-dot-solicitudes');
+      if(!dot) return;
+      let seen = getSeenSolicitudesCount();
+      const total = CACHE_SOLICITUDES.length;
+      if(seen > total){
+        seen = total;
+        localStorage.setItem(SOL_SEEN_KEY, String(total));
+      }
+      dot.style.display = total > seen ? 'block' : 'none';
+    }
+
+    function markSolicitudesAsSeen(){
+      localStorage.setItem(SOL_SEEN_KEY, String(CACHE_SOLICITUDES.length));
+      updateSolicitudesDot();
+    }
+        function renderSolicitudes(){
+      const cont=document.getElementById('lista-solicitudes');
+      if(!CACHE_SOLICITUDES.length){
+        cont.innerHTML='<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay solicitudes aÃºn.</p>';
+        return;
+      }
+      cont.innerHTML=CACHE_SOLICITUDES.slice().sort((a,b)=>new Date((b.contenido.split('|')[6]||'')).getTime()-new Date((a.contenido.split('|')[6]||'')).getTime()).map(s=>{
+        const p=s.contenido.split('|').map(normalizeText);
+        const nombre=p[1]||'Sin nombre';
+        const telRaw=p[2]||'';
+        const edad=p[3]||'';
+        const razon=p[4]||'';
+        const salud=p[5]||'';
+        const fecha=p[6]?new Date(p[6]).toLocaleString('es-MX'):'Sin fecha';
+        const telSan=sanitizeTel(telRaw);
+        const ws=telSan.length>=8
+          ? '<a class="ws-wrapper" target="_blank" href="https://wa.me/'+telSan+'"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></a>'
+          : '<span class="ws-wrapper"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></span>';
+        return '<div class="clase-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:.85rem">'+nombre+'</b><br><small style="opacity:.6">Edad: '+edad+'</small><br>'+ws+'</div><small style="opacity:.45;font-size:.62rem;text-align:right">'+fecha+'</small></div><div style="margin-top:12px;font-size:.75rem;line-height:1.5"><b style="color:var(--celeste)">RazÃ³n:</b> '+razon+'<br><b style="color:var(--celeste)">Salud:</b> '+salud+'</div><button style="margin-top:12px;background:transparent;border:none;color:var(--danger);font-size:.58rem;font-weight:900;cursor:pointer" onclick="borrar(\''+s.id+'\')">BORRAR SOLICITUD</button></div>';
+      }).join('');
+    }
+function renderCronograma(){
+      const container=document.getElementById('render-cronograma');
+      if(!container) return;
+      container.innerHTML=DIAS.map(dia=>{
+        const clasesDelDia=(CACHE_HORARIOS_BY_DIA[dia]||[]);
+        const htmlClases=clasesDelDia.length
+          ? clasesDelDia.map(c=>{
+              const p=c.contenido.split('|').map(normalizeText);
+              const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
+              const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;•&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+            }).join('')
+          : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
+        return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
+      }).join('');
+      normalizeDomText(container);
+    }function toggleCronoDetail(id){const el=document.getElementById(`crono-detail-${id}`),v=el.style.display==='block';document.querySelectorAll('.crono-detail-box').forEach(b=>b.style.display='none');el.style.display=v?'none':'block';}
+    function checkVencimiento(f){if(!f)return false;const h=new Date(),v=new Date(f+"T23:59:59");return (v-h)/(1000*60*60)<=48;}
+
+    function renderAlumnosList(lista){
+      const container=document.getElementById('render-alumnos');
+      if(!container) return;
+      container.innerHTML=lista.map(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        const estaVencido=checkVencimiento(p[10]);
+        const telSan=sanitizeTel(p[2]||'');
+        const hasTel=telSan&&telSan.length>=8;
+        const telefono=hasTel
+          ? `<a href="https://wa.me/${telSan}" target="_blank" class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]||''}</span></a>`
+          : `<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]||''}</span></span>`;
+        const contenidoSeguro=(a.contenido||'').replace(/'/g,'&#39;');
+        const actividadFisica=`${p[14]||'N/A'}${p[15]?` - ${p[15]}`:''}`;
+        const dolorLesion=`${p[16]||'N/A'}${p[17]?` - ${p[17]}`:''}`;
+        const cirugia=`${p[18]||'N/A'}${p[19]?` - ${p[19]}`:''}`;
+        const partos=`${p[22]||'N/A'}${p[22]==='Si'&&p[23]?` - ${p[23]}`:''}`;
+        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> • ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
+      }).join('');
+      normalizeDomText(container);
+    }
+    function getNotifVencKey(id){ return 'v:'+id; }
+    function getNotifBirthdayKey(nombre){ return 'c:'+(nombre||'').trim().toLowerCase(); }
+
+    function hydrateDismissedNotifications(rows){
+      NOTIF_DISMISSED.clear();
+      const row=(rows||[]).find(r=>r.celda_id===CELDA_NOTIF_STATE);
+      NOTIF_STATE_ROW_ID=row?.id||null;
+      if(!row?.contenido) return;
+      try{
+        const data=JSON.parse(row.contenido);
+        const list=Array.isArray(data)?data:(Array.isArray(data?.dismissed)?data.dismissed:[]);
+        list.forEach(k=>NOTIF_DISMISSED.add(String(k)));
+      }catch{}
+    }
+
+    async function persistDismissedNotifications(){
+      const contenido=JSON.stringify({dismissed:Array.from(NOTIF_DISMISSED)});
+      if(NOTIF_STATE_ROW_ID){
+        await _sp.from('horarios').update({contenido}).eq('id',NOTIF_STATE_ROW_ID);
+        return;
+      }
+      const {data,error}=await _sp.from('horarios').insert([{celda_id:CELDA_NOTIF_STATE,contenido}]).select('id').limit(1);
+      if(!error&&data&&data[0]&&data[0].id) NOTIF_STATE_ROW_ID=data[0].id;
+    }
+
+    function processVencimientos(){
+      const listaNotif=document.getElementById('lista-notificaciones');
+      if(!listaNotif) return;
+
+      const alertas=CACHE_ALUMNOS.filter(a=>checkVencimiento(a.contenido.split('|')[10])&&!NOTIF_DISMISSED.has(`v:${a.id}`));
+      const cumplePend=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre)&&!NOTIF_DISMISSED.has(`c:${(c.nombre||'').trim().toLowerCase()}`));
+
+      document.getElementById('active-dot').style.display=(alertas.length+cumplePend.length)>0?'block':'none';
+      CURRENT_NOTIF_SIGNATURE=[
+        ...alertas.map(a=>`v:${a.id}`).sort(),
+        ...cumplePend.map(c=>`c:${(c.nombre||'').trim().toLowerCase()}`).sort()
+      ].join('|');
+      updateNotifAttention();
+
+      const htmlCumple=cumplePend.map(c=>{
+        const tel=sanitizeTel(c.tel||'');
+        const hasWs=tel&&tel.length>=8;
+        const safeName=(c.nombre||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const safeTel=String(tel||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const ws=hasWs
+          ? `<a class="birthday-ws-link" href="#" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}'); return false;"><img src="${WS_ICON_URL}" class="ws-icon"></a>`
+          : `<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
+        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumpleaños</b><br><small>${c.nombre} esta cumpliendo anos</small></div>${ws}</div>`;
+      }).join('');
+      const htmlVence=alertas.map(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        return `<div class="clase-box" style="border-left:4px solid var(--danger)"><b style="color:var(--danger)">${p[1]}</b><br><small>Vence: <b>${p[10]}</b></small></div>`;
+      }).join('');
+
+      const empty=(alertas.length===0&&cumplePend.length===0)
+        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>'
+        : '';
+      listaNotif.innerHTML = htmlCumple + htmlVence + empty;
+      normalizeDomText(listaNotif);
+    }
+    function updateNotifAttention(){
+      const btn=document.getElementById('btn-notif');
+      if(!btn) return;
+      const viewing=document.getElementById('modulo-notificaciones')?.style.display==='block';
+      const hasPending=!!CURRENT_NOTIF_SIGNATURE;
+      const shouldShake=hasPending && CURRENT_NOTIF_SIGNATURE!==LAST_SEEN_NOTIF_SIGNATURE && !viewing;
+      btn.classList.toggle('notif-shake', shouldShake);
+    }
+
+    async function clearNotifications(){
+      CACHE_ALUMNOS
+        .filter(a=>checkVencimiento(a.contenido.split('|')[10]))
+        .forEach(a=>NOTIF_DISMISSED.add(getNotifVencKey(a.id))); 
+      getCumpleanerosHoy()
+        .forEach(c=>NOTIF_DISMISSED.add(getNotifBirthdayKey(c.nombre))); 
+      await persistDismissedNotifications();
+      LAST_SEEN_NOTIF_SIGNATURE='';
+      processVencimientos();
+    }
+
+    function getCumpleanerosHoy(){
+      const now=new Date();
+      const md=`${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      return CACHE_ALUMNOS.map(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        return { nombre:normalizeText(p[1]||''), tel:normalizeText(p[2]||''), nac:normalizeText(p[12]||'') };
+      }).filter(x=>{
+        if(!x.nombre || !x.nac) return false;
+        const raw=(x.nac||'').trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw.slice(5,10)===md;
+        if(/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) return `${raw.slice(3,5)}-${raw.slice(0,2)}`===md;
+        return false;
+      });
+    }
+
+    function getTodayKey(){
+      return new Date().toISOString().slice(0,10);
+    }
+
+    function isBirthdayHandledToday(nombre){
+      const day=getTodayKey();
+      const list=Array.isArray(BIRTHDAY_HANDLED_BY_DAY[day])?BIRTHDAY_HANDLED_BY_DAY[day]:[];
+      return list.includes((nombre||'').trim().toLowerCase());
+    }
+
+    function markBirthdayHandledToday(nombre){
+      const n=(nombre||'').trim().toLowerCase();
+      if(!n) return;
+      const day=getTodayKey();
+      const list=Array.isArray(BIRTHDAY_HANDLED_BY_DAY[day])?BIRTHDAY_HANDLED_BY_DAY[day]:[];
+      if(!list.includes(n)) list.push(n);
+      BIRTHDAY_HANDLED_BY_DAY[day]=list;
+    }
+
+    function shouldShowBirthdayCycle(force=false){
+      if(force) return true;
+      const last=parseInt(localStorage.getItem(BIRTHDAY_LAST_SHOWN_KEY)||'0',10);
+      if(!Number.isFinite(last)||last<=0) return true;
+      return (Date.now()-last)>=BIRTHDAY_INTERVAL_MS;
+    }
+
+    function markBirthdayCycleNow(){
+      localStorage.setItem(BIRTHDAY_LAST_SHOWN_KEY,String(Date.now()));
+    }
+
+    function closeBirthdayPrompt(runAfterClose=null,mode='normal'){
+      const root=document.getElementById('birthday-prompt-root');
+      scheduleBirthdayFireworksStop(2000);
+      if(!root){
+        if(typeof runAfterClose==='function') runAfterClose();
+        return;
+      }
+      root.classList.remove('birthday-prompt-root-explode','birthday-prompt-root-hide');
+      root.classList.add(mode==='explode'?'birthday-prompt-root-explode':'birthday-prompt-root-hide');
+      setTimeout(()=>{
+        if(root) root.remove();
+        if(typeof runAfterClose==='function') runAfterClose();
+      }, mode==='explode'?760:640);
+    }
+
+    function scheduleBirthdayFireworksStop(ms=2000){
+      if(BIRTHDAY_FIREWORKS_CTRL && typeof BIRTHDAY_FIREWORKS_CTRL.stopAfter==='function'){
+        BIRTHDAY_FIREWORKS_CTRL.stopAfter(ms);
+      }
+    }
+
+    function triggerIgnoreBirthday(btn,nombre){
+      if(btn && btn.classList.contains('ignore-exploding')) return;
+      if(btn) btn.classList.add('ignore-exploding');
+      setTimeout(()=>{ ignoreBirthday(nombre); }, 560);
+    }
+
+    async function ignoreBirthday(nombre){
+      markBirthdayHandledToday(nombre);
+      NOTIF_DISMISSED.add(getNotifBirthdayKey(nombre));
+      await persistDismissedNotifications();
+      closeBirthdayPrompt(()=>processVencimientos(),'explode');
+    }
+
+    function buildBirthdayWhatsappMessage(nombre){
+      const wave=String.fromCodePoint(0x1F30A);
+      const meditate=String.fromCodePoint(0x1F9D8)+String.fromCharCode(0x200D,0x2640,0xFE0F);
+      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumpleaños, gracias por compartir tu energía y tu esfuerzo con nosotros. Que este año sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
+    }
+
+    function openWhatsappWithMessage(tel,msg){
+      const text=encodeURIComponent(msg||'');
+      const webUrl='https://wa.me/'+tel+'?text='+text;
+      const appUrl='whatsapp://send?phone='+tel+'&text='+text;
+      const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+      if(mobile){
+        window.location.href=appUrl;
+        setTimeout(()=>window.open(webUrl,'_blank','noopener'),700);
+        return;
+      }
+      window.open(webUrl,'_blank','noopener');
+    }
+
+    async function sendBirthdayWhatsapp(nombre,telOverride=''){
+      const nombrePlano=(nombre||'').trim();
+      if(!nombrePlano) return;
+
+      let tel=normalizeTelForWhatsapp(telOverride||'');
+      if(!tel){
+        const found=CACHE_ALUMNOS.find(a=>{
+          const p=a.contenido.split('|').map(normalizeText);
+          return (p[1]||'').trim().toLowerCase()===nombrePlano.toLowerCase();
+        });
+        if(found){
+          const p=found.contenido.split('|');
+          tel=normalizeTelForWhatsapp(p[2]||'');
+        }
+      }
+
+      if(!tel||tel.length<8){
+        alert('Este alumno no tiene un numero valido para WhatsApp.');
+        return;
+      }
+
+      const msg=buildBirthdayWhatsappMessage(nombrePlano||nombre);
+      openWhatsappWithMessage(tel,msg);
+      markBirthdayHandledToday(nombrePlano||nombre);
+      NOTIF_DISMISSED.add(getNotifBirthdayKey(nombrePlano||nombre));
+      await persistDismissedNotifications();
+      closeBirthdayPrompt(()=>processVencimientos());
+    }
+    function openBirthdayPrompt(cumple){
+      let root=document.getElementById('birthday-prompt-root');
+      if(root) root.remove();
+      root=document.createElement('div');
+      root.id='birthday-prompt-root';
+      root.className='birthday-prompt-root';
+      const safeName=cleanField(cumple.nombre||'',80);
+      const safeTel=cleanField(cumple.tel||'',32);
+      root.innerHTML=''
+      + '<div class="birthday-prompt-backdrop">'
+      +   '<div class="birthday-prompt-card">'
+      +     '<button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>'
+      +     '<div class="birthday-prompt-title">Nuevo cumpleaños</div>'
+      +     '<div class="birthday-prompt-sub">'+safeName+' esta cumpliendo anos</div>'
+      +     '<div class="birthday-prompt-actions">'
+      +       '<button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp(\''+safeName+'\',\''+safeTel+'\')">Mandar mensaje</button>'
+      +       '<button class="btn-cancelar btn-fuse btn-ignore" style="margin:0" onclick="triggerIgnoreBirthday(this,\''+safeName+'\')">Eliminar</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+      document.body.appendChild(root);
+      normalizeDomText(root);
+    }function launchBirthdayFireworks(){
+      if(BIRTHDAY_FIREWORKS_CTRL && typeof BIRTHDAY_FIREWORKS_CTRL.stopNow==='function'){
+        BIRTHDAY_FIREWORKS_CTRL.stopNow();
+      }
+
+      let canvas=document.getElementById('birthday-fireworks-canvas');
+      if(canvas) canvas.remove();
+      canvas=document.createElement('canvas');
+      canvas.id='birthday-fireworks-canvas';
+      canvas.className='birthday-fireworks-layer';
+      document.body.appendChild(canvas);
+
+      const ctx=canvas.getContext('2d');
+      if(!ctx){ canvas.remove(); return null; }
+
+      const DPR=Math.max(1,window.devicePixelRatio||1);
+      let w=0,h=0,raf=0;
+      let active=true;
+      let stopping=false;
+      let stopAt=Infinity;
+      let launchCooldown=0;
+      let launchWave=0;
+      const rockets=[];
+      const sparks=[];
+      const colors=['#ff4d4d','#ffae45','#ffe66a','#73ffbc','#73b8ff','#d289ff','#ff74cb','#8bffec'];
+
+      function resize(){
+        w=window.innerWidth;
+        h=window.innerHeight;
+        canvas.width=Math.floor(w*DPR);
+        canvas.height=Math.floor(h*DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+      }
+      resize();
+      window.addEventListener('resize',resize,{passive:true});
+
+      function spawnRocket(){
+        const sideBias=(launchWave++ % 2)===0 ? 0.22 : 0.78;
+        const x=(Math.random()*0.45 + sideBias-0.22) * w;
+        rockets.push({
+          x:Math.max(20,Math.min(w-20,x)),
+          y:h+8,
+          vx:(Math.random()-.5)*1.05,
+          vy:-(8.0+Math.random()*2.2),
+          targetY:h*(0.14+Math.random()*0.34),
+          color:colors[(Math.random()*colors.length)|0],
+          trail:[]
+        });
+      }
+
+      function explode(r){
+        const rings=2 + ((Math.random()*3)|0);
+        for(let ring=0; ring<rings; ring++){
+          const count=42 + ((Math.random()*26)|0);
+          const base=1.35 + ring*0.95;
+          for(let i=0;i<count;i++){
+            const a=(Math.PI*2*i)/count + (Math.random()-.5)*0.1;
+            const sp=base + Math.random()*2.1;
+            sparks.push({
+              x:r.x,y:r.y,
+              vx:Math.cos(a)*sp,
+              vy:Math.sin(a)*sp,
+              life:118 + ((Math.random()*58)|0),
+              age:0,
+              color:r.color,
+              twinkle:Math.random()*0.7 + 0.3
+            });
+          }
+        }
+      }
+
+      function drawTrail(trail,color){
+        for(let i=0;i<trail.length;i++){
+          const t=trail[i];
+          const k=i/trail.length;
+          ctx.globalAlpha=0.022 + k*0.145;
+          ctx.fillStyle=color;
+          ctx.beginPath();
+          ctx.arc(t.x,t.y,1.1 + k*1.55,0,Math.PI*2);
+          ctx.fill();
+        }
+        ctx.globalAlpha=1;
+      }
+
+      function tick(ts){
+        if(!active) return;
+        ctx.globalCompositeOperation='source-over';
+        ctx.fillStyle='rgba(0,0,0,0.18)';
+        ctx.fillRect(0,0,w,h);
+
+        if(!stopping){
+          if(ts>launchCooldown){
+            const burst=1 + ((Math.random()*2)|0);
+            for(let i=0;i<burst;i++){ if(rockets.length<4) spawnRocket(); }
+            launchCooldown=ts + 80 + Math.random()*55;
+          }
+        }
+
+        for(let i=rockets.length-1;i>=0;i--){
+          const r=rockets[i];
+          r.trail.push({x:r.x,y:r.y});
+          if(r.trail.length>18) r.trail.shift();
+          r.x+=r.vx;
+          r.y+=r.vy;
+          r.vy+=0.042;
+
+          drawTrail(r.trail,r.color);
+          ctx.fillStyle=r.color;
+          ctx.beginPath();
+          ctx.shadowColor=r.color;
+          ctx.shadowBlur=10;
+          ctx.arc(r.x,r.y,2.05,0,Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur=0;
+
+          if(r.y<=r.targetY || r.vy>=-0.95){
+            explode(r);
+            rockets.splice(i,1);
+          }
+        }
+
+        for(let i=sparks.length-1;i>=0;i--){
+          const p=sparks[i];
+          p.age++;
+          p.x+=p.vx;
+          p.y+=p.vy;
+          p.vy+=0.022;
+          p.vx*=0.994;
+          const lifeT=Math.max(0,1-p.age/p.life);
+          const pulse=(0.7 + Math.sin((p.age*0.14)+p.twinkle)*0.3);
+          const alpha=lifeT*pulse;
+          ctx.globalAlpha=alpha;
+          ctx.fillStyle=p.color;
+          ctx.beginPath();
+          ctx.shadowColor=p.color;
+          ctx.shadowBlur=7;
+          ctx.arc(p.x,p.y,0.7 + lifeT*1.9,0,Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur=0;
+          if(p.age>=p.life) sparks.splice(i,1);
+        }
+        ctx.globalAlpha=1;
+
+        if(stopping && ts>=stopAt && rockets.length===0 && sparks.length===0){
+          stopNow();
+          return;
+        }
+        raf=requestAnimationFrame(tick);
+      }
+
+      function stopAfter(ms=2000){
+        if(!active) return;
+        stopping=true;
+        stopAt=Math.min(stopAt, performance.now()+Math.max(0,ms));
+      }
+
+      function stopNow(){
+        if(!active) return;
+        active=false;
+        cancelAnimationFrame(raf);
+        window.removeEventListener('resize',resize);
+        if(canvas&&canvas.parentNode) canvas.remove();
+        if(BIRTHDAY_FIREWORKS_CTRL&&BIRTHDAY_FIREWORKS_CTRL.stopNow===stopNow) BIRTHDAY_FIREWORKS_CTRL=null;
+      }
+
+      raf=requestAnimationFrame(tick);
+      BIRTHDAY_FIREWORKS_CTRL={ stopAfter, stopNow };
+      return BIRTHDAY_FIREWORKS_CTRL;
+    }
+
+    function showBirthdayNotices(force=false){
+      const pendientes=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre));
+      if(!pendientes.length) return;
+      if(!shouldShowBirthdayCycle(force)) return;
+      markBirthdayCycleNow();
+
+      if(BIRTHDAY_PROMPT_TIMER) clearTimeout(BIRTHDAY_PROMPT_TIMER);
+      BIRTHDAY_PROMPT_TIMER=setTimeout(()=>{
+        try{ launchBirthdayFireworks(); }catch(e){ console.error('fireworks error',e); }
+        openBirthdayPrompt(pendientes[0]);
+      }, 900);
+    }
+    function filtrarAlumnos(){const q=document.getElementById('buscadorAlumnos').value.toLowerCase();renderAlumnosList(CACHE_ALUMNOS.filter(a=>a.contenido.split('|')[1].toLowerCase().includes(q)));}
+    function toggleExtra(id){const el=document.getElementById(`extra-${id}`);el.style.display=el.style.display==='block'?'none':'block';}
+
+    function toggleConditionalInput(selectId,wrapId,yesValue='Si'){
+      const sel=document.getElementById(selectId);
+      const wrap=document.getElementById(wrapId);
+      if(!sel||!wrap) return;
+      wrap.style.display=sel.value===yesValue?'block':'none';
+    }
+
+    function toggleOptionalSection(id){
+      const el=document.getElementById(id);
+      if(!el) return;
+      el.style.display=el.style.display==='none'?'block':'none';
+    }
+
+    function abrirFormNuevoAlumno(editId=null,existingData=null){
+      const p=existingData?existingData.split('|'):Array(27).fill('');
+      const get=(idx,def='')=>typeof p[idx]!=='undefined'?p[idx]:def;
+
+      const nombre=get(1,'');
+      const tel=get(2,'');
+      const nac=get(12,'');
+      const profesion=get(13,'');
+
+      const act=get(14,(get(15,'')?'Si':'No'));
+      const actCual=get(15,'');
+      const dolor=get(16,(get(17,'')?'Si':'No'));
+      const dolorDonde=get(17,'');
+      const cirugia=get(18,(get(19,'')?'Si':'No'));
+      const cirugiaCual=get(19,'');
+
+      const tensionOps=['Cuello','Espalda alta','Zona lumbar','Caderas','Rodillas','Hombros','Otro'];
+      let tension=get(20,'');
+      let tensionOtro='';
+      if(tension && !tensionOps.includes(tension)){ tensionOtro=tension; tension='Otro'; }
+
+      const embarazo=get(21,'No');
+      const partos=get(22,(get(23,'')?'Si':'No'));
+      const partosCuantos=get(23,'');
+
+      const objetivoOps=['Mejorar postura','Aumentar flexibilidad','Fortalecer el cuerpo','Disminuir dolor','RecuperaciÃ³n de lesiÃ³n','Bienestar','Otro'];
+      let objetivo=get(24,get(4,''));
+      let objetivoOtro='';
+      if(objetivo && !objetivoOps.includes(objetivo)){ objetivoOtro=objetivo; objetivo='Otro'; }
+
+      const obs=get(25,get(9,''));
+      const aut=get(26,'No')==='Si';
+
+      let nums='';
+      for(let i=1;i<=100;i++) nums+=`<option ${String(partosCuantos)===String(i)?'selected':''}>${i}</option>`;
+
+      const formHtml=`<div class="modal-form-shell">
+        <label>Nombre completo</label><input type="text" id="db-nom" value="${nombre}">
+        <label>Fecha de nacimiento</label><input type="date" id="db-nac" value="${nac}">
+        <label>Tel&eacute;fono</label><input type="text" id="db-tel" value="${tel}">
+        <label>Profesi&oacute;n / actividad principal</label><input type="text" id="db-prof" value="${profesion}">
+
+        <label>&iquest;Realiza actualmente alguna actividad f&iacute;sica?</label>
+        <select id="db-activa" onchange="toggleConditionalInput('db-activa','db-activa-cual-wrap')">
+          <option ${act==='No'?'selected':''}>No</option>
+          <option ${act==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-activa-cual-wrap" style="display:none">
+          <label>&iquest;Cu&aacute;l?</label><input type="text" id="db-activa-cual" value="${actCual}">
+        </div>
+
+        <label>&iquest;Tiene actualmente dolor o alguna lesi&oacute;n?</label>
+        <select id="db-dolor" onchange="toggleConditionalInput('db-dolor','db-dolor-donde-wrap')">
+          <option ${dolor==='No'?'selected':''}>No</option>
+          <option ${dolor==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-dolor-donde-wrap" style="display:none">
+          <label>&iquest;D&oacute;nde?</label><input type="text" id="db-dolor-donde" value="${dolorDonde}">
+        </div>
+
+        <label>&iquest;Ha tenido alguna cirug&iacute;a importante?</label>
+        <select id="db-cirugia" onchange="toggleConditionalInput('db-cirugia','db-cirugia-cual-wrap')">
+          <option ${cirugia==='No'?'selected':''}>No</option>
+          <option ${cirugia==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-cirugia-cual-wrap" style="display:none">
+          <label>&iquest;Cu&aacute;l?</label><input type="text" id="db-cirugia-cual" value="${cirugiaCual}">
+        </div>
+
+        <label>&iquest;En qu&eacute; parte del cuerpo siente m&aacute;s tensi&oacute;n o molestias habitualmente?</label>
+        <select id="db-tension" onchange="toggleConditionalInput('db-tension','db-tension-otro-wrap','Otro')">${tensionOps.map(o=>`<option ${tension===o?'selected':''}>${o}</option>`).join('')}</select>
+        <div id="db-tension-otro-wrap" style="display:none">
+          <label>Otro (especifique)</label><input type="text" id="db-tension-otro" value="${tensionOtro}">
+        </div>
+
+        <button type="button" class="btn-second" style="margin-top:8px" onclick="toggleOptionalSection('db-info-extra')">Informaci&oacute;n adicional</button>
+        <div id="db-info-extra" style="display:none;margin-top:8px">
+          <label>&iquest;Est&aacute; embarazada?</label>
+          <select id="db-embarazo">
+            <option ${embarazo==='No'?'selected':''}>No</option>
+            <option ${embarazo==='Si'?'selected':''}>Si</option>
+          </select>
+
+          <label>&iquest;Ha tenido partos o ces&aacute;reas?</label>
+          <select id="db-partos" onchange="toggleConditionalInput('db-partos','db-partos-cuantos-wrap')">
+            <option ${partos==='No'?'selected':''}>No</option>
+            <option ${partos==='Si'?'selected':''}>Si</option>
+          </select>
+          <div id="db-partos-cuantos-wrap" style="display:none">
+            <label>&iquest;Cu&aacute;ntos?</label><select id="db-partos-cuantos">${nums}</select>
+          </div>
+
+          <label>Objetivo principal al venir al estudio</label>
+          <select id="db-objetivo" onchange="toggleConditionalInput('db-objetivo','db-objetivo-otro-wrap','Otro')">${objetivoOps.map(o=>`<option ${objetivo===o?'selected':''}>${o}</option>`).join('')}</select>
+          <div id="db-objetivo-otro-wrap" style="display:none">
+            <label>Otro (especifique)</label><input type="text" id="db-objetivo-otro" value="${objetivoOtro}">
+          </div>
+
+          <label>Observaciones</label><textarea id="db-obs" rows="3">${obs}</textarea>
+        </div>
+
+        <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:.65rem;margin-left:0">
+          <input type="checkbox" id="db-aut" ${aut?'checked':''} style="width:auto;margin:0"> Autorizo participar en las clases de Pilates Pulse bajo mi propia responsabilidad.
+        </label>
+
+        <button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button>
+        <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
+      </div>`;
+
+      openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
+      toggleConditionalInput('db-activa','db-activa-cual-wrap');
+      toggleConditionalInput('db-dolor','db-dolor-donde-wrap');
+      toggleConditionalInput('db-cirugia','db-cirugia-cual-wrap');
+      toggleConditionalInput('db-tension','db-tension-otro-wrap','Otro');
+      toggleConditionalInput('db-partos','db-partos-cuantos-wrap');
+      toggleConditionalInput('db-objetivo','db-objetivo-otro-wrap','Otro');
+    }
+
+    async function saveAlumno(editId="null"){
+      const d=id=>document.getElementById(id)?.value||'';
+      const ch=id=>document.getElementById(id)?.checked? 'Si':'No';
+
+      const nombre=d('db-nom').trim();
+      const tel=d('db-tel').trim();
+      const nac=d('db-nac');
+      const profesion=d('db-prof').trim();
+      const actividad=d('db-activa');
+      const actividadCual=d('db-activa-cual').trim();
+      const dolor=d('db-dolor');
+      const dolorDonde=d('db-dolor-donde').trim();
+      const cirugia=d('db-cirugia');
+      const cirugiaCual=d('db-cirugia-cual').trim();
+      const tensionSel=d('db-tension');
+      const tensionOtro=d('db-tension-otro').trim();
+      const tension=tensionSel==='Otro'?(tensionOtro||'Otro'):tensionSel;
+      const embarazo=d('db-embarazo');
+      const partos=d('db-partos');
+      const partosCuantos=d('db-partos-cuantos');
+      const objetivoSel=d('db-objetivo');
+      const objetivoOtro=d('db-objetivo-otro').trim();
+      const objetivo=objetivoSel==='Otro'?(objetivoOtro||'Otro'):objetivoSel;
+      const obs=d('db-obs').trim();
+      const autorizo=ch('db-aut');
+
+      const safe=x=>String(x||'').replace(/\|/g,'/');
+
+      const content=[
+        'DB',
+        safe(nombre),
+        safe(tel),
+        safe('Registro'),
+        safe(objetivo),
+        safe(embarazo),
+        safe(dolor==='Si'?dolorDonde:''),
+        safe(cirugia==='Si'?cirugiaCual:''),
+        safe(tension),
+        safe(obs),
+        safe(''),
+        safe(''),
+        safe(nac),
+        safe(profesion),
+        safe(actividad),
+        safe(actividad==='Si'?actividadCual:''),
+        safe(dolor),
+        safe(dolor==='Si'?dolorDonde:''),
+        safe(cirugia),
+        safe(cirugia==='Si'?cirugiaCual:''),
+        safe(tension),
+        safe(embarazo),
+        safe(partos),
+        safe(partos==='Si'?partosCuantos:''),
+        safe(objetivo),
+        safe(obs),
+        safe(autorizo)
+      ].join('|');
+
+      if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
+      else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);
+
+      cerrarFormAlumno();
+      updateAll();
+    }
+    function cerrarFormAlumno(){closeModal();}
+    function animateSequentialLoad(container){
+      if(!container) return;
+      const items = Array.from(container.querySelectorAll('.dia-item,.clase-box,.crono-row,.crono-task,.search-container,h3,.crono-header-text')).slice(0,36);
+      items.forEach((el,i)=>{
+        el.classList.remove('seq-item');
+        el.style.animationDelay = (i*85)+'ms';
+        void el.offsetWidth;
+        el.classList.add('seq-item');
+        const done=()=>{el.classList.remove('seq-item');el.style.animationDelay='';el.removeEventListener('animationend',done);};
+        el.addEventListener('animationend',done);
+      });
+    }
+
+    function switchModulo(id){
+      const modules=['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-solicitudes','modulo-notificaciones'];
+      const btnMap={'modulo-agenda':'btn-agenda','modulo-cronograma':'btn-crono','modulo-alumnos':'btn-db','modulo-solicitudes':'btn-solicitudes','modulo-notificaciones':'btn-notif'};
+      const target=document.getElementById(id);
+      if(!target) return;
+
+      modules.forEach(m=>{const el=document.getElementById(m); if(el) el.style.display='none';});
+      target.style.display='block';
+
+      document.getElementById('main-brand').style.display=id==='modulo-cronograma'?'none':'flex';
+      Object.values(btnMap).forEach(bid=>document.getElementById(bid).classList.remove('active-btn'));
+      document.getElementById(btnMap[id]).classList.add('active-btn');
+
+      if(id==='modulo-cronograma') document.getElementById('edit-form-crono').innerHTML='';
+      if(id==='modulo-solicitudes') markSolicitudesAsSeen();
+      if(id==='modulo-notificaciones'){
+        LAST_SEEN_NOTIF_SIGNATURE=CURRENT_NOTIF_SIGNATURE;
+        updateNotifAttention();
+      }
+
+      animateSequentialLoad(target);
+    }
+
+    function buildMiniCalendar(dateObj){
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const weekDays = ['D','L','M','X','J','V','S'];
+  const y = dateObj.getFullYear();
+  const m = dateObj.getMonth();
+  const d = dateObj.getDate();
+  const first = new Date(y, m, 1);
+  const firstDay = first.getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayInfo = getTodayAgendaInfo();
+  const classLabel = todayInfo.count===1 ? 'clase' : 'clases';
+  const dayLabel = dateObj.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+
+  let cells = '';
+  for(let i=0;i<firstDay;i++) cells += '<span class="mini-cal-cell empty"></span>';
+  for(let day=1; day<=daysInMonth; day++){
+    const active = day===d ? ' active' : '';
+    cells += `<span class="mini-cal-cell${active}">${day}</span>`;
+  }
+
+  return `
+    <div class="mini-cal-topline">${dayLabel}</div>
+    <div class="mini-cal-summary">Hoy: <b>${todayInfo.count}</b> ${classLabel}</div>
+    <div class="mini-cal-expand-hint">Toca para ver detalle</div>
+    <div class="mini-cal-details">
+      <div class="mini-cal-week">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
+      <div class="mini-cal-grid">${cells}</div>
+      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `DÃ­a activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
+    </div>`;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
