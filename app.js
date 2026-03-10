@@ -211,9 +211,22 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       </div>`;
       openModal(editId?'Editar clase':'Nueva clase',formHtml);
     }
+
+    async function borrar(id){
+      if(!id) return;
+      const ok=confirm("\\u00bfEliminar este registro?");
+      if(!ok) return;
+      const {error}=await _sp.from('horarios').delete().eq('id',id);
+      if(error){
+        alert('No se pudo eliminar. Intenta nuevamente.');
+        return;
+      }
+      closeModal();
+      await updateAll();
+    }
             function formatAlumnosAgenda(texto,horaClase,tipoClase){
       if(!texto) return '';
-      return texto.split(',').map(nombreRaw=>{
+      return texto.split(',').map((nombreRaw,idx)=>{
         const nombreLimpio=normalizeText(nombreRaw).trim();
         if(!nombreLimpio) return '';
         const alumnoDB=CACHE_ALUMNOS_IDX[nombreLimpio.toLowerCase()];
@@ -222,7 +235,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
           const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}.\nTienes una reservacion para recibir tu clase de ${tipoClase}.\nHorario: ${horaClase}.\nPor favor, confirma tu asistencia.\nPilates Pulse.\nTe esperamos.`);
           linkWs=` <a href="https://wa.me/${alumnoDB.tel}?text=${msg}" target="_blank" rel="noopener"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;
         }
-        return `<div style="margin-bottom:6px;display:flex;align-items:center;gap:8px"><span>${nombreLimpio}</span>${linkWs}</div>`;
+        return `<div style="margin-bottom:6px;display:flex;align-items:center;gap:8px"><span>${idx+1}- ${nombreLimpio}</span>${linkWs}</div>`;
       }).join('');
     }
 function buildAlumnoIndex(){
@@ -509,7 +522,7 @@ async function pushClase(dia,editId="null"){
         alert('No hay clases en esta semana para eliminar.');
         return;
       }
-      const ok=confirm(`Se eliminara temporalmente la semana ${formatWeekRange(weekKey)}. Podras recuperarla durante 2 horas. ¿Deseas continuar?`);
+      const ok=confirm("\\u00bfEliminar este registro?");
       if(!ok) return;
 
       const expiresAt=new Date(Date.now()+WEEK_TRASH_WINDOW_MS).toISOString();
