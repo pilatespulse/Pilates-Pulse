@@ -1,16 +1,17 @@
 const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
-    const DIAS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
     const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
-    const MODALIDADES=["Grupales","Privadas","Masajes","Cumpleaños"];
+    const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
-    const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET";
+    const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
     const DEFAULT_COUNTRY='';
     const SOL_SEEN_KEY='sol_seen_count';
     const WEEK_ACTIVE_KEY='week_active_key';
-    const NOTIF_DISMISSED_KEY='notif_dismissed_keys';
-    const BIRTHDAY_INTERVAL_MS=2*60*60*1000;
+    const BIRTHDAY_INTERVAL_MS=30*60*1000;
     const BIRTHDAY_LAST_SHOWN_KEY='birthday_last_shown_at';
+    const WEEK_TRASH_PREFIX='WEEK_TRASH|';
+    const WEEK_TRASH_WINDOW_MS=2*60*60*1000;
     let CACHE_ALUMNOS=[],CACHE_HORARIOS=[],CACHE_SOLICITUDES=[];
     let ACTIVE_WEEK_KEY='';
     let CLOCK_TIMER=null;
@@ -23,28 +24,104 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const BIRTHDAY_DISMISSED=new Set();
     const NOTIF_DISMISSED=new Set();
     const BIRTHDAY_HANDLED_BY_DAY={};
+    let NOTIF_STATE_ROW_ID=null;
     let BIRTHDAY_PROMPT_TIMER=null;
     let BIRTHDAY_FIREWORKS_CTRL=null;
     let CURRENT_NOTIF_SIGNATURE='';
     let LAST_SEEN_NOTIF_SIGNATURE='';
+    let WEEK_TRASH_CACHE={};
 
     function classColor(){return 'var(--celeste)';}
     function sanitizeTel(t){if(!t)return '';let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=9)s=DEFAULT_COUNTRY+s;return s;}
     function normalizeTelForWhatsapp(t){return (''+(t||'')).replace(/[^\d]/g,'');}
     function decodeHtmlEntities(txt){const el=document.createElement('textarea');el.innerHTML=txt||'';return el.value||'';}
+        function normalizeText(v){
+      let s=(v==null?'':String(v));
+      const pairs=[
+        ['\u00C3\u00A1','\u00E1'],['\u00C3\u00A9','\u00E9'],['\u00C3\u00AD','\u00ED'],['\u00C3\u00B3','\u00F3'],['\u00C3\u00BA','\u00FA'],
+        ['\u00C3\u00B1','\u00F1'],['\u00C3\u2018','\u00D1'],['\u00C3\u0081','\u00C1'],['\u00C3\u0089','\u00C9'],['\u00C3\u008D','\u00CD'],
+        ['\u00C3\u0093','\u00D3'],['\u00C3\u009A','\u00DA'],['\u00C2\u00BF','\u00BF'],['\u00C2\u00A1','\u00A1'],
+        ['\u00E2\u20AC\u201D','\u2014'],['\u00E2\u20AC\u201C','\u2013'],['\u00E2\u20AC\u0153','\u201C'],['\u00E2\u20AC\u009D','\u201D'],
+        ['\u00E2\u20AC\u02DC','\u2018'],['\u00E2\u20AC\u2122','\u2019'],['\u00E2\u20AC\u00A6','\u2026'],['\u00C2\u00B7','\u2022']
+      ];
+      const decodeLatin1Utf8=(text)=>{
+        try{
+          const bytes=new Uint8Array(Array.from(text,ch=>ch.charCodeAt(0)&255));
+          return new TextDecoder('utf-8').decode(bytes);
+        }catch(_){
+          return text;
+        }
+      };
+      for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
+      for(let i=0;i<3;i++){
+        if(!/[ÃƒÃ‚Ã¢]/.test(s)) break;
+        const decoded=decodeLatin1Utf8(s);
+        if(!decoded||decoded===s) break;
+        s=decoded;
+        for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
+      }
+      s=s.replace(/\u00C2(?=[^\w]|$)/g,'');
+      s=s.replace(/Ã‚(?=[^\w]|$)/g,'');
+      return s;
+    }
+    function cleanField(v,maxLen=120){
+      return normalizeText(v).replace(/[<>`]/g,'').trim().slice(0,maxLen);
+    }
+    function normalizeDomText(root){
+      const base=root||document.body;
+      if(!base) return;
+      const walker=document.createTreeWalker(base, NodeFilter.SHOW_TEXT);
+      let n;
+      while((n=walker.nextNode())){
+        const fixed=normalizeText(n.nodeValue||'');
+        if(fixed!==n.nodeValue) n.nodeValue=fixed;
+      }
+    }
     function a24h(h){if(!h)return 0;let[t,ap]=h.split(' ');let[hh,mm]=t.split(':').map(Number);if(ap==="PM"&&hh<12)hh+=12;if(ap==="AM"&&hh===12)hh=0;return hh*60+mm;}
 
-    window.onload=()=>{initBokeh();localStorage.getItem('studio_auth')?startApp():openLanding();};
+    window.onload=()=>{initBokeh();bindLandingScrollState();localStorage.getItem('studio_auth')?startApp():openLanding();};
     function hidePublicScreens(){['landing-section','agenda-publica-section','login-section','app-content'].forEach(id=>document.getElementById(id).style.display='none');}
-    function openLanding(){hidePublicScreens();document.getElementById('landing-section').style.display='flex';}
+    function openLanding(){hidePublicScreens();const landing=document.getElementById('landing-section');landing.style.display='flex';landing.classList.remove('about-open');landing.scrollTop=0;}
     function openLogin(){hidePublicScreens();document.getElementById('login-section').style.display='flex';}
     function openAgendaPublica(){hidePublicScreens();document.getElementById('agenda-publica-section').style.display='flex';}
+    function bindLandingScrollState(){
+      const landing=document.getElementById('landing-section');
+      if(!landing||landing.dataset.aboutBound==='1') return;
+      landing.dataset.aboutBound='1';
+      landing.addEventListener('scroll',()=>{
+        landing.classList.toggle('about-open',landing.scrollTop>120);
+      },{passive:true});
+    }
+    function smoothScrollContainer(el,targetTop,duration=1000){
+      const start=el.scrollTop;
+      const end=Math.max(0,targetTop);
+      const delta=end-start;
+      if(Math.abs(delta)<2) return;
+      const t0=performance.now();
+      const ease=t=>t<0.5?16*t*t*t*t*t:1-Math.pow(-2*t+2,5)/2;
+      const step=now=>{
+        const p=Math.min(1,(now-t0)/duration);
+        el.scrollTop=start+delta*ease(p);
+        if(p<1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    function openAboutSection(){
+      const landing=document.getElementById('landing-section');
+      const target=document.getElementById('about-us-section');
+      if(!landing||!target) return;
+      if(getComputedStyle(landing).display==='none') openLanding();
+      landing.classList.add('about-open');
+      const top=target.offsetTop-14;
+      setTimeout(()=>smoothScrollContainer(landing,top,1450),35);
+    }
     function ensureModalRoot(){
       let root=document.getElementById('app-modal-root');
       if(root) return root;
       root=document.createElement('div');
       root.id='app-modal-root';
       document.body.appendChild(root);
+      normalizeDomText(root);
       return root;
     }
     function openModal(title,bodyHtml){
@@ -88,7 +165,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
     }
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
-    async function startApp(){hydrateDismissedNotifications();hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');showBirthdayNotices();if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);}
+    async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');normalizeDomText(document.getElementById('app-content'));showBirthdayNotices();if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);}
 
     function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
     function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';if(vis){toggleMiniCalendar(false);return;}renderAgendaDay(d);}
@@ -97,18 +174,23 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       document.getElementById('listaDias').innerHTML=`
         <div class="agenda-hero">
           <div class="agenda-hero-main">
-            <div id="current-day-hero" class="agenda-day-hero"></div>
+            <div class="agenda-hero-topline">
+              <div id="current-day-hero" class="agenda-day-hero"></div>
+              <button class="btn-cancelar agenda-delete-week-btn" onclick="eliminarSemanaActiva()">ELIMINAR SEMANA</button>
+            </div>
             <div id="current-time-hero" class="agenda-time-hero"></div>
           </div>
           <div id="mini-calendar" class="mini-calendar"></div>
         </div>
         <div class="clase-box week-card" style="padding:14px 16px; margin-bottom:14px;">
           <div id="fecha-actual" class="date-main"></div>
-          <div id="week-range" class="date-week"></div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px;" onclick="goPrevWeek()">VOLVER</button>
-            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px;" onclick="goNextWeek()">SIGUIENTE SEMANA</button>
+          <div class="week-range-row"><div id="week-range" class="date-week"></div><div id="week-status-indicator" class="week-status-indicator" aria-live="polite"></div></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px; width:auto; padding:12px 16px;" onclick="goPrevWeek()">VOLVER</button>
+            <button class="btn-cancelar" style="margin:0; font-size:.56rem; letter-spacing:1px; width:auto; padding:12px 16px;" onclick="goNextWeek()">SIGUIENTE SEMANA</button>
+            <button id="btn-recuperar-semana" class="btn-principal" style="display:none; margin:0; width:auto; padding:12px 16px; font-size:.56rem; letter-spacing:1px;" onclick="recuperarSemanaEliminada()">RECUPERAR SEMANA</button>
           </div>
+          <div id="week-trash-note" style="display:none; margin-top:10px; font-size:.62rem; opacity:.68;"></div>
         </div>`+DIAS.map(d=>`
         <div class="dia-item">
           <div class="dia-header" onclick="toggleDia('${d}')"><span style="font-weight:900;font-size:.75rem;letter-spacing:1px">${d.toUpperCase()}</span><span id="badge-${d}" style="font-size:.5rem;opacity:.5;font-weight:800;background:rgba(255,255,255,.1);padding:4px 8px;border-radius:8px">0</span></div>
@@ -119,33 +201,35 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       const p=existingData?existingData.split('|'):['','','',''];
       const formHtml=`
       <div class="modal-form-shell">
+        ${editId?`<button class="btn-cancelar" style="margin:0 0 12px 0;background:#b3261e;color:#fff;padding:12px;font-size:.56rem;border:none;font-weight:900;letter-spacing:1px" onclick="borrar('${editId}')">ELIMINAR CLASE</button>`:''}
         <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
         <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
         <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
         <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
         <button class="btn-principal" style="padding:12px;font-size:.6rem;letter-spacing:1px" onclick="pushClase('${dia}','${editId}')">GUARDAR</button>
-        ${editId?`<button class="btn-cancelar" style="background:var(--danger);color:#fff;padding:10px;font-size:.5rem;border:none" onclick="borrar('${editId}')">ELIMINAR</button>`:''}
         <button class="btn-cancelar" style="padding:10px;font-size:.5rem" onclick="closeModal()">CANCELAR</button>
       </div>`;
       openModal(editId?'Editar clase':'Nueva clase',formHtml);
     }
-
-    function formatAlumnosAgenda(texto,horaClase,tipoClase){
-      if(!texto)return '';
-      return texto.split(',').map((nombreRaw,i)=>{
-        const nombreLimpio=nombreRaw.trim();
+            function formatAlumnosAgenda(texto,horaClase,tipoClase){
+      if(!texto) return '';
+      return texto.split(',').map(nombreRaw=>{
+        const nombreLimpio=normalizeText(nombreRaw).trim();
+        if(!nombreLimpio) return '';
         const alumnoDB=CACHE_ALUMNOS_IDX[nombreLimpio.toLowerCase()];
         let linkWs='';
-        if(alumnoDB&&alumnoDB.tel){const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}!!\nTienes una reservación para recibir tu clase de ${tipoClase}\nHorario: ${horaClase}\nPor favor, confirmar asistencia.\nPilates Pulse.\n¡Te esperamos!`);linkWs=`<a href="https://wa.me/${alumnoDB.tel}?text=${msg}" target="_blank"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;}
-        return `<div style="margin-bottom:6px;display:flex;align-items:center"><span>${i+1}-${nombreLimpio}</span>${linkWs}</div>`;
+        if(alumnoDB&&alumnoDB.tel){
+          const msg=encodeURIComponent(`Buenas tardes ${nombreLimpio}.\nTienes una reservacion para recibir tu clase de ${tipoClase}.\nHorario: ${horaClase}.\nPor favor, confirma tu asistencia.\nPilates Pulse.\nTe esperamos.`);
+          linkWs=` <a href="https://wa.me/${alumnoDB.tel}?text=${msg}" target="_blank" rel="noopener"><img src="${WS_ICON_URL}" class="ws-agenda-icon"></a>`;
+        }
+        return `<div style="margin-bottom:6px;display:flex;align-items:center;gap:8px"><span>${nombreLimpio}</span>${linkWs}</div>`;
       }).join('');
     }
-
-    function buildAlumnoIndex(){
+function buildAlumnoIndex(){
       const idx={};
       CACHE_ALUMNOS.forEach(a=>{
-        const p=a.contenido.split('|');
-        const name=(p[1]||'').trim().toLowerCase();
+        const p=a.contenido.split('|').map(normalizeText);
+        const name=normalizeText(p[1]||'').trim().toLowerCase();
         if(!name) return;
         const tel=sanitizeTel(p[2]||'');
         idx[name]={ tel: tel&&tel.length>=8?tel:'' };
@@ -163,20 +247,25 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       AGENDA_DATA_VERSION++;
     }
 
-    function renderAgendaDay(dia,force=false){
+            function renderAgendaDay(dia,force=false){
       const box=document.getElementById(`clases-${dia}`);
       if(!box) return;
       const ver=String(AGENDA_DATA_VERSION);
       if(!force&&box.dataset.ver===ver) return;
       const filtrados=CACHE_HORARIOS_BY_DIA[dia]||[];
       box.innerHTML=filtrados.map(i=>{
-        const p=i.contenido.split('|');
-        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.75rem;line-height:1.4"><b>${p[0]}</b> — <span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${p[2]}</small><br><div style="margin-top:8px">${formatAlumnosAgenda(p[3],p[0],p[1])}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${i.contenido}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+        const p=i.contenido.split('|').map(normalizeText);
+        const hora=p[0]||'';
+        const tipo=p[1]||'';
+        const modalidad=p[2]||'';
+        const alumnos=formatAlumnosAgenda(p[3]||'',hora,tipo);
+        const contenidoSeguro=(i.contenido||'').replace(/'/g,'&#39;');
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;•&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
       }).join('');
       box.dataset.ver=ver;
+      normalizeDomText(box);
     }
-
-    async function pushClase(dia,editId="null"){
+async function pushClase(dia,editId="null"){
       const content=`${document.getElementById('h-'+dia).value}|${document.getElementById('t-'+dia).value}|${document.getElementById('m-'+dia).value}|${document.getElementById('n-'+dia).value}`;
       if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
       else await _sp.from('horarios').insert([{celda_id:weekCeldaId(dia),contenido:content}]);
@@ -209,6 +298,58 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       return { week: m[1], dia: m[2] };
     }
 
+    function getWeekTrashCeldaId(weekKey){
+      return `${WEEK_TRASH_PREFIX}${weekKey}`;
+    }
+
+    function parseWeekTrashRow(row){
+      if(!row || !String(row.celda_id||'').startsWith(WEEK_TRASH_PREFIX)) return null;
+      try{
+        const data=JSON.parse(row.contenido||'{}');
+        const weekKey=data.weekKey||String(row.celda_id).slice(WEEK_TRASH_PREFIX.length);
+        const expiresMs=new Date(data.expiresAt||0).getTime();
+        if(!weekKey || !Array.isArray(data.rows) || !Number.isFinite(expiresMs) || expiresMs<=0) return null;
+        return { rowId: row.id, weekKey, rows: data.rows, deletedAt: data.deletedAt||'', expiresAt: data.expiresAt, expiresMs };
+      }catch(_){
+        return null;
+      }
+    }
+
+    function getAgendaRowsForWeek(rows, weekKey){
+      const currentWeekKey=getWeekStartKey(new Date());
+      return (rows||[]).filter(r=>{
+        const rawId=String(r.celda_id||'');
+        if(DIAS.includes(rawId)) return weekKey===currentWeekKey;
+        const parsed=parseWeekCeldaId(rawId);
+        return !!(parsed && parsed.week===weekKey && DIAS.includes(parsed.dia));
+      });
+    }
+
+    function formatRemainingTrashTime(expiresMs){
+      const diff=Math.max(0,expiresMs-Date.now());
+      const totalMin=Math.ceil(diff/60000);
+      const hours=Math.floor(totalMin/60);
+      const mins=totalMin%60;
+      if(hours<=0) return `${mins} min`;
+      return `${hours}h ${String(mins).padStart(2,'0')}m`;
+    }
+
+    function updateWeekTrashUI(){
+      const btn=document.getElementById('btn-recuperar-semana');
+      const note=document.getElementById('week-trash-note');
+      if(!btn||!note) return;
+      const trash=WEEK_TRASH_CACHE[ACTIVE_WEEK_KEY];
+      if(!trash){
+        btn.style.display='none';
+        note.style.display='none';
+        note.textContent='';
+        return;
+      }
+      btn.style.display='inline-flex';
+      btn.textContent=`RECUPERAR SEMANA (${formatRemainingTrashTime(trash.expiresMs)})`;
+      note.style.display='block';
+      note.textContent='La semana eliminada puede recuperarse durante 2 horas.';
+    }
     function formatTodayLabel(){
       return new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
     }
@@ -221,6 +362,10 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       return new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
     }
 
+    function isViewingCurrentWeek(){
+      return ACTIVE_WEEK_KEY===getWeekStartKey(new Date());
+    }
+
     function formatWeekRange(weekKey){
       const mon = new Date(weekKey + 'T00:00:00');
       const sat = new Date(weekKey + 'T00:00:00');
@@ -230,7 +375,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       return `Semana: ${a} - ${b}`;
     }
     function getTodayAgendaInfo(){
-      const dayMap = { 1:'Lunes', 2:'Martes', 3:'Miércoles', 4:'Jueves', 5:'Viernes', 6:'Sábado' };
+      const dayMap = { 1:DIAS[0], 2:DIAS[1], 3:DIAS[2], 4:DIAS[3], 5:DIAS[4], 6:DIAS[5] };
       const dia = dayMap[new Date().getDay()] || null;
       const count = dia ? CACHE_HORARIOS.filter(x=>x.celda_id===dia).length : 0;
       return { dia, count, hasAgendaDay: !!dia };
@@ -267,6 +412,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       const timeHeroEl = document.getElementById('current-time-hero');
       const cronoTodayEl = document.getElementById('crono-fecha-actual');
       const cronoRangeEl = document.getElementById('crono-week-range');
+      const weekStatusEl = document.getElementById('week-status-indicator');
       let miniCalEl = document.getElementById('mini-calendar');
       if(!miniCalEl){
         const hero = document.querySelector('.agenda-hero');
@@ -282,6 +428,16 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(rangeEl) rangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
       if(cronoTodayEl) cronoTodayEl.textContent = formatTodayLabel();
       if(cronoRangeEl) cronoRangeEl.textContent = formatWeekRange(ACTIVE_WEEK_KEY);
+      const weekIsCurrent=isViewingCurrentWeek();
+      const weekColor=weekIsCurrent ? '#5ee27a' : '#ff6b6b';
+      if(rangeEl) rangeEl.style.color=weekColor;
+      if(cronoRangeEl) cronoRangeEl.style.color=weekColor;
+      if(weekStatusEl){
+        weekStatusEl.textContent=weekIsCurrent ? '✓' : '✕';
+        weekStatusEl.className='week-status-indicator '+(weekIsCurrent ? 'is-current' : 'is-other');
+        weekStatusEl.setAttribute('aria-label', weekIsCurrent ? 'Semana actual' : 'Semana distinta');
+      }
+      updateWeekTrashUI();
       if(dayHeroEl) dayHeroEl.textContent = formatHeroDayLabel();
       bindMiniCalendarInteractions();
       if(miniCalEl){
@@ -320,6 +476,84 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       await updateAll();
     }
 
+    async function deleteWeekTrashRow(rowId){
+      if(!rowId) return;
+      await _sp.from('horarios').delete().eq('id',rowId);
+    }
+
+    async function cleanupExpiredWeekTrash(rows){
+      const expired=(rows||[])
+        .map(parseWeekTrashRow)
+        .filter(x=>x && x.expiresMs<=Date.now());
+      if(!expired.length) return;
+      await _sp.from('horarios').delete().in('id', expired.map(x=>x.rowId));
+    }
+
+    async function upsertWeekTrash(weekKey,payload,rows=[]){
+      const current=(rows||[]).find(r=>String(r.celda_id||'')===getWeekTrashCeldaId(weekKey));
+      const contenido=JSON.stringify(payload);
+      if(current?.id){
+        await _sp.from('horarios').update({contenido}).eq('id',current.id);
+        return;
+      }
+      await _sp.from('horarios').insert([{celda_id:getWeekTrashCeldaId(weekKey),contenido}]);
+    }
+
+    async function eliminarSemanaActiva(){
+      const weekKey=ACTIVE_WEEK_KEY;
+      const {data,error}=await _sp.from('horarios').select('id,celda_id,contenido');
+      if(error){ alert('No se pudo leer la agenda de esta semana.'); return; }
+      const rows=data||[];
+      const weekRows=getAgendaRowsForWeek(rows,weekKey);
+      if(!weekRows.length){
+        alert('No hay clases en esta semana para eliminar.');
+        return;
+      }
+      const ok=confirm(`Se eliminara temporalmente la semana ${formatWeekRange(weekKey)}. Podras recuperarla durante 2 horas. ¿Deseas continuar?`);
+      if(!ok) return;
+
+      const expiresAt=new Date(Date.now()+WEEK_TRASH_WINDOW_MS).toISOString();
+      const payload={
+        weekKey,
+        deletedAt:new Date().toISOString(),
+        expiresAt,
+        rows:weekRows.map(r=>({celda_id:r.celda_id,contenido:r.contenido}))
+      };
+
+      await upsertWeekTrash(weekKey,payload,rows);
+      await _sp.from('horarios').delete().in('id',weekRows.map(r=>r.id));
+      await updateAll();
+      alert('La semana se elimino temporalmente. Puedes recuperarla durante 2 horas.');
+    }
+
+    async function recuperarSemanaEliminada(){
+      const trash=WEEK_TRASH_CACHE[ACTIVE_WEEK_KEY];
+      if(!trash){
+        alert('No hay una semana eliminada para recuperar.');
+        return;
+      }
+      if(trash.expiresMs<=Date.now()){
+        await deleteWeekTrashRow(trash.rowId);
+        await updateAll();
+        alert('El tiempo para recuperar esta semana ya vencio.');
+        return;
+      }
+
+      const {data,error}=await _sp.from('horarios').select('id,celda_id,contenido');
+      if(error){ alert('No se pudo preparar la recuperacion de la semana.'); return; }
+      const rows=data||[];
+      const existentes=getAgendaRowsForWeek(rows,ACTIVE_WEEK_KEY);
+      if(existentes.length){
+        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. ¿Deseas continuar?');
+        if(!reemplazar) return;
+        await _sp.from('horarios').delete().in('id',existentes.map(r=>r.id));
+      }
+
+      await _sp.from('horarios').insert(trash.rows.map(r=>({celda_id:r.celda_id,contenido:r.contenido})));
+      await deleteWeekTrashRow(trash.rowId);
+      await updateAll();
+      alert('La semana se recupero correctamente.');
+    }
     async function clearAgendaAndCronoRows() {
       const { error } = await _sp.from('horarios').delete().in('celda_id', DIAS);
       if (error) throw error;
@@ -381,14 +615,22 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     async function updateAll(){
       const {data}=await _sp.from('horarios').select('id,celda_id,contenido');
       const rows=data||[];
-      CACHE_ALUMNOS=rows.filter(x=>x.celda_id===CELDA_DB);
-      CACHE_SOLICITUDES=rows.filter(x=>x.celda_id===CELDA_SOLICITUD);
+      await cleanupExpiredWeekTrash(rows);
+      const {data: freshData}=await _sp.from('horarios').select('id,celda_id,contenido');
+      const activeRows=freshData||rows;
+      hydrateDismissedNotifications(activeRows);
+      WEEK_TRASH_CACHE={};
+      activeRows.forEach(r=>{
+        const trash=parseWeekTrashRow(r);
+        if(trash && trash.expiresMs>Date.now()) WEEK_TRASH_CACHE[trash.weekKey]=trash;
+      });
+      CACHE_ALUMNOS=activeRows.filter(x=>x.celda_id===CELDA_DB);
+      CACHE_SOLICITUDES=activeRows.filter(x=>x.celda_id===CELDA_SOLICITUD);
       const currentWeekKey = getWeekStartKey(new Date());
-      CACHE_HORARIOS=rows
-        .filter(x=>x.celda_id!==CELDA_DB&&x.celda_id!==CELDA_SOLICITUD&&x.celda_id!==CELDA_RESET_META&&!String(x.celda_id).startsWith('ARCHIVE_'))
+      CACHE_HORARIOS=activeRows
+        .filter(x=>x.celda_id!==CELDA_DB&&x.celda_id!==CELDA_SOLICITUD&&x.celda_id!==CELDA_RESET_META&&x.celda_id!==CELDA_NOTIF_STATE&&!String(x.celda_id).startsWith('ARCHIVE_')&&!String(x.celda_id).startsWith(WEEK_TRASH_PREFIX))
         .map(x=>{
           const rawId = String(x.celda_id||'');
-          // Compatibilidad con registros viejos sin semana: solo mostrarlos en semana actual.
           if (DIAS.includes(rawId) && ACTIVE_WEEK_KEY===currentWeekKey) return { ...x, celda_id: rawId };
           const parsed = parseWeekCeldaId(rawId);
           if (parsed && parsed.week===ACTIVE_WEEK_KEY && DIAS.includes(parsed.dia)) return { ...x, celda_id: parsed.dia };
@@ -409,8 +651,8 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       renderAlumnosList(CACHE_ALUMNOS);processVencimientos();renderCronograma();renderSolicitudes();updateSolicitudesDot();updateWeekIndicators();
       const visible = ['modulo-agenda','modulo-cronograma','modulo-alumnos','modulo-solicitudes','modulo-notificaciones'].map(id=>document.getElementById(id)).find(el=>el && getComputedStyle(el).display!=='none');
       if(visible) animateSequentialLoad(visible);
+      normalizeDomText(document.getElementById('app-content'));
     }
-
     function getSeenSolicitudesCount(){
       const n = parseInt(localStorage.getItem(SOL_SEEN_KEY) || '0', 10);
       return Number.isFinite(n) ? n : 0;
@@ -432,45 +674,92 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       localStorage.setItem(SOL_SEEN_KEY, String(CACHE_SOLICITUDES.length));
       updateSolicitudesDot();
     }
-    function renderSolicitudes(){
+        function renderSolicitudes(){
       const cont=document.getElementById('lista-solicitudes');
-      if(!CACHE_SOLICITUDES.length){cont.innerHTML=`<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay solicitudes aún.</p>`;return;}
+      if(!CACHE_SOLICITUDES.length){
+        cont.innerHTML='<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay solicitudes aÃºn.</p>';
+        return;
+      }
       cont.innerHTML=CACHE_SOLICITUDES.slice().sort((a,b)=>new Date((b.contenido.split('|')[6]||'')).getTime()-new Date((a.contenido.split('|')[6]||'')).getTime()).map(s=>{
-        const p=s.contenido.split('|'),nombre=p[1]||'Sin nombre',telRaw=p[2]||'',edad=p[3]||'',razon=p[4]||'',salud=p[5]||'',fecha=p[6]?new Date(p[6]).toLocaleString('es-MX'):'Sin fecha',telSan=sanitizeTel(telRaw);
-        const ws=telSan.length>=8?`<a class="ws-wrapper" target="_blank" href="https://wa.me/${telSan}"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${telRaw}</span></a>`:`<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${telRaw}</span></span>`;
-        return `<div class="clase-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:.85rem">${nombre}</b><br><small style="opacity:.6">Edad: ${edad}</small><br>${ws}</div><small style="opacity:.45;font-size:.62rem;text-align:right">${fecha}</small></div><div style="margin-top:12px;font-size:.75rem;line-height:1.5"><b style="color:var(--celeste)">Razón:</b> ${razon}<br><b style="color:var(--celeste)">Salud:</b> ${salud}</div><button style="margin-top:12px;background:transparent;border:none;color:var(--danger);font-size:.58rem;font-weight:900;cursor:pointer" onclick="borrar('${s.id}')">BORRAR SOLICITUD</button></div>`;
+        const p=s.contenido.split('|').map(normalizeText);
+        const nombre=p[1]||'Sin nombre';
+        const telRaw=p[2]||'';
+        const edad=p[3]||'';
+        const razon=p[4]||'';
+        const salud=p[5]||'';
+        const fecha=p[6]?new Date(p[6]).toLocaleString('es-MX'):'Sin fecha';
+        const telSan=sanitizeTel(telRaw);
+        const ws=telSan.length>=8
+          ? '<a class="ws-wrapper" target="_blank" href="https://wa.me/'+telSan+'"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></a>'
+          : '<span class="ws-wrapper"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></span>';
+        return '<div class="clase-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:.85rem">'+nombre+'</b><br><small style="opacity:.6">Edad: '+edad+'</small><br>'+ws+'</div><small style="opacity:.45;font-size:.62rem;text-align:right">'+fecha+'</small></div><div style="margin-top:12px;font-size:.75rem;line-height:1.5"><b style="color:var(--celeste)">RazÃ³n:</b> '+razon+'<br><b style="color:var(--celeste)">Salud:</b> '+salud+'</div><button style="margin-top:12px;background:transparent;border:none;color:var(--danger);font-size:.58rem;font-weight:900;cursor:pointer" onclick="borrar(\''+s.id+'\')">BORRAR SOLICITUD</button></div>';
       }).join('');
     }
-
-    function renderCronograma(){
+function renderCronograma(){
       const container=document.getElementById('render-cronograma');
-      container.innerHTML=DIAS.map(dia=>{const clasesDelDia=CACHE_HORARIOS.filter(x=>x.celda_id===dia);return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${clasesDelDia.length>0?clasesDelDia.map(c=>{const p=c.contenido.split('|');return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]}</b>&nbsp;—&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${c.contenido}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${p[3].split(',').map((n,i)=>`${i+1}-${n.trim()}`).join('<br>')}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]}</div></div></div>`;}).join(''):'<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>'}</div></div>`;}).join('');
-    }
-    function toggleCronoDetail(id){const el=document.getElementById(`crono-detail-${id}`),v=el.style.display==='block';document.querySelectorAll('.crono-detail-box').forEach(b=>b.style.display='none');el.style.display=v?'none':'block';}
+      if(!container) return;
+      container.innerHTML=DIAS.map(dia=>{
+        const clasesDelDia=(CACHE_HORARIOS_BY_DIA[dia]||[]);
+        const htmlClases=clasesDelDia.length
+          ? clasesDelDia.map(c=>{
+              const p=c.contenido.split('|').map(normalizeText);
+              const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
+              const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;•&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+            }).join('')
+          : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
+        return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
+      }).join('');
+      normalizeDomText(container);
+    }function toggleCronoDetail(id){const el=document.getElementById(`crono-detail-${id}`),v=el.style.display==='block';document.querySelectorAll('.crono-detail-box').forEach(b=>b.style.display='none');el.style.display=v?'none':'block';}
     function checkVencimiento(f){if(!f)return false;const h=new Date(),v=new Date(f+"T23:59:59");return (v-h)/(1000*60*60)<=48;}
 
     function renderAlumnosList(lista){
-      document.getElementById('render-alumnos').innerHTML=lista.map(a=>{
-        const p=a.contenido.split('|'),estaVencido=checkVencimiento(p[10]),telSan=sanitizeTel(p[2]||''),hasTel=telSan&&telSan.length>=8;
-        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${hasTel?`<a href="https://wa.me/${telSan}" target="_blank" class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]}</span></a>`:`<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]}</span></span>`}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]}</span> — ${p[4]}</small><div id="extra-${a.id}" class="ficha-detalles"><p><b>EDAD:</b> ${p[11]} años</p><p><b>TELÉFONO:</b> ${p[2]}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${a.contenido}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
+      const container=document.getElementById('render-alumnos');
+      if(!container) return;
+      container.innerHTML=lista.map(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        const estaVencido=checkVencimiento(p[10]);
+        const telSan=sanitizeTel(p[2]||'');
+        const hasTel=telSan&&telSan.length>=8;
+        const telefono=hasTel
+          ? `<a href="https://wa.me/${telSan}" target="_blank" class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]||''}</span></a>`
+          : `<span class="ws-wrapper"><img src="${WS_ICON_URL}" class="ws-icon"><span class="ws-number">${p[2]||''}</span></span>`;
+        const contenidoSeguro=(a.contenido||'').replace(/'/g,'&#39;');
+        const actividadFisica=`${p[14]||'N/A'}${p[15]?` - ${p[15]}`:''}`;
+        const dolorLesion=`${p[16]||'N/A'}${p[17]?` - ${p[17]}`:''}`;
+        const cirugia=`${p[18]||'N/A'}${p[19]?` - ${p[19]}`:''}`;
+        const partos=`${p[22]||'N/A'}${p[22]==='Si'&&p[23]?` - ${p[23]}`:''}`;
+        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> • ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
       }).join('');
+      normalizeDomText(container);
     }
+    function getNotifVencKey(id){ return 'v:'+id; }
+    function getNotifBirthdayKey(nombre){ return 'c:'+(nombre||'').trim().toLowerCase(); }
 
-
-    function hydrateDismissedNotifications(){
+    function hydrateDismissedNotifications(rows){
       NOTIF_DISMISSED.clear();
+      const row=(rows||[]).find(r=>r.celda_id===CELDA_NOTIF_STATE);
+      NOTIF_STATE_ROW_ID=row?.id||null;
+      if(!row?.contenido) return;
       try{
-        const raw=localStorage.getItem(NOTIF_DISMISSED_KEY)||'[]';
-        const arr=JSON.parse(raw);
-        if(Array.isArray(arr)) arr.forEach(k=>NOTIF_DISMISSED.add(String(k)));
+        const data=JSON.parse(row.contenido);
+        const list=Array.isArray(data)?data:(Array.isArray(data?.dismissed)?data.dismissed:[]);
+        list.forEach(k=>NOTIF_DISMISSED.add(String(k)));
       }catch{}
     }
 
-    function persistDismissedNotifications(){
-      localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(Array.from(NOTIF_DISMISSED)));
+    async function persistDismissedNotifications(){
+      const contenido=JSON.stringify({dismissed:Array.from(NOTIF_DISMISSED)});
+      if(NOTIF_STATE_ROW_ID){
+        await _sp.from('horarios').update({contenido}).eq('id',NOTIF_STATE_ROW_ID);
+        return;
+      }
+      const {data,error}=await _sp.from('horarios').insert([{celda_id:CELDA_NOTIF_STATE,contenido}]).select('id').limit(1);
+      if(!error&&data&&data[0]&&data[0].id) NOTIF_STATE_ROW_ID=data[0].id;
     }
 
-        function processVencimientos(){
+    function processVencimientos(){
       const listaNotif=document.getElementById('lista-notificaciones');
       if(!listaNotif) return;
 
@@ -487,19 +776,24 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       const htmlCumple=cumplePend.map(c=>{
         const tel=sanitizeTel(c.tel||'');
         const hasWs=tel&&tel.length>=8;
-        const ws=hasWs?`<a class="birthday-ws-link" href="https://wa.me/${tel}" target="_blank"><img src="${WS_ICON_URL}" class="ws-icon"></a>`:`<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
-        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">🎉 Cumpleaños</b><br><small>${c.nombre} está cumpliendo años</small></div>${ws}</div>`;
+        const safeName=(c.nombre||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const safeTel=String(tel||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const ws=hasWs
+          ? `<a class="birthday-ws-link" href="#" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}'); return false;"><img src="${WS_ICON_URL}" class="ws-icon"></a>`
+          : `<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
+        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumpleaños</b><br><small>${c.nombre} esta cumpliendo anos</small></div>${ws}</div>`;
       }).join('');
-
       const htmlVence=alertas.map(a=>{
-        const p=a.contenido.split('|');
+        const p=a.contenido.split('|').map(normalizeText);
         return `<div class="clase-box" style="border-left:4px solid var(--danger)"><b style="color:var(--danger)">${p[1]}</b><br><small>Vence: <b>${p[10]}</b></small></div>`;
       }).join('');
 
-      const empty=(alertas.length===0&&cumplePend.length===0)?'<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>':'';
+      const empty=(alertas.length===0&&cumplePend.length===0)
+        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleanos hoy.</p>'
+        : '';
       listaNotif.innerHTML = htmlCumple + htmlVence + empty;
+      normalizeDomText(listaNotif);
     }
-
     function updateNotifAttention(){
       const btn=document.getElementById('btn-notif');
       if(!btn) return;
@@ -509,13 +803,13 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       btn.classList.toggle('notif-shake', shouldShake);
     }
 
-    function clearNotifications(){
+    async function clearNotifications(){
       CACHE_ALUMNOS
         .filter(a=>checkVencimiento(a.contenido.split('|')[10]))
-        .forEach(a=>NOTIF_DISMISSED.add('v:'+a.id));
+        .forEach(a=>NOTIF_DISMISSED.add(getNotifVencKey(a.id))); 
       getCumpleanerosHoy()
-        .forEach(c=>NOTIF_DISMISSED.add('c:'+(c.nombre||'').trim().toLowerCase()));
-      persistDismissedNotifications();
+        .forEach(c=>NOTIF_DISMISSED.add(getNotifBirthdayKey(c.nombre))); 
+      await persistDismissedNotifications();
       LAST_SEEN_NOTIF_SIGNATURE='';
       processVencimientos();
     }
@@ -524,8 +818,8 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       const now=new Date();
       const md=`${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
       return CACHE_ALUMNOS.map(a=>{
-        const p=a.contenido.split('|');
-        return { nombre:p[1]||'', tel:p[2]||'', nac:p[12]||'' };
+        const p=a.contenido.split('|').map(normalizeText);
+        return { nombre:normalizeText(p[1]||''), tel:normalizeText(p[2]||''), nac:normalizeText(p[12]||'') };
       }).filter(x=>{
         if(!x.nombre || !x.nac) return false;
         const raw=(x.nac||'').trim();
@@ -589,21 +883,43 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     function triggerIgnoreBirthday(btn,nombre){
       if(btn && btn.classList.contains('ignore-exploding')) return;
       if(btn) btn.classList.add('ignore-exploding');
-      setTimeout(()=>ignoreBirthday(nombre), 560);
+      setTimeout(()=>{ ignoreBirthday(nombre); }, 560);
     }
 
-    function ignoreBirthday(nombre){
+    async function ignoreBirthday(nombre){
       markBirthdayHandledToday(nombre);
+      NOTIF_DISMISSED.add(getNotifBirthdayKey(nombre));
+      await persistDismissedNotifications();
       closeBirthdayPrompt(()=>processVencimientos(),'explode');
     }
 
-    function sendBirthdayWhatsapp(nombre,telRaw){
-      const nombrePlano=decodeHtmlEntities(nombre||'').trim();
-      let tel=normalizeTelForWhatsapp(telRaw||'');
+    function buildBirthdayWhatsappMessage(nombre){
+      const wave=String.fromCodePoint(0x1F30A);
+      const meditate=String.fromCodePoint(0x1F9D8)+String.fromCharCode(0x200D,0x2640,0xFE0F);
+      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumpleaños, gracias por compartir tu energía y tu esfuerzo con nosotros. Que este año sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
+    }
 
-      if((!tel||tel.length<8) && nombrePlano){
+    function openWhatsappWithMessage(tel,msg){
+      const text=encodeURIComponent(msg||'');
+      const webUrl='https://wa.me/'+tel+'?text='+text;
+      const appUrl='whatsapp://send?phone='+tel+'&text='+text;
+      const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+      if(mobile){
+        window.location.href=appUrl;
+        setTimeout(()=>window.open(webUrl,'_blank','noopener'),700);
+        return;
+      }
+      window.open(webUrl,'_blank','noopener');
+    }
+
+    async function sendBirthdayWhatsapp(nombre,telOverride=''){
+      const nombrePlano=(nombre||'').trim();
+      if(!nombrePlano) return;
+
+      let tel=normalizeTelForWhatsapp(telOverride||'');
+      if(!tel){
         const found=CACHE_ALUMNOS.find(a=>{
-          const p=a.contenido.split('|');
+          const p=a.contenido.split('|').map(normalizeText);
           return (p[1]||'').trim().toLowerCase()===nombrePlano.toLowerCase();
         });
         if(found){
@@ -613,39 +929,40 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       }
 
       if(!tel||tel.length<8){
-        alert('Este alumno no tiene un número válido para WhatsApp.');
+        alert('Este alumno no tiene un numero valido para WhatsApp.');
         return;
       }
 
-      const msg=encodeURIComponent(`¡Feliz cumple, ${nombrePlano||nombre}! 🥂 Gracias por ser parte de la comunidad de Pilates Pulse. Te deseamos un año lleno de equilibrio y buenos momentos. ¡Disfruta mucho tu día! ✨🧘‍♀️`);
-      window.open(`https://wa.me/${tel}?text=${msg}`,'_blank','noopener');
+      const msg=buildBirthdayWhatsappMessage(nombrePlano||nombre);
+      openWhatsappWithMessage(tel,msg);
       markBirthdayHandledToday(nombrePlano||nombre);
+      NOTIF_DISMISSED.add(getNotifBirthdayKey(nombrePlano||nombre));
+      await persistDismissedNotifications();
       closeBirthdayPrompt(()=>processVencimientos());
     }
-
     function openBirthdayPrompt(cumple){
       let root=document.getElementById('birthday-prompt-root');
       if(root) root.remove();
       root=document.createElement('div');
       root.id='birthday-prompt-root';
       root.className='birthday-prompt-root';
-      const safeName=(cumple.nombre||'').replace(/'/g,'&#39;');
-      const safeTel=(cumple.tel||'').replace(/'/g,'&#39;');
-      root.innerHTML=`
-      <div class="birthday-prompt-backdrop">
-        <div class="birthday-prompt-card">
-          <button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>
-          <div class="birthday-prompt-title">🎉 Cumpleaños hoy</div>
-          <div class="birthday-prompt-sub">${safeName} está cumpliendo años</div>
-          <div class="birthday-prompt-actions">
-            <button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}')">Mandar mensaje</button>
-            <button class="btn-cancelar btn-fuse btn-ignore" style="margin:0" onclick="triggerIgnoreBirthday(this,'${safeName}')">Eliminar</button>
-          </div>
-        </div>
-      </div>`;
+      const safeName=cleanField(cumple.nombre||'',80);
+      const safeTel=cleanField(cumple.tel||'',32);
+      root.innerHTML=''
+      + '<div class="birthday-prompt-backdrop">'
+      +   '<div class="birthday-prompt-card">'
+      +     '<button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>'
+      +     '<div class="birthday-prompt-title">Nuevo cumpleaños</div>'
+      +     '<div class="birthday-prompt-sub">'+safeName+' esta cumpliendo anos</div>'
+      +     '<div class="birthday-prompt-actions">'
+      +       '<button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp(\''+safeName+'\',\''+safeTel+'\')">Mandar mensaje</button>'
+      +       '<button class="btn-cancelar btn-fuse btn-ignore" style="margin:0" onclick="triggerIgnoreBirthday(this,\''+safeName+'\')">Eliminar</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
       document.body.appendChild(root);
-    }
-    function launchBirthdayFireworks(){
+      normalizeDomText(root);
+    }function launchBirthdayFireworks(){
       if(BIRTHDAY_FIREWORKS_CTRL && typeof BIRTHDAY_FIREWORKS_CTRL.stopNow==='function'){
         BIRTHDAY_FIREWORKS_CTRL.stopNow();
       }
@@ -830,14 +1147,201 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     function filtrarAlumnos(){const q=document.getElementById('buscadorAlumnos').value.toLowerCase();renderAlumnosList(CACHE_ALUMNOS.filter(a=>a.contenido.split('|')[1].toLowerCase().includes(q)));}
     function toggleExtra(id){const el=document.getElementById(`extra-${id}`);el.style.display=el.style.display==='block'?'none':'block';}
 
-    function abrirFormNuevoAlumno(editId=null,existingData=null){
-      const p=existingData?existingData.split('|'):Array(13).fill('');let edades="";for(let i=1;i<=100;i++)edades+=`<option value="${i}">${i}</option>`;
-      const formHtml=`<div class="modal-form-shell"><label>Nombre</label><input type="text" id="db-nom" value="${p[1]}"><label>Edad</label><select id="db-edad">${edades}</select><label>Teléfono (formato internacional ej: 549...)</label><input type="text" id="db-tel" value="${p[2]}"><label>Clase</label><select id="db-clase">${CLASES.map(c=>`<option ${p[3]==c?'selected':''}>${c}</option>`).join('')}</select><label>Frecuencia</label><select id="db-frec">${FRECUENCIAS.map(f=>`<option ${p[4]==f?'selected':''}>${f}</option>`).join('')}</select><label>Modalidad</label><select id="db-mod">${MODALIDADES.map(m=>`<option ${p[5]==m?'selected':''}>${m}</option>`).join('')}</select><label>Fecha de nacimiento</label><input type="date" id="db-nac" value="${p[12]||''}"><label>Vencimiento</label><input type="date" id="db-vence" value="${p[10]}"><label>Salud</label><textarea id="db-salud" rows="2">${p[6]}</textarea><label>Visita</label><textarea id="db-visita" rows="2">${p[7]}</textarea><label>Origen</label><textarea id="db-fuente" rows="2">${p[8]}</textarea><label>Referido</label><select id="db-ref"><option ${p[9]=='No'?'selected':''}>No</option><option ${p[9]=='Si'?'selected':''}>Si</option></select><button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button><button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button></div>`;
-      openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
-      if(editId)document.getElementById('db-edad').value=p[11];
+    function toggleConditionalInput(selectId,wrapId,yesValue='Si'){
+      const sel=document.getElementById(selectId);
+      const wrap=document.getElementById(wrapId);
+      if(!sel||!wrap) return;
+      wrap.style.display=sel.value===yesValue?'block':'none';
     }
 
-    async function saveAlumno(editId="null"){const d=id=>document.getElementById(id).value;const content=`DB|${d('db-nom')}|${d('db-tel')}|${d('db-clase')}|${d('db-frec')}|${d('db-mod')}|${d('db-salud')}|${d('db-visita')}|${d('db-fuente')}|${d('db-ref')}|${d('db-vence')}|${d('db-edad')}|${d('db-nac')}`;if(editId!=="null")await _sp.from('horarios').update({contenido:content}).eq('id',editId);else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);cerrarFormAlumno();updateAll();}
+    function toggleOptionalSection(id){
+      const el=document.getElementById(id);
+      if(!el) return;
+      el.style.display=el.style.display==='none'?'block':'none';
+    }
+
+    function abrirFormNuevoAlumno(editId=null,existingData=null){
+      const p=existingData?existingData.split('|'):Array(27).fill('');
+      const get=(idx,def='')=>typeof p[idx]!=='undefined'?p[idx]:def;
+
+      const nombre=get(1,'');
+      const tel=get(2,'');
+      const nac=get(12,'');
+      const profesion=get(13,'');
+
+      const act=get(14,(get(15,'')?'Si':'No'));
+      const actCual=get(15,'');
+      const dolor=get(16,(get(17,'')?'Si':'No'));
+      const dolorDonde=get(17,'');
+      const cirugia=get(18,(get(19,'')?'Si':'No'));
+      const cirugiaCual=get(19,'');
+
+      const tensionOps=['Cuello','Espalda alta','Zona lumbar','Caderas','Rodillas','Hombros','Otro'];
+      let tension=get(20,'');
+      let tensionOtro='';
+      if(tension && !tensionOps.includes(tension)){ tensionOtro=tension; tension='Otro'; }
+
+      const embarazo=get(21,'No');
+      const partos=get(22,(get(23,'')?'Si':'No'));
+      const partosCuantos=get(23,'');
+
+      const objetivoOps=['Mejorar postura','Aumentar flexibilidad','Fortalecer el cuerpo','Disminuir dolor','RecuperaciÃ³n de lesiÃ³n','Bienestar','Otro'];
+      let objetivo=get(24,get(4,''));
+      let objetivoOtro='';
+      if(objetivo && !objetivoOps.includes(objetivo)){ objetivoOtro=objetivo; objetivo='Otro'; }
+
+      const obs=get(25,get(9,''));
+      const aut=get(26,'No')==='Si';
+
+      let nums='';
+      for(let i=1;i<=100;i++) nums+=`<option ${String(partosCuantos)===String(i)?'selected':''}>${i}</option>`;
+
+      const formHtml=`<div class="modal-form-shell">
+        <label>Nombre completo</label><input type="text" id="db-nom" value="${nombre}">
+        <label>Fecha de nacimiento</label><input type="date" id="db-nac" value="${nac}">
+        <label>Tel&eacute;fono</label><input type="text" id="db-tel" value="${tel}">
+        <label>Profesi&oacute;n / actividad principal</label><input type="text" id="db-prof" value="${profesion}">
+
+        <label>&iquest;Realiza actualmente alguna actividad f&iacute;sica?</label>
+        <select id="db-activa" onchange="toggleConditionalInput('db-activa','db-activa-cual-wrap')">
+          <option ${act==='No'?'selected':''}>No</option>
+          <option ${act==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-activa-cual-wrap" style="display:none">
+          <label>&iquest;Cu&aacute;l?</label><input type="text" id="db-activa-cual" value="${actCual}">
+        </div>
+
+        <label>&iquest;Tiene actualmente dolor o alguna lesi&oacute;n?</label>
+        <select id="db-dolor" onchange="toggleConditionalInput('db-dolor','db-dolor-donde-wrap')">
+          <option ${dolor==='No'?'selected':''}>No</option>
+          <option ${dolor==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-dolor-donde-wrap" style="display:none">
+          <label>&iquest;D&oacute;nde?</label><input type="text" id="db-dolor-donde" value="${dolorDonde}">
+        </div>
+
+        <label>&iquest;Ha tenido alguna cirug&iacute;a importante?</label>
+        <select id="db-cirugia" onchange="toggleConditionalInput('db-cirugia','db-cirugia-cual-wrap')">
+          <option ${cirugia==='No'?'selected':''}>No</option>
+          <option ${cirugia==='Si'?'selected':''}>Si</option>
+        </select>
+        <div id="db-cirugia-cual-wrap" style="display:none">
+          <label>&iquest;Cu&aacute;l?</label><input type="text" id="db-cirugia-cual" value="${cirugiaCual}">
+        </div>
+
+        <label>&iquest;En qu&eacute; parte del cuerpo siente m&aacute;s tensi&oacute;n o molestias habitualmente?</label>
+        <select id="db-tension" onchange="toggleConditionalInput('db-tension','db-tension-otro-wrap','Otro')">${tensionOps.map(o=>`<option ${tension===o?'selected':''}>${o}</option>`).join('')}</select>
+        <div id="db-tension-otro-wrap" style="display:none">
+          <label>Otro (especifique)</label><input type="text" id="db-tension-otro" value="${tensionOtro}">
+        </div>
+
+        <button type="button" class="btn-second" style="margin-top:8px" onclick="toggleOptionalSection('db-info-extra')">Informaci&oacute;n adicional</button>
+        <div id="db-info-extra" style="display:none;margin-top:8px">
+          <label>&iquest;Est&aacute; embarazada?</label>
+          <select id="db-embarazo">
+            <option ${embarazo==='No'?'selected':''}>No</option>
+            <option ${embarazo==='Si'?'selected':''}>Si</option>
+          </select>
+
+          <label>&iquest;Ha tenido partos o ces&aacute;reas?</label>
+          <select id="db-partos" onchange="toggleConditionalInput('db-partos','db-partos-cuantos-wrap')">
+            <option ${partos==='No'?'selected':''}>No</option>
+            <option ${partos==='Si'?'selected':''}>Si</option>
+          </select>
+          <div id="db-partos-cuantos-wrap" style="display:none">
+            <label>&iquest;Cu&aacute;ntos?</label><select id="db-partos-cuantos">${nums}</select>
+          </div>
+
+          <label>Objetivo principal al venir al estudio</label>
+          <select id="db-objetivo" onchange="toggleConditionalInput('db-objetivo','db-objetivo-otro-wrap','Otro')">${objetivoOps.map(o=>`<option ${objetivo===o?'selected':''}>${o}</option>`).join('')}</select>
+          <div id="db-objetivo-otro-wrap" style="display:none">
+            <label>Otro (especifique)</label><input type="text" id="db-objetivo-otro" value="${objetivoOtro}">
+          </div>
+
+          <label>Observaciones</label><textarea id="db-obs" rows="3">${obs}</textarea>
+        </div>
+
+        <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:.65rem;margin-left:0">
+          <input type="checkbox" id="db-aut" ${aut?'checked':''} style="width:auto;margin:0"> Autorizo participar en las clases de Pilates Pulse bajo mi propia responsabilidad.
+        </label>
+
+        <button class="btn-principal" style="letter-spacing:1px" onclick="saveAlumno('${editId}')">GUARDAR</button>
+        <button class="btn-cancelar" onclick="cerrarFormAlumno()">CANCELAR</button>
+      </div>`;
+
+      openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
+      toggleConditionalInput('db-activa','db-activa-cual-wrap');
+      toggleConditionalInput('db-dolor','db-dolor-donde-wrap');
+      toggleConditionalInput('db-cirugia','db-cirugia-cual-wrap');
+      toggleConditionalInput('db-tension','db-tension-otro-wrap','Otro');
+      toggleConditionalInput('db-partos','db-partos-cuantos-wrap');
+      toggleConditionalInput('db-objetivo','db-objetivo-otro-wrap','Otro');
+    }
+
+    async function saveAlumno(editId="null"){
+      const d=id=>document.getElementById(id)?.value||'';
+      const ch=id=>document.getElementById(id)?.checked? 'Si':'No';
+
+      const nombre=d('db-nom').trim();
+      const tel=d('db-tel').trim();
+      const nac=d('db-nac');
+      const profesion=d('db-prof').trim();
+      const actividad=d('db-activa');
+      const actividadCual=d('db-activa-cual').trim();
+      const dolor=d('db-dolor');
+      const dolorDonde=d('db-dolor-donde').trim();
+      const cirugia=d('db-cirugia');
+      const cirugiaCual=d('db-cirugia-cual').trim();
+      const tensionSel=d('db-tension');
+      const tensionOtro=d('db-tension-otro').trim();
+      const tension=tensionSel==='Otro'?(tensionOtro||'Otro'):tensionSel;
+      const embarazo=d('db-embarazo');
+      const partos=d('db-partos');
+      const partosCuantos=d('db-partos-cuantos');
+      const objetivoSel=d('db-objetivo');
+      const objetivoOtro=d('db-objetivo-otro').trim();
+      const objetivo=objetivoSel==='Otro'?(objetivoOtro||'Otro'):objetivoSel;
+      const obs=d('db-obs').trim();
+      const autorizo=ch('db-aut');
+
+      const safe=x=>String(x||'').replace(/\|/g,'/');
+
+      const content=[
+        'DB',
+        safe(nombre),
+        safe(tel),
+        safe('Registro'),
+        safe(objetivo),
+        safe(embarazo),
+        safe(dolor==='Si'?dolorDonde:''),
+        safe(cirugia==='Si'?cirugiaCual:''),
+        safe(tension),
+        safe(obs),
+        safe(''),
+        safe(''),
+        safe(nac),
+        safe(profesion),
+        safe(actividad),
+        safe(actividad==='Si'?actividadCual:''),
+        safe(dolor),
+        safe(dolor==='Si'?dolorDonde:''),
+        safe(cirugia),
+        safe(cirugia==='Si'?cirugiaCual:''),
+        safe(tension),
+        safe(embarazo),
+        safe(partos),
+        safe(partos==='Si'?partosCuantos:''),
+        safe(objetivo),
+        safe(obs),
+        safe(autorizo)
+      ].join('|');
+
+      if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
+      else await _sp.from('horarios').insert([{celda_id:CELDA_DB,contenido:content}]);
+
+      cerrarFormAlumno();
+      updateAll();
+    }
     function cerrarFormAlumno(){closeModal();}
     function animateSequentialLoad(container){
       if(!container) return;
@@ -875,20 +1379,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       animateSequentialLoad(target);
     }
 
-    async function borrar(id){if(confirm("¿Borrar definitivamente?")){await _sp.from('horarios').delete().eq('id',id);document.getElementById('edit-form-crono').innerHTML='';updateAll();}}
-
-
-
-
-
-
-
-
-
-
-
-
-function buildMiniCalendar(dateObj){
+    function buildMiniCalendar(dateObj){
   const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const weekDays = ['D','L','M','X','J','V','S'];
   const y = dateObj.getFullYear();
@@ -915,9 +1406,44 @@ function buildMiniCalendar(dateObj){
     <div class="mini-cal-details">
       <div class="mini-cal-week">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
       <div class="mini-cal-grid">${cells}</div>
-      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
+      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `DÃ­a activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
