@@ -7,24 +7,44 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/Xqs2VjT0/image.png">
   <link rel="apple-touch-icon" href="https://i.postimg.cc/Xqs2VjT0/image.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Montserrat:wght@400;600;900&family=Playfair+Display:ital,wght@1,700&family=Cormorant+Garamond:ital,wght@0,500;1,600&family=Raleway:wght@300;500;700&family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="bokeh-container"></div>
 
-  <div id="landing-section">
-    <div class="landing-wrap">
-      <div class="branding-container" style="padding-top:0">
-        <div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div>
-        <div class="brand-text">PILATES PULSE</div>
-      </div>
-      <div class="landing-breath" aria-hidden="true">
-        <span class="breath-line"></span>
-        <span class="breath-dot breath-dot-left"></span>
-        <span class="breath-dot breath-dot-right"></span>
-      </div>
-      <div class="landing-actions"><button class="btn-principal" onclick="openLogin()">Acceso</button><button class="btn-second" onclick="openAgendaPublica()">Agendar</button></div>
+  <div id="landing-section">  
+    <div class="pp-hero-shell">
+      <header class="pp-topbar">
+        <div class="pp-brand-left">
+          <img class="pp-brand-icon" src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse">
+          <div class="pp-brand-word">pilates pulse</div>
+        </div>
+        <nav class="pp-nav-right">
+          <button class="pp-nav-link" onclick="openAboutSection()">Sobre nosotros</button>
+          <button class="pp-nav-link pp-nav-access" onclick="openLogin()">Acceso</button>
+        </nav>
+      </header>
+
+      <section class="pp-hero-content">
+        <h1 class="pp-hero-title">Tu momento de equilibrio</h1>
+        <p class="pp-hero-sub">Transforma tu cuerpo y mente con expertos en el metodo Pilates</p>
+        <button class="pp-hero-cta" onclick="openAgendaPublica()">&Uacute;NETE AHORA</button>
+      </section>
+      <section id="about-us-section" class="pp-about-section">
+        <div class="pp-about-section-header">SOBRE NOSOTROS</div>
+        <div class="pp-about-section-card">
+          <div class="pp-about-carousel" aria-label="Galeria Sobre nosotros">
+            <img class="pp-about-slide s1" src="https://i.postimg.cc/cJVWVxRp/IMG-0048.jpg" width="800" height="600" alt="Pilates Pulse 1" loading="eager" decoding="async">
+            <img class="pp-about-slide s2" src="https://i.postimg.cc/hPrSfqnL/IMG-0068.jpg" width="800" height="600" alt="Pilates Pulse 2" loading="lazy" decoding="async">
+            <img class="pp-about-slide s3" src="https://i.postimg.cc/cJVWVxRp/IMG-0048.jpg" width="800" height="600" alt="Pilates Pulse 3" loading="lazy" decoding="async">
+          </div>
+          <div class="pp-about-copy">
+            <h3>Somos Pilates Pulse</h3>
+            <p>Un espacio dedicado al movimiento consciente, la fuerza inteligente y el bienestar integral. Acompanamos a cada alumno con sesiones personalizadas y una energia cercana para transformar cuerpo y mente.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -33,9 +53,9 @@
       <div class="branding-container"><div class="logo-pulse-circle"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div><div class="brand-text">AGENDA INICIAL</div></div>
       <div class="public-form-shell">
         <label>Nombre</label><input type="text" id="ag-nombre" placeholder="Tu nombre completo">
-        <label>Teléfono</label><input type="text" id="ag-telefono" placeholder="Ej: +52...">
+        <label>Telefono</label><input type="text" id="ag-telefono" placeholder="Ej: +52...">
         <label>Edad</label><input type="number" id="ag-edad" min="1" max="110" placeholder="Tu edad">
-        <label>Razón de su visita</label><textarea id="ag-razon" rows="3" placeholder="¿Qué te gustaría trabajar?"></textarea>
+        <label>Razon de su visita</label><textarea id="ag-razon" rows="3" placeholder="Que te gustaria trabajar?"></textarea>
         <label>Salud</label><textarea id="ag-salud" rows="3" placeholder="Lesiones, condiciones o notas importantes"></textarea>
         <button class="btn-principal" onclick="enviarSolicitudAgenda()">Enviar solicitud</button>
       </div>
@@ -54,7 +74,7 @@
   </div>
 
   <div id="app-content" style="display:none;">
-    <div class="logout-container"><button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button> <button class="btn-logout btn-refresh" aria-label="Refrescar" title="Refrescar" onclick="location.reload()">&#10227;</button></div>
+    <div class="logout-container"><button class="btn-logout" onclick="handleLogout()">Cerrar Sesion</button> <button class="btn-logout btn-refresh" aria-label="Refrescar" title="Refrescar" onclick="location.reload()">&#10227;</button></div>
     <div class="branding-container" id="main-brand" onclick="location.reload()" style="cursor:pointer">
       <div class="logo-pulse-circle" style="width:60px;height:60px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div>
       <div class="brand-text" style="font-size:.8rem">PILATES PULSE</div>
@@ -63,7 +83,7 @@
     <div class="main-container">
       <div id="modulo-agenda"><div id="listaDias"></div></div>
       <div id="modulo-cronograma" style="display:none;"><div class="branding-container" style="padding-top:0"><div class="logo-pulse-circle" style="width:50px;height:50px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div></div><div class="crono-header-text">Cronograma</div><div class="clase-box week-card" style="padding:14px 16px; margin-bottom:16px;"><div id="crono-fecha-actual" class="date-main"></div><div id="crono-week-range" class="date-week"></div></div><div id="edit-form-crono" style="margin-bottom:20px;"></div><div id="render-cronograma"></div></div>
-      <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:10px">PRÓXIMOS VENCIMIENTOS</h3><button class="btn-cancelar btn-clear-notif" onclick="clearNotifications()">VACIAR NOTIFICACIONES</button><div id="lista-notificaciones"></div></div>
+      <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:10px">PROXIMOS VENCIMIENTOS</h3><button class="btn-cancelar btn-clear-notif" onclick="clearNotifications()">VACIAR NOTIFICACIONES</button><div id="lista-notificaciones"></div></div>
       <div id="modulo-alumnos" style="display:none;"><div class="search-container"><span class="search-icon">&#128269;</span><input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()"></div><button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px;font-size:.7rem" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button><div id="form-alumno-nuevo"></div><div id="render-alumnos"></div></div>
       <div id="modulo-solicitudes" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:20px">SOLICITUDES WEB</h3><div id="lista-solicitudes"></div></div>
 
@@ -76,10 +96,20 @@
       </div>
     </div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
