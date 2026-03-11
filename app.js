@@ -32,14 +32,14 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let WEEK_TRASH_CACHE={};
 
     function classColor(){return 'var(--celeste)';}
-function sanitizeTel(t){
-  if(!t)return ;
- let s=(+t).replace(/\D/g,).replace(/^00+/,).replace(/^0+/,);
- // if number looks local, prepend country code so wa.me works on mobile
- if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=10)s=DEFAULT_COUNTRY+s;
- return s;
-}
-function normalizeTelForWhatsapp(t){return sanitizeTel(t);}
+    function sanitizeTel(t){
+      if(!t)return '';
+      let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');
+      // if number looks local, prepend country code so wa.me works on mobile
+      if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=10)s=DEFAULT_COUNTRY+s;
+      return s;
+    }
+    function normalizeTelForWhatsapp(t){return sanitizeTel(t);}
     function decodeHtmlEntities(txt){const el=document.createElement('textarea');el.innerHTML=txt||'';return el.value||'';}
         function normalizeText(v){
       let s=(v==null?'':String(v));
