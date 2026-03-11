@@ -5,7 +5,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
     const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
-    const DEFAULT_COUNTRY='';
+    const DEFAULT_COUNTRY='52'; // Mexico country code to make WhatsApp links valid on mobile
     const SOL_SEEN_KEY='sol_seen_count';
     const WEEK_ACTIVE_KEY='week_active_key';
     const BIRTHDAY_INTERVAL_MS=30*60*1000;
@@ -32,8 +32,14 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let WEEK_TRASH_CACHE={};
 
     function classColor(){return 'var(--celeste)';}
-    function sanitizeTel(t){if(!t)return '';let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=9)s=DEFAULT_COUNTRY+s;return s;}
-    function normalizeTelForWhatsapp(t){return (''+(t||'')).replace(/[^\d]/g,'');}
+function sanitizeTel(t){
+  if(!t)return ;
+ let s=(+t).replace(/\D/g,).replace(/^00+/,).replace(/^0+/,);
+ // if number looks local, prepend country code so wa.me works on mobile
+ if(DEFAULT_COUNTRY&&s&&!s.startsWith(DEFAULT_COUNTRY)&&s.length<=10)s=DEFAULT_COUNTRY+s;
+ return s;
+}
+function normalizeTelForWhatsapp(t){return sanitizeTel(t);}
     function decodeHtmlEntities(txt){const el=document.createElement('textarea');el.innerHTML=txt||'';return el.value||'';}
         function normalizeText(v){
       let s=(v==null?'':String(v));
