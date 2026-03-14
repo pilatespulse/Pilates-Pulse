@@ -20,6 +20,14 @@
         {name:'PULSE ESSENCE', price:264}
       ]
     };
+    const CONTADURIA_PAYMENT_METHODS=['pago_movil','zelle','paypal','efectivo','binance'];
+    const CONTADURIA_PAYMENT_LABELS={
+      pago_movil:'Pago movil',
+      zelle:'Zelle',
+      paypal:'PayPal',
+      efectivo:'Efectivo',
+      binance:'Binance'
+    };
     const CONTADURIA_TABLE='contabilidad_movimientos';
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
     const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
@@ -1498,6 +1506,8 @@ function renderCronograma(){
     function ensureContaduriaData(){
       if(!CACHE_ALUMNOS || !CACHE_ALUMNOS.length){
         updateAll().then(()=>{ populateContaduriaAlumnos(); updateContaduriaPlanes(); });
+        handleContaduriaMetodoPagoChange();
+        setContaduriaDefaultDate();
         return;
       }
       populateContaduriaAlumnos();
@@ -1554,22 +1564,87 @@ function renderCronograma(){
       if(el.style.display==='block') el.focus();
     }
 
-    function updateContaduriaPlanes(){
+            function updateContaduriaPlanes(){
       const nivel=document.getElementById('contad-plan-nivel');
       const planSelect=document.getElementById('contad-plan-item');
+      const planWrap=document.getElementById('contad-plan-wrap');
+      const total=document.getElementById('contad-total');
+      const metodoSel=document.getElementById('contad-metodo-pago');
       if(!nivel||!planSelect) return;
-      const list=CONTADURIA_PLANES[nivel.value]||[];
+      const nivelVal=nivel.value;
+      const metodoVal=metodoSel?metodoSel.value:'';
+      if(isSueltaNivel(nivelVal)){
+        if(planWrap) planWrap.style.display='none';
+        planSelect.innerHTML='<option value="">No aplica</option>';
+        const fixed = nivelVal.toLowerCase().includes('privada') ? 30 : 15;
+        if(total){
+          if(metodoVal==='pago_movil'){
+            total.readOnly=false;
+            total.dataset.baseUsd='';
+            if(total.value===String(fixed)) total.value='';
+          }else{
+            total.dataset.baseUsd=String(fixed);
+            total.value=fixed;
+            total.readOnly=true;
+          }
+        }
+        updateContaduriaTotal();
+        return;
+      }
+      if(planWrap) planWrap.style.display='block';
+      const list=CONTADURIA_PLANES[nivelVal]||[];
       planSelect.innerHTML='<option value="">Selecciona plan</option>'+list.map(p=>'<option value="'+p.name+'" data-price="'+p.price+'">'+p.name+'</option>').join('');
+      if(total) total.readOnly=false;
       updateContaduriaTotal();
     }
 
-    function updateContaduriaTotal(){
+    function isSueltaNivel(nivel){
+      const n=String(nivel||'').toLowerCase();
+      return n.includes('privada suelta') || n.includes('grupal suelta');
+    }
+
+            function updateContaduriaTotal(){
       const planSelect=document.getElementById('contad-plan-item');
       const total=document.getElementById('contad-total');
-      if(!planSelect||!total) return;
+      const nivel=document.getElementById('contad-plan-nivel');
+      const metodoSel=document.getElementById('contad-metodo-pago');
+      if(!total) return;
+      const metodoVal=metodoSel?metodoSel.value:'';
+      if(nivel && isSueltaNivel(nivel.value)){
+        const fixed = nivel.value.toLowerCase().includes('privada') ? 30 : 15;
+        if(metodoVal==='pago_movil'){
+          total.readOnly=false;
+          total.dataset.baseUsd='';
+          if(total.value===String(fixed)) total.value='';
+        }else{
+          total.dataset.baseUsd=String(fixed);
+          total.value=fixed;
+          total.readOnly=true;
+        }
+        return;
+      }
+      if(!planSelect) return;
       const opt=planSelect.options[planSelect.selectedIndex];
-      if(!opt || !opt.value){ total.value=''; return; }
-      total.value=opt.getAttribute('data-price')||'';
+      if(!opt || !opt.value){ total.value=''; total.dataset.baseUsd=''; return; }
+      const baseUsd=parseFloat(opt.getAttribute('data-price')||'0');
+      total.dataset.baseUsd=Number.isFinite(baseUsd)?String(baseUsd):'';
+      total.value=Number.isFinite(baseUsd)&&baseUsd?baseUsd:'';
+    }
+
+    function handleContaduriaMetodoPagoChange(){
+      const metodo=document.getElementById('contad-metodo-pago')?.value||'';
+      const label=document.getElementById('contad-total-label');
+      if(label){
+        label.textContent = metodo==='pago_movil' ? 'Monto (Bs)' : 'Monto (USD)';
+            updateContaduriaTotal();
+    }
+
+    function setContaduriaDefaultDate(){
+      const input=document.getElementById('contad-fecha-pago');
+      if(input && !input.value){
+        input.value=new Date().toISOString().slice(0,10);
+      }
+    }
     }
 
     function toggleContaduriaTotalEditable(){
@@ -1588,18 +1663,65 @@ function renderCronograma(){
     }
 
     async function registrarIngresoContaduria(){
+      if(CONTADURIA_INGRESO_SAVING) return;
+      const btn=document.getElementById('contad-registrar-ingreso');
+      CONTADURIA_INGRESO_SAVING=true;
+      if(btn){ btn.disabled=true; }
       const nombre=getContaduriaNombre();
       const nivel=document.getElementById('contad-plan-nivel')?.value||'';
       const plan=document.getElementById('contad-plan-item')?.value||'';
-      const total=parseFloat(document.getElementById('contad-total')?.value||'0');
-      if(!nombre||!nivel||!plan||!total){ alert('Completa todos los campos.'); return; }
-      const payload={tipo:'ingreso',estudiante:nombre,plan_nivel:nivel,plan:plan,persona:null,categoria:'clase',monto:total,fecha:new Date().toISOString()};
+      const metodo=document.getElementById('contad-metodo-pago')?.value||'';
+      const fechaPago=document.getElementById('contad-fecha-pago')?.value||'';
+      const totalInput=parseFloat(document.getElementById('contad-total')?.value||'0');
+      if(!nombre||!nivel||!metodo||!Number.isFinite(totalInput)||totalInput<=0 || (!isSueltaNivel(nivel) && !plan)){ alert('Completa todos los campos.'); if(btn){btn.disabled=false;} CONTADURIA_INGRESO_SAVING=false; return; }
+      if(!fechaPago){ alert('Selecciona la fecha de pago.'); if(btn){btn.disabled=false;} CONTADURIA_INGRESO_SAVING=false; return; }
+      const dedupKey=[nombre,nivel,plan,metodo,fechaPago,totalInput].join('|');
+      const nowTs=Date.now();
+      if(dedupKey===CONTADURIA_LAST_INGRESO_KEY && (nowTs-CONTADURIA_LAST_INGRESO_TS)<2000){
+        if(btn){btn.disabled=false;}
+        CONTADURIA_INGRESO_SAVING=false;
+        return;
+      }
+      CONTADURIA_LAST_INGRESO_KEY=dedupKey;
+      CONTADURIA_LAST_INGRESO_TS=nowTs;
+      let montoUsd=totalInput;
+      let montoVes=0;
+      let montoEur=0;
+      let moneda='USD';
+      if(metodo==='pago_movil'){
+        const rate=await fetchEuroVesRate();
+        montoVes=totalInput;
+        montoEur=rate? (montoVes/rate):0;
+        montoUsd=montoEur;
+        moneda='VES';
+      }
+      const fechaIso=new Date(fechaPago+'T00:00:00').toISOString();
+      const metaExtra = metodo==='pago_movil'
+        ? 'metodo='+metodo+'|ves='+montoVes.toFixed(2)+'|eur='+montoEur.toFixed(4)+'|moneda=VES'
+        : 'metodo='+metodo+'|moneda=USD';
+      const payload={tipo:'ingreso',estudiante:nombre,plan_nivel:nivel,plan:plan,persona:metaExtra,categoria:'clase',monto:montoUsd,fecha:fechaIso};
+      const dup=await _sp.from(CONTADURIA_TABLE)
+        .select('id')
+        .eq('tipo','ingreso')
+        .eq('estudiante',nombre)
+        .eq('plan_nivel',nivel)
+        .eq('plan',plan)
+        .eq('monto',montoUsd)
+        .eq('fecha',fechaIso)
+        .limit(1);
+      if(dup.data && dup.data.length){
+        if(btn){btn.disabled=false;}
+        CONTADURIA_INGRESO_SAVING=false;
+        alert('Este ingreso ya fue registrado.');
+        return;
+      }
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
-      if(res.error){ alert('No se pudo registrar el ingreso. Verifica la tabla en Supabase.'); return; }
+      if(res.error){ alert('No se pudo registrar el ingreso: '+(res.error.message||JSON.stringify(res.error))); if(btn){btn.disabled=false;} CONTADURIA_INGRESO_SAVING=false; return; }
       alert('Ingreso registrado.');
       switchContaduriaView('info');
+      if(btn){btn.disabled=false;}
+      CONTADURIA_INGRESO_SAVING=false;
     }
-
     async function registrarPagoTatiana(){
       const fecha=document.getElementById('contad-tatiana-fecha')?.value||'';
       const monto=parseFloat(document.getElementById('contad-tatiana-monto')?.value||'0');
@@ -1626,6 +1748,9 @@ function renderCronograma(){
     }
 
     let CONTADURIA_INFO_CACHE={};
+    let CONTADURIA_LAST_INGRESO_KEY="";
+    let CONTADURIA_LAST_INGRESO_TS=0;
+    let CONTADURIA_INGRESO_SAVING=false;
     let CONTADURIA_INGRESOS_BY_ID={};
     let CONTADURIA_VES_RATE_CACHE={rate:null,ts:0};
     const CONTADURIA_VES_RATE_FALLBACK=510;
@@ -1666,6 +1791,67 @@ function renderCronograma(){
       }
     }
 
+    function parseContaduriaCategoria(raw){
+      const base=(raw||'').toString();
+      const parts=base.split('|');
+      const out={categoriaBase:parts[0]||'clase', metodo:'', montoVes:0, montoEur:0, moneda:''};
+      parts.slice(1).forEach(p=>{
+        const kv=p.split('=');
+        const k=(kv[0]||'').trim().toLowerCase();
+        const v=(kv[1]||'').trim();
+        if(!k) return;
+        if(k==='metodo') out.metodo=v;
+        if(k==='ves') out.montoVes=parseFloat(v)||0;
+        if(k==='eur') out.montoEur=parseFloat(v)||0;
+        if(k==='moneda') out.moneda=v.toUpperCase();
+      });
+      return out;
+    }
+
+    function normalizeMetodoValue(raw){
+      const base=String(raw||'');
+      if(!base) return '';
+      const v=base.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if(!v) return '';
+      if(v.includes('pago') && (v.includes('movil') || v.includes('m?vil') || v.includes('movil') || v.includes('pago_movil'))) return 'pago_movil';
+      if(v.includes('pago') || v.includes('movil') || v.includes('pago_movil')) return 'pago_movil';
+      if(v.includes('zelle')) return 'zelle';
+      if(v.includes('paypal')) return 'paypal';
+      if(v.includes('efectivo') || v.includes('cash')) return 'efectivo';
+      if(v.includes('binance')) return 'binance';
+      return v;
+    }
+
+    function extractMetodoFromRaw(raw){
+      const base=String(raw||'');
+      if(!base) return '';
+      const direct=normalizeMetodoValue(base);
+      if(direct) return direct;
+      const m=base.match(/metodos*[:=]s*([a-zA-Z_-]+)/i);
+      if(m && m[1]){
+        const norm=normalizeMetodoValue(m[1]);
+        if(norm) return norm;
+      }
+      return '';
+    }
+
+            function getIngresoMeta(item){
+      const personaRaw=String(item?.persona||'');
+      const catRaw=String(item?.categoria||'');
+      const metaPersona=parseContaduriaCategoria(personaRaw);
+      const metaCategoria=parseContaduriaCategoria(catRaw);
+      const merged={...metaCategoria, ...metaPersona};
+      const metodo=merged.metodo || extractMetodoFromRaw(personaRaw) || extractMetodoFromRaw(catRaw);
+      if(metodo) merged.metodo=metodo;
+      return merged;
+    }
+
+    function isContaduriaEliminado(item){
+      const cat=String(item?.categoria||'').toLowerCase();
+      return cat.includes('eliminado') || cat.includes('deleted');
+    }
+
+
     async function loadContaduriaInfo(){
       const list=document.getElementById('contaduria-info-list');
       const totalEl=document.getElementById('contaduria-info-total');
@@ -1675,19 +1861,20 @@ function renderCronograma(){
         .order('id',{ascending:false}).limit(600);
       if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
       const rows=res.data||[];
-      if(!rows.length){ list.textContent='Sin movimientos aun.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
-      const ingresos=rows.filter(r=>r.tipo==='ingreso');
-      const egresos=rows.filter(r=>r.tipo==='egreso');
+      const rowsFinal = rows.filter(r=>!isContaduriaEliminado(r));
+      if(!rowsFinal.length){ list.textContent='Sin movimientos aun.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
+      let ingresos=rowsFinal.filter(r=>r.tipo==='ingreso');
+      const egresos=rowsFinal.filter(r=>r.tipo==='egreso');
       const totalIngresos=ingresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalEgresos=egresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalActivo=totalIngresos-totalEgresos;
-      if(totalEl){
+                  if(totalEl){
         const rate=await fetchEuroVesRate();
-        const vesActivo=rate?formatVes(totalActivo*rate):'N/D';
-        const vesIngresos=rate?formatVes(totalIngresos*rate):'N/D';
-        const vesEgresos=rate?formatVes(totalEgresos*rate):'N/D';
         const tasaLabel=rate?formatVes(rate):'N/D';
         const tasaBox=document.getElementById('contaduria-tasa-box');
+        const bsActivo=rate?formatVes(totalActivo*rate):'N/D';
+        const bsIngresos=rate?formatVes(totalIngresos*rate):'N/D';
+        const bsEgresos=rate?formatVes(totalEgresos*rate):'N/D';
         if(tasaBox){
           tasaBox.innerHTML='<div class="conta-rate-label">Tasa del dia</div><div class="conta-rate-value">'+tasaLabel+'</div><div class="conta-rate-sub">EUR/VES</div>';
         }
@@ -1697,25 +1884,30 @@ function renderCronograma(){
             '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: $'+totalIngresos.toFixed(2)+'</span> | Egresos: $'+totalEgresos.toFixed(2)+'</span>'+
           '</div>'+
           '<div class="conta-total-row conta-total-ves">'+
-            '<span class="conta-total-activo">Total activo: '+vesActivo+' Bs.</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: '+vesIngresos+' Bs.</span> | Egresos: '+vesEgresos+' Bs.</span>'+
+            '<span class="conta-total-activo">Total activo: '+bsActivo+' Bs.</span> '+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: '+bsIngresos+' Bs.</span> | Egresos: '+bsEgresos+' Bs.</span>'+
           '</div>';
       }
       CONTADURIA_INGRESOS_BY_ID={};
       ingresos.forEach(item=>{ CONTADURIA_INGRESOS_BY_ID[item.id]=item; });
       const ingresoCards=ingresos.map(item=>{
+        const meta=getIngresoMeta(item);
         const nombre=(item.estudiante||'N/A').trim();
-        const plan=(item.plan||item.plan_nivel||'Sin plan').trim();
-        const monto=(parseFloat(item.monto)||0).toFixed(2);
-        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
+        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
+        const montoVes=formatVes(meta.montoVes||0);
+        const montoEur=(meta.montoEur||0).toFixed(2);
+        const montoLabel=isVes? (montoVes+' Bs.') : ('$'+montoUsd);
+        const eurLine=isVes? '<div style="opacity:.7;font-size:.62rem;margin-top:4px">EUR: '+montoEur+'</div>' : '';
+        return '<div class="clase-box contaduria-ingreso-card" onclick="openIngresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+nombre+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">'+plan+'</div>'+
-            '<div style="margin-top:6px;font-weight:800">$'+monto+'</div>'+
+            '<div style="margin-top:6px;font-weight:800">'+montoLabel+'</div>'+
+            eurLine+
           '</div>'+
           '<div style="display:flex;gap:8px;align-items:center">'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
+            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -1772,6 +1964,35 @@ function renderCronograma(){
       return '<option value="">Selecciona plan</option>'+list.map(p=>'<option '+(p.name===selected?'selected':'')+'>'+p.name+'</option>').join('');
     }
 
+        function getContaduriaMetodoLabel(metodo){
+      if(!metodo) return 'Sin metodo';
+      const norm=normalizeMetodoValue(metodo);
+      if(CONTADURIA_PAYMENT_LABELS[norm]) return CONTADURIA_PAYMENT_LABELS[norm];
+      return metodo;
+    }
+
+    function openIngresoDetalle(id){
+      const item=CONTADURIA_INGRESOS_BY_ID[id];
+      if(!item){ alert('No se encontro el ingreso.'); return; }
+      const meta=getIngresoMeta(item);
+      const nombre=(item.estudiante||'N/A').trim();
+      const nivel=(item.plan_nivel||'').trim();
+      const plan=(item.plan||'').trim();
+      const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+      const metodo=getContaduriaMetodoLabel(meta.metodo || item?.persona || item?.categoria);
+      const isSuelta=isSueltaNivel(nivel);
+      const planLine=(!isSuelta && plan)?`<div style="font-size:.7rem;opacity:.8">Plan: ${plan}</div>`:'';
+      const bodyHtml=
+        `<div class="modal-form-shell contaduria-detail-modal">
+          <div style="font-weight:800;font-size:.95rem;margin-bottom:8px">${nombre}</div>
+          <div style="font-size:.7rem;opacity:.8">Clase: ${nivel||'Sin clase'}</div>
+          ${planLine}
+          <div style="font-size:.7rem;opacity:.8">Fecha: ${fecha}</div>
+          <div style="font-size:.7rem;opacity:.8">Metodo: ${metodo}</div>
+        </div>`;
+      openModal('Detalle de ingreso', bodyHtml);
+    }
+
     function openIngresoEditor(id){
       const item=CONTADURIA_INGRESOS_BY_ID[id];
       if(!item){ alert('No se encontro el ingreso.'); return; }
@@ -1815,11 +2036,25 @@ function renderCronograma(){
       loadContaduriaInfo();
     }
 
-    async function eliminarIngresoContaduria(id){
+        async function eliminarIngresoContaduria(id){
       const ok=confirm('Estas seguro de esto?');
       if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('id', id);
-      if(res.error){ alert('No se pudo eliminar.'); return; }
+      if(res.error){
+        // Fallback: marcar como eliminado si delete no esta permitido
+        const item=CONTADURIA_INGRESOS_BY_ID[id];
+        if(item){
+          const base=String(item.categoria||'clase');
+          const next=base.includes('eliminado')?base:(base+'|estado=eliminado');
+          const res2=await _sp.from(CONTADURIA_TABLE).update({categoria:next}).eq('id', id);
+          if(!res2.error){
+            loadContaduriaInfo();
+            return;
+          }
+        }
+        alert('No se pudo eliminar: '+(res.error.message||JSON.stringify(res.error)));
+        return;
+      }
       loadContaduriaInfo();
     }
 

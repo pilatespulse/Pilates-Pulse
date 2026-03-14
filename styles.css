@@ -2047,3 +2047,12 @@ body.modal-open{
 
 #contaduria-info-total .conta-total-ingresos{background:linear-gradient(90deg, rgb(205,182,120), rgb(196,200,206));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
 
+
+.contaduria-detail-modal{
+  padding: 18px 20px;
+  font-size: .85rem;
+  line-height: 1.45;
+}
+.contaduria-detail-modal .detail-line{
+  font-size: .8rem;
+}

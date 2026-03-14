@@ -125,19 +125,36 @@
           <option>Planes grupales</option>
           <option>Planes semiprivados</option>
           <option>Planes privados</option>
+                  <option>Privada suelta</option>
+          <option>Grupal suelta</option>
+</select>
+        <div id="contad-plan-wrap">
+          <label style="margin-top:16px">Plan</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="contad-plan-item" onchange="updateContaduriaTotal()" style="flex:1"></select>
+          </div>
+        </div>
+
+        <label style="margin-top:16px">Metodo de pago</label>
+        <select id="contad-metodo-pago" onchange="handleContaduriaMetodoPagoChange()">
+          <option value="">Selecciona metodo de pago</option>
+          <option value="pago_movil">Pago movil (Bs)</option>
+          <option value="zelle">Zelle (USD)</option>
+          <option value="paypal">PayPal (USD)</option>
+          <option value="efectivo">Efectivo (USD)</option>
+          <option value="binance">Binance (USD)</option>
         </select>
 
-        <label style="margin-top:16px">Plan</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="contad-plan-item" onchange="updateContaduriaTotal()" style="flex:1"></select>
-        </div>
+        <label style="margin-top:16px">Fecha de pago</label>
+        <input id="contad-fecha-pago" type="date">
 
-        <label style="margin-top:16px">Total</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="contad-total" type="number" min="0" step="0.01" readonly style="flex:1;height:52px;font-size:1rem;padding:12px 14px">
-        </div>
 
-        <button class="btn-principal" style="margin-top:20px" onclick="registrarIngresoContaduria()">Registrar ingreso</button>
+
+        <label style="margin-top:16px" id="contad-total-label">Monto (USD)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="contad-total" type="number" min="0" step="0.01" style="flex:1;height:52px;font-size:1rem;padding:12px 14px">
+        </div>
+        <button class="btn-principal" id="contad-registrar-ingreso" style="margin-top:20px" onclick="registrarIngresoContaduria()">Registrar ingreso</button>
       </div>
 
       <div id="contaduria-egresos" class="contaduria-shell" style="margin-bottom:24px;display:none">
@@ -190,6 +207,7 @@
   <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
