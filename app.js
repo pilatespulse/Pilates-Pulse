@@ -1,4 +1,4 @@
-const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+ï»¿const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
     const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
@@ -190,7 +190,24 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
     }
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
-    async function startApp(){hidePublicScreens();document.getElementById('app-content').style.display='block';ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());renderEstructura();await ensureWeeklyReset();updateWeekIndicators();if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);CLOCK_TIMER=setInterval(updateWeekIndicators,1000);await updateAll();switchModulo('modulo-agenda');normalizeDomText(document.getElementById('app-content'));showBirthdayNotices();if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);}
+    async function startApp(){
+      hidePublicScreens();
+      document.getElementById('app-content').style.display='block';
+      const contBtn=document.getElementById('btn-contaduria');
+      if(contBtn) contBtn.onclick=openContaduria;
+      ACTIVE_WEEK_KEY=localStorage.getItem(WEEK_ACTIVE_KEY)||getWeekStartKey(new Date());
+      renderEstructura();
+      await ensureWeeklyReset();
+      updateWeekIndicators();
+      if(CLOCK_TIMER)clearInterval(CLOCK_TIMER);
+      CLOCK_TIMER=setInterval(updateWeekIndicators,1000);
+      await updateAll();
+      switchModulo('modulo-agenda');
+      normalizeDomText(document.getElementById('app-content'));
+      showBirthdayNotices();
+      if(BIRTHDAY_TIMER)clearInterval(BIRTHDAY_TIMER);
+      BIRTHDAY_TIMER=setInterval(()=>showBirthdayNotices(),BIRTHDAY_INTERVAL_MS);
+    }
 
     function generarHoras(selected=""){let r="";for(let i=7;i<=21;i++){let h=i>12?i-12:i,ampm=i>=12?"PM":"AM";let t1=`${h}:00 ${ampm}`,t2=`${h}:30 ${ampm}`;r+=`<option ${selected==t1?'selected':''}>${t1}</option><option ${selected==t2?'selected':''}>${t2}</option>`;}return r;}
     function toggleDia(d){const el=document.getElementById(`cont-${d}`),vis=el.style.display==='block';document.querySelectorAll('.dia-content').forEach(c=>c.style.display='none');el.style.display=vis?'none':'block';if(vis){toggleMiniCalendar(false);return;}renderAgendaDay(d);}
@@ -1711,7 +1728,7 @@ function renderCronograma(){
         return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Sueldo · '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Sueldo ï¿½ '+fecha+'</div>'+
           '</div>'+
           '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
         '</div>';
@@ -1723,7 +1740,7 @@ function renderCronograma(){
         return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Gasto suelto · '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Gasto suelto ï¿½ '+fecha+'</div>'+
           '</div>'+
           '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
         '</div>';
