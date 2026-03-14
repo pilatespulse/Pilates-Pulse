@@ -93,7 +93,98 @@
         <button class="nav-btn" id="btn-db" onclick="switchModulo('modulo-alumnos')">BASE DATOS</button>
         <button class="nav-btn" id="btn-solicitudes" onclick="switchModulo('modulo-solicitudes')">SOLICITUDES<div class="dot-notif" id="active-dot-solicitudes"></div></button>
         <button class="nav-btn" id="btn-notif" onclick="switchModulo('modulo-notificaciones')">NOTIF.<div class="dot-notif" id="active-dot"></div></button>
+        <button class="nav-btn" id="btn-contaduria" onclick="openContaduria()">CONTADURIA</button>
       </div>
+    </div>
+  </div>
+  <div id="modulo-contaduria" style="display:none;">
+    <div class="branding-container" style="padding-top:0">
+      <div class="logo-pulse-circle" style="width:60px;height:60px"><img src="https://i.postimg.cc/Xqs2VjT0/image.png" alt="Pilates Pulse"></div>
+      <div class="brand-text" style="font-size:.9rem">CONTADURIA</div>
+    </div>
+    <div style="padding:0 16px 16px">
+      <div class="contaduria-tabs">
+        <button class="btn-principal contaduria-tab" data-view="ingresos" style="flex:1" onclick="switchContaduriaView('ingresos')">Registro de ingresos</button>
+        <button class="btn-cancelar contaduria-tab" data-view="egresos" style="flex:1" onclick="switchContaduriaView('egresos')">Precios fijos y retirar pago</button>
+        <button class="btn-cancelar contaduria-tab" data-view="info" style="flex:1" onclick="switchContaduriaView('info')">Informacion</button>
+      </div>
+
+      <div id="contaduria-ingresos" class="contaduria-shell" style="margin-bottom:24px">
+        <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase">Registro de ingresos</h3>
+        <label>Nombre</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="contad-alumno" style="flex:1;min-width:200px"></select>
+          <input id="contad-alumno-search" type="search" placeholder="Buscar..." style="flex:0 0 160px" oninput="buscarAlumnoContaduria()">
+          <button class="btn-cancelar" style="flex:0 0 42px;padding:10px" onclick="buscarAlumnoContaduria()" title="Buscar">&#128269;</button>
+          <button class="btn-cancelar" style="flex:0 0 42px;padding:10px" onclick="toggleContaduriaManualName()" title="Escribir manualmente">&#9998;</button>
+        </div>
+        <input id="contad-alumno-manual" type="text" placeholder="Escribe un nombre" style="display:none;margin-top:8px;">
+
+        <label style="margin-top:16px">Clase</label>
+        <select id="contad-plan-nivel" onchange="updateContaduriaPlanes()">
+          <option>Planes grupales</option>
+          <option>Planes semiprivados</option>
+          <option>Planes privados</option>
+        </select>
+
+        <label style="margin-top:16px">Plan</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="contad-plan-item" onchange="updateContaduriaTotal()" style="flex:1"></select>
+        </div>
+
+        <label style="margin-top:16px">Total</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="contad-total" type="number" min="0" step="0.01" readonly style="flex:1;height:52px;font-size:1rem;padding:12px 14px">
+        </div>
+
+        <button class="btn-principal" style="margin-top:20px" onclick="registrarIngresoContaduria()">Registrar ingreso</button>
+      </div>
+
+      <div id="contaduria-egresos" class="contaduria-shell" style="margin-bottom:24px;display:none">
+        <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase">Precios fijos</h3>
+        <div class="clase-box" style="margin-bottom:12px">
+          <div style="font-size:.7rem;letter-spacing:1px;text-transform:uppercase;opacity:.75">Pago a Tatiana</div>
+          <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:8px">
+            <label style="flex:1">Fecha <input type="date" id="contad-tatiana-fecha"></label>
+            <label style="width:160px">Monto <input type="number" id="contad-tatiana-monto" value="225" min="0" step="0.01"></label>
+          </div>
+          <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoTatiana()">Registrar quincena</button>
+        </div>
+        <div class="clase-box">
+          <div style="font-size:.7rem;letter-spacing:1px;text-transform:uppercase;opacity:.75">Pago suelto</div>
+          <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:8px">
+            <label style="flex:1">Razon <input type="text" id="contad-suelto-razon" placeholder="Ej: Servicio"></label>
+            <label style="flex:1">Fecha <input type="date" id="contad-suelto-fecha"></label>
+            <label style="width:160px">Monto <input type="number" id="contad-suelto-monto" min="0" step="0.01" placeholder="0.00"></label>
+          </div>
+          <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoSuelto()">Registrar pago</button>
+        </div>
+      </div>
+
+      <div id="contaduria-retiro" class="contaduria-shell" style="display:none">
+        <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase">Retirar pago</h3>
+        <label>Persona</label>
+        <select id="contad-persona-variable">
+          <option>Isabel</option>
+          <option>Dalia</option>
+        </select>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <label style="flex:1">Fecha <input type="date" id="contad-variable-fecha"></label>
+          <label style="flex:1">Cantidad <input type="number" id="contad-variable-monto" min="0" step="0.01" placeholder="0.00"></label>
+        </div>
+        <button class="btn-principal" style="margin-top:12px" onclick="retirarPagoVariable()">Retirar pago</button>
+      </div>
+
+      <div id="contaduria-info" class="contaduria-shell" style="display:none">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase;margin:0">Informacion</h3>
+          <div id="contaduria-tasa-box" class="contaduria-rate-box"></div>
+        </div>
+        <div id="contaduria-info-list" style="margin-top:12px"></div>
+      </div>
+
+      <div id="contaduria-info-total" style="margin-top:10px;color:#73b8ff;font-weight:800">Total: $0.00</div>
+      <button class="back-btn" style="margin-top:16px" onclick="switchModulo('modulo-agenda')">Volver</button>
     </div>
   </div>
   <script src="app.js"></script>

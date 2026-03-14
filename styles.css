@@ -2009,3 +2009,41 @@ body.modal-open{
     transform: translateX(0) scale(1.01);
   }
 }
+
+.contaduria-tabs{display:flex;gap:10px;margin-bottom:18px}
+.contaduria-tab{transition:transform .2s ease,background .25s ease,color .25s ease,box-shadow .25s ease}
+.contaduria-tab:active{transform:scale(0.98)}
+.contaduria-tab.active{background:#fff!important;color:#000!important;border-color:#fff!important;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.contaduria-shell{opacity:0;transform:translateY(10px);transition:opacity .22s ease,transform .22s ease}
+.contaduria-shell.contaduria-shell--active{opacity:1;transform:translateY(0)}
+.contaduria-shell.contaduria-shell--hidden{opacity:0;transform:translateY(10px)}
+.contaduria-info-title{font-size:.7rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;opacity:.7}
+
+
+#contaduria-info-total{color:rgb(205,182,120)}
+#contaduria-info-total .conta-total-activo{color:rgb(205,182,120);font-weight:800}
+#contaduria-info-total .conta-total-breakdown{color:rgb(196,200,206);font-weight:600;font-size:.7rem;opacity:.9}
+
+
+.app-modal-panel{animation:modalIn .28s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.contaduria-edit-modal{gap:10px}
+
+
+#contaduria-info-total .conta-total-row{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+#contaduria-info-total .conta-total-ves{margin-top:6px}
+#contaduria-info-total .conta-total-activo{color:rgb(205,182,120);font-weight:800}
+#contaduria-info-total .conta-total-breakdown{color:rgb(196,200,206);font-weight:600;font-size:.7rem;opacity:.9}
+
+
+#contaduria-info-total .conta-rate-row{margin-bottom:6px}
+
+
+.contaduria-rate-box{min-width:160px;padding:10px 12px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(15,15,15,.7);text-align:left}
+.conta-rate-label{font-size:.62rem;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+.conta-rate-value{font-size:.95rem;font-weight:800;color:rgb(205,182,120)}
+.conta-rate-sub{font-size:.6rem;opacity:.6;margin-top:2px}
+
+
+#contaduria-info-total .conta-total-ingresos{background:linear-gradient(90deg, rgb(205,182,120), rgb(196,200,206));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+

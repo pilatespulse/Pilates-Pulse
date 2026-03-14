@@ -3,6 +3,24 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
+    const CONTADURIA_PLANES={
+      'Planes grupales':[
+        {name:'PULSE INTRO', price:48},
+        {name:'PULSE BALANCE', price:88},
+        {name:'PULSE FLOW', price:120}
+      ],
+      'Planes semiprivados':[
+        {name:'PULSE DUO', price:72},
+        {name:'PULSE HARMONIC', price:136},
+        {name:'PULSE SYNERGY', price:192}
+      ],
+      'Planes privados':[
+        {name:'PULSE FOCUS', price:96},
+        {name:'PULSE ELEVATE', price:184},
+        {name:'PULSE ESSENCE', price:264}
+      ]
+    };
+    const CONTADURIA_TABLE='contabilidad_movimientos';
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
     const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
     const DEFAULT_COUNTRY='52'; // Mexico country code to make WhatsApp links valid on mobile
@@ -13,6 +31,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     const WEEK_TRASH_PREFIX='WEEK_TRASH|';
     const WEEK_TRASH_WINDOW_MS=2*60*60*1000;
     let CACHE_ALUMNOS=[],CACHE_HORARIOS=[],CACHE_SOLICITUDES=[];
+    let CACHE_CONTADURIA_NAMES=[];
     let ACTIVE_WEEK_KEY='';
     let CLOCK_TIMER=null;
     let LAST_MIN_MARK='';
@@ -1380,6 +1399,10 @@ function renderCronograma(){
       const btnMap={'modulo-agenda':'btn-agenda','modulo-cronograma':'btn-crono','modulo-alumnos':'btn-db','modulo-solicitudes':'btn-solicitudes','modulo-notificaciones':'btn-notif'};
       const target=document.getElementById(id);
       if(!target) return;
+      const cont=document.getElementById('modulo-contaduria');
+      if(cont) cont.style.display='none';
+      const app=document.getElementById('app-content');
+      if(app) app.style.display='block';
 
       modules.forEach(m=>{const el=document.getElementById(m); if(el) el.style.display='none';});
       target.style.display='block';
@@ -1398,7 +1421,425 @@ function renderCronograma(){
       animateSequentialLoad(target);
     }
 
-    function buildMiniCalendar(dateObj){
+        function openContaduria(){
+      hidePublicScreens();
+      const cont=document.getElementById('modulo-contaduria');
+      if(cont) cont.style.display='block';
+      const app=document.getElementById('app-content');
+      if(app) app.style.display='none';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active-btn'));
+      const btn=document.getElementById('btn-contaduria');
+      if(btn) btn.classList.add('active-btn');
+      switchContaduriaView('ingresos');
+      ensureContaduriaData();
+    }
+
+    function setContaduriaTabActive(view){
+      const tabs=document.querySelectorAll('.contaduria-tab');
+      tabs.forEach(btn=>{
+        const isActive=btn.getAttribute('data-view')===view;
+        btn.classList.toggle('active', isActive);
+      });
+    }
+
+    function animateContaduriaShell(el, active){
+      if(!el) return;
+      if(active){
+        el.style.display='block';
+        el.classList.remove('contaduria-shell--hidden');
+        requestAnimationFrame(()=>el.classList.add('contaduria-shell--active'));
+      }else{
+        el.classList.remove('contaduria-shell--active');
+        el.classList.add('contaduria-shell--hidden');
+        setTimeout(()=>{
+          if(el.classList.contains('contaduria-shell--hidden')) el.style.display='none';
+        },220);
+      }
+    }
+
+    function switchContaduriaView(view){
+      const ingresos=document.getElementById('contaduria-ingresos');
+      const egresos=document.getElementById('contaduria-egresos');
+      const retiro=document.getElementById('contaduria-retiro');
+      const info=document.getElementById('contaduria-info');
+      setContaduriaTabActive(view);
+      const showIngresos=view==='ingresos';
+      const showEgresos=view==='egresos';
+      const showInfo=view==='info';
+      animateContaduriaShell(ingresos, showIngresos);
+      animateContaduriaShell(egresos, showEgresos);
+      animateContaduriaShell(retiro, showEgresos);
+      animateContaduriaShell(info, showInfo);
+      const infoTotal=document.getElementById('contaduria-info-total');
+      if(infoTotal) infoTotal.style.display=showInfo?'block':'none';
+      if(showInfo){
+        loadContaduriaInfo();
+        startContaduriaRateAutoRefresh();
+      }
+    }
+
+    function ensureContaduriaData(){
+      if(!CACHE_ALUMNOS || !CACHE_ALUMNOS.length){
+        updateAll().then(()=>{ populateContaduriaAlumnos(); updateContaduriaPlanes(); });
+        return;
+      }
+      populateContaduriaAlumnos();
+      updateContaduriaPlanes();
+    }
+
+    let CONTADURIA_RATE_TIMER=null;
+
+    function refreshContaduriaInfoIfVisible(){
+      const info=document.getElementById('contaduria-info');
+      if(info && info.style.display!=='none') loadContaduriaInfo();
+    }
+
+    function startContaduriaRateAutoRefresh(){
+      if(CONTADURIA_RATE_TIMER) clearInterval(CONTADURIA_RATE_TIMER);
+      CONTADURIA_RATE_TIMER=setInterval(()=>{
+        const info=document.getElementById('contaduria-info');
+        if(info && info.style.display!=='none') loadContaduriaInfo();
+      },25*60*1000);
+    }
+
+    function populateContaduriaAlumnos(){
+      const select=document.getElementById('contad-alumno');
+      if(!select) return;
+      const names=(CACHE_ALUMNOS||[]).map(a=>{
+        const p=a.contenido.split('|').map(normalizeText);
+        return (p[1]||'').trim();
+      }).filter(Boolean);
+      names.sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+      CACHE_CONTADURIA_NAMES=names;
+      renderContaduriaAlumnos(names);
+    }
+
+    function renderContaduriaAlumnos(list){
+      const select=document.getElementById('contad-alumno');
+      if(!select) return;
+      const items=(list||[]).map(n=>'<option>'+n+'</option>').join('');
+      select.innerHTML='<option value="">Selecciona alumno</option>'+items;
+    }
+
+    function buscarAlumnoContaduria(){
+      const input=document.getElementById('contad-alumno-search');
+      if(!input) return;
+      const q=(input.value||'').trim().toLowerCase();
+      if(!q){ renderContaduriaAlumnos(CACHE_CONTADURIA_NAMES); return; }
+      const filtered=CACHE_CONTADURIA_NAMES.filter(n=>n.toLowerCase().startsWith(q));
+      renderContaduriaAlumnos(filtered);
+    }
+
+    function toggleContaduriaManualName(){
+      const el=document.getElementById('contad-alumno-manual');
+      if(!el) return;
+      el.style.display=el.style.display==='none'?'block':'none';
+      if(el.style.display==='block') el.focus();
+    }
+
+    function updateContaduriaPlanes(){
+      const nivel=document.getElementById('contad-plan-nivel');
+      const planSelect=document.getElementById('contad-plan-item');
+      if(!nivel||!planSelect) return;
+      const list=CONTADURIA_PLANES[nivel.value]||[];
+      planSelect.innerHTML='<option value="">Selecciona plan</option>'+list.map(p=>'<option value="'+p.name+'" data-price="'+p.price+'">'+p.name+'</option>').join('');
+      updateContaduriaTotal();
+    }
+
+    function updateContaduriaTotal(){
+      const planSelect=document.getElementById('contad-plan-item');
+      const total=document.getElementById('contad-total');
+      if(!planSelect||!total) return;
+      const opt=planSelect.options[planSelect.selectedIndex];
+      if(!opt || !opt.value){ total.value=''; return; }
+      total.value=opt.getAttribute('data-price')||'';
+    }
+
+    function toggleContaduriaTotalEditable(){
+      const total=document.getElementById('contad-total');
+      if(!total) return;
+      total.readOnly=!total.readOnly;
+      if(total.readOnly) updateContaduriaTotal();
+      else total.focus();
+    }
+
+    function getContaduriaNombre(){
+      const manual=document.getElementById('contad-alumno-manual');
+      const select=document.getElementById('contad-alumno');
+      const manualName=(manual&&manual.style.display!=='none')?manual.value.trim():'';
+      return manualName || (select?select.value.trim():'');
+    }
+
+    async function registrarIngresoContaduria(){
+      const nombre=getContaduriaNombre();
+      const nivel=document.getElementById('contad-plan-nivel')?.value||'';
+      const plan=document.getElementById('contad-plan-item')?.value||'';
+      const total=parseFloat(document.getElementById('contad-total')?.value||'0');
+      if(!nombre||!nivel||!plan||!total){ alert('Completa todos los campos.'); return; }
+      const payload={tipo:'ingreso',estudiante:nombre,plan_nivel:nivel,plan:plan,persona:null,categoria:'clase',monto:total,fecha:new Date().toISOString()};
+      const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
+      if(res.error){ alert('No se pudo registrar el ingreso. Verifica la tabla en Supabase.'); return; }
+      alert('Ingreso registrado.');
+      switchContaduriaView('info');
+    }
+
+    async function registrarPagoTatiana(){
+      const fecha=document.getElementById('contad-tatiana-fecha')?.value||'';
+      const monto=parseFloat(document.getElementById('contad-tatiana-monto')?.value||'0');
+      if(!fecha||!Number.isFinite(monto)||monto<=0){ alert('Completa fecha y monto.'); return; }
+      const fechaIso=new Date(fecha+'T00:00:00').toISOString();
+      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:'Tatiana',categoria:'sueldo',monto:monto,fecha:fechaIso};
+      const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
+      if(res.error){ alert('No se pudo registrar el pago.'); return; }
+      alert('Pago registrado.');
+      refreshContaduriaInfoIfVisible();
+    }
+
+    async function registrarPagoSuelto(){
+      const razon=document.getElementById('contad-suelto-razon')?.value.trim()||'';
+      const fecha=document.getElementById('contad-suelto-fecha')?.value||'';
+      const monto=parseFloat(document.getElementById('contad-suelto-monto')?.value||'0');
+      if(!razon||!fecha||!Number.isFinite(monto)||monto<=0){ alert('Completa razon, fecha y monto.'); return; }
+      const fechaIso=new Date(fecha+'T00:00:00').toISOString();
+      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:razon,categoria:'gasto_suelto',monto:monto,fecha:fechaIso};
+      const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
+      if(res.error){ alert('No se pudo registrar el pago.'); return; }
+      alert('Pago registrado.');
+      refreshContaduriaInfoIfVisible();
+    }
+
+    let CONTADURIA_INFO_CACHE={};
+    let CONTADURIA_INGRESOS_BY_ID={};
+    let CONTADURIA_VES_RATE_CACHE={rate:null,ts:0};
+    const CONTADURIA_VES_RATE_FALLBACK=510;
+
+    async function fetchEuroVesRate(){
+      const now=Date.now();
+      if(CONTADURIA_VES_RATE_CACHE.rate && (now-CONTADURIA_VES_RATE_CACHE.ts)<25*60*1000){
+        return CONTADURIA_VES_RATE_CACHE.rate;
+      }
+      try{
+        const res=await fetch('https://criptonoticias.com.ve/api/tasa/euro',{cache:'no-store'});
+        if(!res.ok) throw new Error('rate fetch failed: '+res.status);
+        const data=await res.json();
+        let rate=Number(data?.tasa ?? data?.valor ?? data?.rate);
+        if(!Number.isFinite(rate)){
+          const txt=String(data?.tasa||data?.valor||'');
+          const match=txt.match(/([0-9]+[.,][0-9]+)/);
+          if(match){
+            rate=Number(match[1].replace('.','').replace(',','.'));
+          }
+        }
+        if(Number.isFinite(rate) && rate>0){
+          CONTADURIA_VES_RATE_CACHE={rate,ts:now};
+          return rate;
+        }
+        console.error('Tasa EUR/VES invalida', data);
+      }catch(err){
+        console.error('Error al obtener tasa EUR/VES', err);
+      }
+      return CONTADURIA_VES_RATE_FALLBACK;
+    }
+
+    function formatVes(n){
+      try{
+        return new Intl.NumberFormat('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+      }catch(_){
+        return (Math.round(n*100)/100).toFixed(2);
+      }
+    }
+
+    async function loadContaduriaInfo(){
+      const list=document.getElementById('contaduria-info-list');
+      const totalEl=document.getElementById('contaduria-info-total');
+      if(!list) return;
+      const res=await _sp.from(CONTADURIA_TABLE)
+        .select('id,estudiante,plan,plan_nivel,monto,tipo,persona,categoria,fecha')
+        .order('id',{ascending:false}).limit(600);
+      if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
+      const rows=res.data||[];
+      if(!rows.length){ list.textContent='Sin movimientos aun.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
+      const ingresos=rows.filter(r=>r.tipo==='ingreso');
+      const egresos=rows.filter(r=>r.tipo==='egreso');
+      const totalIngresos=ingresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalEgresos=egresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalActivo=totalIngresos-totalEgresos;
+      if(totalEl){
+        const rate=await fetchEuroVesRate();
+        const vesActivo=rate?formatVes(totalActivo*rate):'N/D';
+        const vesIngresos=rate?formatVes(totalIngresos*rate):'N/D';
+        const vesEgresos=rate?formatVes(totalEgresos*rate):'N/D';
+        const tasaLabel=rate?formatVes(rate):'N/D';
+        const tasaBox=document.getElementById('contaduria-tasa-box');
+        if(tasaBox){
+          tasaBox.innerHTML='<div class="conta-rate-label">Tasa del dia</div><div class="conta-rate-value">'+tasaLabel+'</div><div class="conta-rate-sub">EUR/VES</div>';
+        }
+        totalEl.innerHTML=
+          '<div class="conta-total-row">'+
+            '<span class="conta-total-activo">Total activo: $'+totalActivo.toFixed(2)+'</span> '+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: $'+totalIngresos.toFixed(2)+'</span> | Egresos: $'+totalEgresos.toFixed(2)+'</span>'+
+          '</div>'+
+          '<div class="conta-total-row conta-total-ves">'+
+            '<span class="conta-total-activo">Total activo: '+vesActivo+' Bs.</span> '+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: '+vesIngresos+' Bs.</span> | Egresos: '+vesEgresos+' Bs.</span>'+
+          '</div>';
+      }
+      CONTADURIA_INGRESOS_BY_ID={};
+      ingresos.forEach(item=>{ CONTADURIA_INGRESOS_BY_ID[item.id]=item; });
+      const ingresoCards=ingresos.map(item=>{
+        const nombre=(item.estudiante||'N/A').trim();
+        const plan=(item.plan||item.plan_nivel||'Sin plan').trim();
+        const monto=(parseFloat(item.monto)||0).toFixed(2);
+        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+          '<div>'+
+            '<div style="font-size:.75rem;font-weight:700">'+nombre+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">'+plan+'</div>'+
+            '<div style="margin-top:6px;font-weight:800">$'+monto+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;align-items:center">'+
+            '<button class="btn-cancelar" style="padding:8px 10px" onclick="openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
+            '<button class="btn-cancelar" style="padding:8px 10px" onclick="eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+      const sueldos=egresos.filter(e=>String(e.categoria).toLowerCase()==='sueldo');
+      const gastosSueltos=egresos.filter(e=>String(e.categoria).toLowerCase()==='gasto_suelto');
+      const sueldosCards=sueldos.map(item=>{
+        const quien=(item.persona||'Sueldo').trim();
+        const monto=(parseFloat(item.monto)||0).toFixed(2);
+        const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+          '<div>'+
+            '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Sueldo · '+fecha+'</div>'+
+          '</div>'+
+          '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
+        '</div>';
+      }).join('');
+      const gastosCards=gastosSueltos.map(item=>{
+        const razon=(item.persona||'Gasto suelto').trim();
+        const monto=(parseFloat(item.monto)||0).toFixed(2);
+        const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+          '<div>'+
+            '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Gasto suelto · '+fecha+'</div>'+
+          '</div>'+
+          '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
+        '</div>';
+      }).join('');
+      list.innerHTML=
+        '<div class="contaduria-info-section">'+
+          '<div class="contaduria-info-title">Ingresos</div>'+
+          '<button class="btn-cancelar" style="padding:8px 10px;margin:6px 0 10px;width:auto" onclick="vaciarIngresosContaduria()">Vaciar registro</button>'+
+          (ingresoCards||'<div style="opacity:.65;font-size:.72rem">Sin ingresos registrados.</div>')+
+        '</div>'+
+        '<div class="contaduria-info-section" style="margin-top:16px">'+
+          '<div class="contaduria-info-title">Sueldos</div>'+
+          '<button class="btn-cancelar" style="padding:8px 10px;margin:6px 0 10px;width:auto" onclick="vaciarEgresosContaduria()">Vaciar registro</button>'+
+          (sueldosCards||'<div style="opacity:.65;font-size:.72rem">Sin sueldos registrados.</div>')+
+        '</div>'+
+        '<div class="contaduria-info-section" style="margin-top:16px">'+
+          '<div class="contaduria-info-title">Gastos sueltos</div>'+
+          (gastosCards||'<div style="opacity:.65;font-size:.72rem">Sin gastos sueltos registrados.</div>')+
+        '</div>';
+    }
+
+    function buildContaduriaNivelOptions(selected){
+      const niveles=Object.keys(CONTADURIA_PLANES);
+      return '<option value="">Selecciona clase</option>'+niveles.map(n=>'<option '+(n===selected?'selected':'')+'>'+n+'</option>').join('');
+    }
+
+    function buildContaduriaPlanOptions(nivel,selected){
+      const list=CONTADURIA_PLANES[nivel]||[];
+      return '<option value="">Selecciona plan</option>'+list.map(p=>'<option '+(p.name===selected?'selected':'')+'>'+p.name+'</option>').join('');
+    }
+
+    function openIngresoEditor(id){
+      const item=CONTADURIA_INGRESOS_BY_ID[id];
+      if(!item){ alert('No se encontro el ingreso.'); return; }
+      const nivel=item.plan_nivel||'';
+      const plan=item.plan||'';
+      const monto=(parseFloat(item.monto)||0).toFixed(2);
+      const bodyHtml=
+        '<div class="modal-form-shell contaduria-edit-modal">'+
+          '<label>Clase</label>'+
+          '<select id="edit-ingreso-nivel" onchange="updateIngresoEditorPlan()">'+buildContaduriaNivelOptions(nivel)+'</select>'+
+          '<label>Plan</label>'+
+          '<select id="edit-ingreso-plan">'+buildContaduriaPlanOptions(nivel,plan)+'</select>'+
+          '<label>Total</label>'+
+          '<input id="edit-ingreso-total" type="number" min="0" step="0.01" value="'+monto+'">'+
+          '<div style="display:flex;gap:10px;margin-top:14px">'+
+            '<button class="btn-principal" onclick="saveIngresoEditor('+id+')">Guardar cambios</button>'+
+            '<button class="btn-cancelar" onclick="closeModal()">Cancelar</button>'+
+          '</div>'+
+        '</div>';
+      openModal('Editar ingreso', bodyHtml);
+    }
+
+    function updateIngresoEditorPlan(){
+      const nivel=document.getElementById('edit-ingreso-nivel')?.value||'';
+      const plan=document.getElementById('edit-ingreso-plan');
+      if(!plan) return;
+      plan.innerHTML=buildContaduriaPlanOptions(nivel,'');
+    }
+
+    async function saveIngresoEditor(id){
+      const nivel=document.getElementById('edit-ingreso-nivel')?.value||'';
+      const plan=document.getElementById('edit-ingreso-plan')?.value||'';
+      const total=parseFloat(document.getElementById('edit-ingreso-total')?.value||'0');
+      if(!nivel||!plan||!Number.isFinite(total)||total<=0){
+        alert('Completa clase, plan y total valido.');
+        return;
+      }
+      const res=await _sp.from(CONTADURIA_TABLE).update({plan_nivel:nivel,plan:plan,monto:total}).eq('id', id);
+      if(res.error){ alert('No se pudo actualizar.'); return; }
+      closeModal();
+      loadContaduriaInfo();
+    }
+
+    async function eliminarIngresoContaduria(id){
+      const ok=confirm('Estas seguro de esto?');
+      if(!ok) return;
+      const res=await _sp.from(CONTADURIA_TABLE).delete().eq('id', id);
+      if(res.error){ alert('No se pudo eliminar.'); return; }
+      loadContaduriaInfo();
+    }
+
+    async function vaciarIngresosContaduria(){
+      const ok=confirm('Estas seguro de esto?');
+      if(!ok) return;
+      const res=await _sp.from(CONTADURIA_TABLE).delete().eq('tipo','ingreso');
+      if(res.error){ alert('No se pudo vaciar el registro.'); return; }
+      loadContaduriaInfo();
+    }
+
+    async function vaciarEgresosContaduria(){
+      const ok=confirm('Estas seguro de esto?');
+      if(!ok) return;
+      const res=await _sp.from(CONTADURIA_TABLE).delete().eq('tipo','egreso');
+      if(res.error){ alert('No se pudo vaciar el registro.'); return; }
+      loadContaduriaInfo();
+    }
+
+    async function retirarPagoVariable(){
+      const persona=document.getElementById('contad-persona-variable')?.value||'';
+      const fecha=document.getElementById('contad-variable-fecha')?.value||'';
+      const montoRaw=document.getElementById('contad-variable-monto')?.value||'';
+      const monto=parseFloat(montoRaw);
+      if(!persona||!fecha||!Number.isFinite(monto)||monto<=0){
+        alert('Selecciona persona, fecha y cantidad valida.');
+        return;
+      }
+      const fechaIso=new Date(fecha+'T00:00:00').toISOString();
+      const payload={tipo:'egreso',persona:persona,categoria:'sueldo',monto:monto,fecha:fechaIso};
+      const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
+      if(res.error){ alert('No se pudo registrar el retiro.'); return; }
+      alert('Retiro registrado.');
+      refreshContaduriaInfoIfVisible();
+    }
+
+function buildMiniCalendar(dateObj){
   const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const weekDays = ['D','L','M','X','J','V','S'];
   const y = dateObj.getFullYear();
