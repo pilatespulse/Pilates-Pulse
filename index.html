@@ -163,7 +163,16 @@
           <div style="font-size:.7rem;letter-spacing:1px;text-transform:uppercase;opacity:.75">Pago a Tatiana</div>
           <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:8px">
             <label style="flex:1">Fecha <input type="date" id="contad-tatiana-fecha"></label>
-            <label style="width:160px">Monto <input type="number" id="contad-tatiana-monto" value="225" min="0" step="0.01"></label>
+            <label style="flex:1">Metodo de pago
+              <select id="contad-tatiana-metodo" onchange="handleEgresoMetodoChange('tatiana')">
+                <option value="">Selecciona metodo</option>
+                <option value="usdt">USDT (USD)</option>
+                <option value="zelle">Zelle (USD)</option>
+                <option value="pago_movil">Pago movil (Bs)</option>
+                <option value="efectivo">Efectivo (USD)</option>
+              </select>
+            </label>
+            <label style="width:160px" id="contad-tatiana-monto-label"><span id="contad-tatiana-monto-label-text">Monto (USD)</span> <input type="number" id="contad-tatiana-monto" value="225" min="0" step="0.01"></label>
           </div>
           <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoTatiana()">Registrar quincena</button>
         </div>
@@ -172,7 +181,16 @@
           <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:8px">
             <label style="flex:1">Razon <input type="text" id="contad-suelto-razon" placeholder="Ej: Servicio"></label>
             <label style="flex:1">Fecha <input type="date" id="contad-suelto-fecha"></label>
-            <label style="width:160px">Monto <input type="number" id="contad-suelto-monto" min="0" step="0.01" placeholder="0.00"></label>
+            <label style="flex:1">Metodo de pago
+              <select id="contad-suelto-metodo" onchange="handleEgresoMetodoChange('suelto')">
+                <option value="">Selecciona metodo</option>
+                <option value="usdt">USDT (USD)</option>
+                <option value="zelle">Zelle (USD)</option>
+                <option value="pago_movil">Pago movil (Bs)</option>
+                <option value="efectivo">Efectivo (USD)</option>
+              </select>
+            </label>
+            <label style="width:160px" id="contad-suelto-monto-label"><span id="contad-suelto-monto-label-text">Monto (USD)</span> <input type="number" id="contad-suelto-monto" min="0" step="0.01" placeholder="0.00"></label>
           </div>
           <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoSuelto()">Registrar pago</button>
         </div>
@@ -187,7 +205,16 @@
         </select>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <label style="flex:1">Fecha <input type="date" id="contad-variable-fecha"></label>
-          <label style="flex:1">Cantidad <input type="number" id="contad-variable-monto" min="0" step="0.01" placeholder="0.00"></label>
+          <label style="flex:1">Metodo de pago
+            <select id="contad-retiro-metodo" onchange="handleEgresoMetodoChange('retiro')">
+              <option value="">Selecciona metodo</option>
+              <option value="usdt">USDT (USD)</option>
+              <option value="zelle">Zelle (USD)</option>
+              <option value="pago_movil">Pago movil (Bs)</option>
+              <option value="efectivo">Efectivo (USD)</option>
+            </select>
+          </label>
+          <label style="flex:1" id="contad-retiro-monto-label"><span id="contad-retiro-monto-label-text">Cantidad (USD)</span> <input type="number" id="contad-variable-monto" min="0" step="0.01" placeholder="0.00"></label>
         </div>
         <button class="btn-principal" style="margin-top:12px" onclick="retirarPagoVariable()">Retirar pago</button>
       </div>

@@ -1,4 +1,4 @@
-﻿const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
+const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
     const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
@@ -20,13 +20,14 @@
         {name:'PULSE ESSENCE', price:264}
       ]
     };
-    const CONTADURIA_PAYMENT_METHODS=['pago_movil','zelle','paypal','efectivo','binance'];
+    const CONTADURIA_PAYMENT_METHODS=['pago_movil','zelle','paypal','efectivo','binance','usdt'];
     const CONTADURIA_PAYMENT_LABELS={
       pago_movil:'Pago movil',
       zelle:'Zelle',
       paypal:'PayPal',
       efectivo:'Efectivo',
-      binance:'Binance'
+      binance:'Binance',
+      usdt:'USDT'
     };
     const CONTADURIA_TABLE='contabilidad_movimientos';
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
@@ -87,14 +88,14 @@
       };
       for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
       for(let i=0;i<3;i++){
-        if(!/[ÃƒÃ‚Ã¢]/.test(s)) break;
+        if(!/[ÃÂâ]/.test(s)) break;
         const decoded=decodeLatin1Utf8(s);
         if(!decoded||decoded===s) break;
         s=decoded;
         for(const p of pairs){ s=s.split(p[0]).join(p[1]); }
       }
       s=s.replace(/\u00C2(?=[^\w]|$)/g,'');
-      s=s.replace(/Ã‚(?=[^\w]|$)/g,'');
+      s=s.replace(/Â(?=[^\w]|$)/g,'');
       return s;
     }
     function cleanField(v,maxLen=120){
@@ -323,7 +324,7 @@ function buildAlumnoIndex(){
         const modalidad=p[2]||'';
         const alumnos=formatAlumnosAgenda(p[3]||'',hora,tipo);
         const contenidoSeguro=(i.contenido||'').replace(/'/g,'&#39;');
-        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;•&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;�&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
       }).join('');
       box.dataset.ver=ver;
       normalizeDomText(box);
@@ -496,7 +497,7 @@ async function pushClase(dia,editId="null"){
       if(rangeEl) rangeEl.style.color=weekColor;
       if(cronoRangeEl) cronoRangeEl.style.color=weekColor;
       if(weekStatusEl){
-        weekStatusEl.textContent=weekIsCurrent ? '✓' : '✕';
+        weekStatusEl.textContent=weekIsCurrent ? '\u2713' : '\u2715';
         weekStatusEl.className='week-status-indicator '+(weekIsCurrent ? 'is-current' : 'is-other');
         weekStatusEl.setAttribute('aria-label', weekIsCurrent ? 'Semana actual' : 'Semana distinta');
       }
@@ -607,7 +608,7 @@ async function pushClase(dia,editId="null"){
       const rows=data||[];
       const existentes=getAgendaRowsForWeek(rows,ACTIVE_WEEK_KEY);
       if(existentes.length){
-        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. ¿Deseas continuar?');
+        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. �Deseas continuar?');
         if(!reemplazar) return;
         await _sp.from('horarios').delete().in('id',existentes.map(r=>r.id));
       }
@@ -740,7 +741,7 @@ async function pushClase(dia,editId="null"){
         function renderSolicitudes(){
       const cont=document.getElementById('lista-solicitudes');
       if(!CACHE_SOLICITUDES.length){
-        cont.innerHTML='<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay solicitudes aÃºn.</p>';
+        cont.innerHTML='<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay solicitudes aún.</p>';
         return;
       }
       cont.innerHTML=CACHE_SOLICITUDES.slice().sort((a,b)=>new Date((b.contenido.split('|')[6]||'')).getTime()-new Date((a.contenido.split('|')[6]||'')).getTime()).map(s=>{
@@ -755,7 +756,7 @@ async function pushClase(dia,editId="null"){
         const ws=telSan.length>=8
           ? '<a class="ws-wrapper" target="_blank" href="https://wa.me/'+telSan+'"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></a>'
           : '<span class="ws-wrapper"><img src="'+WS_ICON_URL+'" class="ws-icon"><span class="ws-number">'+telRaw+'</span></span>';
-        return '<div class="clase-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:.85rem">'+nombre+'</b><br><small style="opacity:.6">Edad: '+edad+'</small><br>'+ws+'</div><small style="opacity:.45;font-size:.62rem;text-align:right">'+fecha+'</small></div><div style="margin-top:12px;font-size:.75rem;line-height:1.5"><b style="color:var(--celeste)">RazÃ³n:</b> '+razon+'<br><b style="color:var(--celeste)">Salud:</b> '+salud+'</div><button style="margin-top:12px;background:transparent;border:none;color:var(--danger);font-size:.58rem;font-weight:900;cursor:pointer" onclick="borrar(\''+s.id+'\')">BORRAR SOLICITUD</button></div>';
+        return '<div class="clase-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:.85rem">'+nombre+'</b><br><small style="opacity:.6">Edad: '+edad+'</small><br>'+ws+'</div><small style="opacity:.45;font-size:.62rem;text-align:right">'+fecha+'</small></div><div style="margin-top:12px;font-size:.75rem;line-height:1.5"><b style="color:var(--celeste)">Razón:</b> '+razon+'<br><b style="color:var(--celeste)">Salud:</b> '+salud+'</div><button style="margin-top:12px;background:transparent;border:none;color:var(--danger);font-size:.58rem;font-weight:900;cursor:pointer" onclick="borrar(\''+s.id+'\')">BORRAR SOLICITUD</button></div>';
       }).join('');
     }
 function renderCronograma(){
@@ -768,7 +769,7 @@ function renderCronograma(){
               const p=c.contenido.split('|').map(normalizeText);
               const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
               const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
-              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;•&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;�&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
             }).join('')
           : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
         return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
@@ -793,7 +794,7 @@ function renderCronograma(){
         const dolorLesion=`${p[16]||'N/A'}${p[17]?` - ${p[17]}`:''}`;
         const cirugia=`${p[18]||'N/A'}${p[19]?` - ${p[19]}`:''}`;
         const partos=`${p[22]||'N/A'}${p[22]==='Si'&&p[23]?` - ${p[23]}`:''}`;
-        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> • ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
+        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> � ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
       }).join('');
       normalizeDomText(container);
     }
@@ -844,7 +845,7 @@ function renderCronograma(){
         const ws=hasWs
           ? `<a class="birthday-ws-link" href="#" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}'); return false;"><img src="${WS_ICON_URL}" class="ws-icon"></a>`
           : `<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
-        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumpleaños</b><br><small>${c.nombre} esta cumpliendo anos</small></div>${ws}</div>`;
+        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumplea�os</b><br><small>${c.nombre} esta cumpliendo anos</small></div>${ws}</div>`;
       }).join('');
       const htmlVence=alertas.map(a=>{
         const p=a.contenido.split('|').map(normalizeText);
@@ -852,7 +853,7 @@ function renderCronograma(){
       }).join('');
 
       const empty=(alertas.length===0&&cumplePend.length===0)
-        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>'
+        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumplea�os hoy.</p>'
         : '';
       listaNotif.innerHTML = htmlCumple + htmlVence + empty;
       normalizeDomText(listaNotif);
@@ -959,7 +960,7 @@ function renderCronograma(){
     function buildBirthdayWhatsappMessage(nombre){
       const wave=String.fromCodePoint(0x1F30A);
       const meditate=String.fromCodePoint(0x1F9D8)+String.fromCharCode(0x200D,0x2640,0xFE0F);
-      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumpleaños, gracias por compartir tu energía y tu esfuerzo con nosotros. Que este año sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
+      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumplea�os, gracias por compartir tu energ�a y tu esfuerzo con nosotros. Que este a�o sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
     }
 
     function openWhatsappWithMessage(tel,msg){
@@ -1015,7 +1016,7 @@ function renderCronograma(){
       + '<div class="birthday-prompt-backdrop">'
       +   '<div class="birthday-prompt-card">'
       +     '<button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>'
-      +     '<div class="birthday-prompt-title">Nuevo cumpleaños</div>'
+      +     '<div class="birthday-prompt-title">Nuevo cumplea�os</div>'
       +     '<div class="birthday-prompt-sub">'+safeName+' esta cumpliendo anos</div>'
       +     '<div class="birthday-prompt-actions">'
       +       '<button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp(\''+safeName+'\',\''+safeTel+'\')">Mandar mensaje</button>'
@@ -1248,7 +1249,7 @@ function renderCronograma(){
       const partos=get(22,(get(23,'')?'Si':'No'));
       const partosCuantos=get(23,'');
 
-      const objetivoOps=['Mejorar postura','Aumentar flexibilidad','Fortalecer el cuerpo','Disminuir dolor','RecuperaciÃ³n de lesiÃ³n','Bienestar','Otro'];
+      const objetivoOps=['Mejorar postura','Aumentar flexibilidad','Fortalecer el cuerpo','Disminuir dolor','Recuperación de lesión','Bienestar','Otro'];
       let objetivo=get(24,get(4,''));
       let objetivoOtro='';
       if(objetivo && !objetivoOps.includes(objetivo)){ objetivoOtro=objetivo; objetivo='Otro'; }
@@ -1636,17 +1637,87 @@ function renderCronograma(){
       const label=document.getElementById('contad-total-label');
       if(label){
         label.textContent = metodo==='pago_movil' ? 'Monto (Bs)' : 'Monto (USD)';
-            updateContaduriaTotal();
+      }
+      updateContaduriaTotal();
     }
 
+    function updateEgresoMetodoUI(scope){
+      const metodo=document.getElementById(`contad-${scope}-metodo`)?.value||'';
+      const labelText=document.getElementById(`contad-${scope}-monto-label-text`);
+      const label=document.getElementById(`contad-${scope}-monto-label`);
+      const nextText = metodo==='pago_movil' ? 'Monto (Bs)' : (scope==='retiro' ? 'Cantidad (USD)' : 'Monto (USD)');
+      if(labelText){
+        labelText.textContent = nextText;
+      }else if(label && label.childNodes && label.childNodes.length){
+        label.childNodes[0].nodeValue = nextText + ' ';
+      }
+    }
+
+    function handleEgresoMetodoChange(scope){
+      updateEgresoMetodoUI(scope);
+      const metodo=document.getElementById(`contad-${scope}-metodo`)?.value||'';
+      if(!metodo) return;
+      openEgresoMontoModal(scope, metodo);
+    }
+
+    function openEgresoMontoModal(scope, metodo){
+      const inputId = scope==='retiro' ? 'contad-variable-monto' : `contad-${scope}-monto`;
+      const inputEl = document.getElementById(inputId);
+      const current = inputEl ? (inputEl.value||'') : '';
+      const label = metodo==='pago_movil' ? 'Monto (Bs)' : (scope==='retiro' ? 'Cantidad (USD)' : 'Monto (USD)');
+      const bodyHtml =
+        '<div class="modal-form-shell">'+
+          '<label>'+label+'</label>'+
+          '<input id="egreso-modal-amount" type="number" min="0" step="0.01" value="'+current+'">'+
+          '<div style="display:flex;gap:10px;margin-top:14px">'+
+            '<button class="btn-principal" onclick="applyEgresoMonto(\''+inputId+'\')">Guardar</button>'+
+            '<button class="btn-cancelar" onclick="closeModal()">Cancelar</button>'+
+          '</div>'+
+        '</div>';
+      openModal('Monto', bodyHtml);
+    }
+
+    function applyEgresoMonto(targetId){
+      const modalInput=document.getElementById('egreso-modal-amount');
+      const target=document.getElementById(targetId);
+      if(modalInput && target){
+        const raw=modalInput.value||'';
+        const parsed=parseMontoInput(raw);
+        if(Number.isFinite(parsed)){
+          target.value=String(parsed);
+        }else{
+          target.value=raw;
+        }
+      }
+      closeModal();
+    }
+
+    async function buildEgresoMeta(metodo,totalInput){
+      let montoUsd=totalInput;
+      let montoVes=0;
+      let montoEur=0;
+      let moneda='USD';
+      const rate=await fetchEuroVesRate();
+      if(metodo==='pago_movil'){
+        montoVes=totalInput;
+        montoEur=rate? (montoVes/rate):0;
+        montoUsd=montoEur;
+        moneda='VES';
+      }else{
+        montoUsd=totalInput;
+        montoEur=totalInput;
+        montoVes=rate? (montoUsd*rate):0;
+        moneda='USD';
+      }
+      const metaExtra='metodo='+metodo+'|ves='+montoVes.toFixed(2)+'|eur='+montoEur.toFixed(4)+'|moneda='+moneda;
+      return {montoUsd,metaExtra};
+    }
     function setContaduriaDefaultDate(){
       const input=document.getElementById('contad-fecha-pago');
       if(input && !input.value){
         input.value=new Date().toISOString().slice(0,10);
       }
     }
-    }
-
     function toggleContaduriaTotalEditable(){
       const total=document.getElementById('contad-total');
       if(!total) return;
@@ -1722,29 +1793,47 @@ function renderCronograma(){
       if(btn){btn.disabled=false;}
       CONTADURIA_INGRESO_SAVING=false;
     }
+    function parseMontoInput(raw){
+      const s=String(raw||'').trim();
+      if(!s) return NaN;
+      let cleaned=s.replace(/[^0-9.,-]/g,'');
+      if(!cleaned) return NaN;
+      const hasComma=cleaned.indexOf(',')>=0;
+      const hasDot=cleaned.indexOf('.')>=0;
+      if(hasComma && hasDot){
+        cleaned=cleaned.split('.').join('').replace(',', '.');
+      }else if(hasComma && !hasDot){
+        cleaned=cleaned.replace(',', '.');
+      }
+      return parseFloat(cleaned);
+    }
     async function registrarPagoTatiana(){
       const fecha=document.getElementById('contad-tatiana-fecha')?.value||'';
-      const monto=parseFloat(document.getElementById('contad-tatiana-monto')?.value||'0');
-      if(!fecha||!Number.isFinite(monto)||monto<=0){ alert('Completa fecha y monto.'); return; }
+      const metodo=document.getElementById('contad-tatiana-metodo')?.value||'';
+      const monto=parseMontoInput(document.getElementById('contad-tatiana-monto')?.value||'');
+      if(!fecha||!metodo||!Number.isFinite(monto)||monto<=0){ alert('Completa fecha, metodo y monto.'); return; }
       const fechaIso=new Date(fecha+'T00:00:00').toISOString();
-      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:'Tatiana',categoria:'sueldo',monto:monto,fecha:fechaIso};
+      const meta=await buildEgresoMeta(metodo,monto);
+      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:'Tatiana',categoria:'sueldo|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el pago.'); return; }
       alert('Pago registrado.');
-      refreshContaduriaInfoIfVisible();
+      switchContaduriaView('info');
     }
 
     async function registrarPagoSuelto(){
       const razon=document.getElementById('contad-suelto-razon')?.value.trim()||'';
       const fecha=document.getElementById('contad-suelto-fecha')?.value||'';
-      const monto=parseFloat(document.getElementById('contad-suelto-monto')?.value||'0');
-      if(!razon||!fecha||!Number.isFinite(monto)||monto<=0){ alert('Completa razon, fecha y monto.'); return; }
+      const metodo=document.getElementById('contad-suelto-metodo')?.value||'';
+      const monto=parseMontoInput(document.getElementById('contad-suelto-monto')?.value||'');
+      if(!razon||!fecha||!metodo||!Number.isFinite(monto)||monto<=0){ alert('Completa razon, fecha, metodo y monto.'); return; }
       const fechaIso=new Date(fecha+'T00:00:00').toISOString();
-      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:razon,categoria:'gasto_suelto',monto:monto,fecha:fechaIso};
+      const meta=await buildEgresoMeta(metodo,monto);
+      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:razon,categoria:'gasto_suelto|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el pago.'); return; }
       alert('Pago registrado.');
-      refreshContaduriaInfoIfVisible();
+      switchContaduriaView('info');
     }
 
     let CONTADURIA_INFO_CACHE={};
@@ -1757,14 +1846,14 @@ function renderCronograma(){
 
     async function fetchEuroVesRate(){
       const now=Date.now();
-      if(CONTADURIA_VES_RATE_CACHE.rate && (now-CONTADURIA_VES_RATE_CACHE.ts)<25*60*1000){
+      if(CONTADURIA_VES_RATE_CACHE.rate && (now-CONTADURIA_VES_RATE_CACHE.ts)<10*60*1000){
         return CONTADURIA_VES_RATE_CACHE.rate;
       }
       try{
-        const res=await fetch('https://criptonoticias.com.ve/api/tasa/euro',{cache:'no-store'});
+        const res=await fetch('https://ve.dolarapi.com/v1/euros/oficial',{cache:'no-store'});
         if(!res.ok) throw new Error('rate fetch failed: '+res.status);
         const data=await res.json();
-        let rate=Number(data?.tasa ?? data?.valor ?? data?.rate);
+        let rate=Number(data?.promedio ?? data?.venta ?? data?.compra ?? data?.tasa ?? data?.valor ?? data?.rate);
         if(!Number.isFinite(rate)){
           const txt=String(data?.tasa||data?.valor||'');
           const match=txt.match(/([0-9]+[.,][0-9]+)/);
@@ -1819,6 +1908,7 @@ function renderCronograma(){
       if(v.includes('paypal')) return 'paypal';
       if(v.includes('efectivo') || v.includes('cash')) return 'efectivo';
       if(v.includes('binance')) return 'binance';
+      if(v.includes('usdt')) return 'usdt';
       return v;
     }
 
@@ -1911,30 +2001,38 @@ function renderCronograma(){
           '</div>'+
         '</div>';
       }).join('');
-      const sueldos=egresos.filter(e=>String(e.categoria).toLowerCase()==='sueldo');
-      const gastosSueltos=egresos.filter(e=>String(e.categoria).toLowerCase()==='gasto_suelto');
+      const sueldos=egresos.filter(e=>parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase()==='sueldo');
+      const gastosSueltos=egresos.filter(e=>parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase()==='gasto_suelto');
       const sueldosCards=sueldos.map(item=>{
         const quien=(item.persona||'Sueldo').trim();
-        const monto=(parseFloat(item.monto)||0).toFixed(2);
+        const meta=parseContaduriaCategoria(item.categoria);
+        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
+        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
+        const montoVes=formatVes(meta.montoVes||0);
+        const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Sueldo � '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Sueldo � '+fecha+'</div>'+
           '</div>'+
-          '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
+          '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
       }).join('');
       const gastosCards=gastosSueltos.map(item=>{
         const razon=(item.persona||'Gasto suelto').trim();
-        const monto=(parseFloat(item.monto)||0).toFixed(2);
+        const meta=parseContaduriaCategoria(item.categoria);
+        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
+        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
+        const montoVes=formatVes(meta.montoVes||0);
+        const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Gasto suelto � '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Gasto suelto � '+fecha+'</div>'+
           '</div>'+
-          '<div style="font-weight:800;color:#ffb3b3">-$'+monto+'</div>'+
+          '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
       }).join('');
       list.innerHTML=
@@ -2058,7 +2156,28 @@ function renderCronograma(){
       loadContaduriaInfo();
     }
 
-    async function vaciarIngresosContaduria(){
+        async function eliminarEgresoContaduria(id){
+      const ok=confirm('Estas seguro de esto?');
+      if(!ok) return;
+      const res=await _sp.from(CONTADURIA_TABLE).delete().eq('id', id);
+      if(res.error){
+        // Fallback: marcar como eliminado si delete no esta permitido
+        const item=(await _sp.from(CONTADURIA_TABLE).select('categoria').eq('id', id).maybeSingle()).data;
+        if(item){
+          const base=String(item.categoria||'egreso');
+          const next=base.includes('eliminado')?base:(base+'|estado=eliminado');
+          const res2=await _sp.from(CONTADURIA_TABLE).update({categoria:next}).eq('id', id);
+          if(!res2.error){
+            loadContaduriaInfo();
+            return;
+          }
+        }
+        alert('No se pudo eliminar: '+(res.error.message||JSON.stringify(res.error)));
+        return;
+      }
+      loadContaduriaInfo();
+    }
+async function vaciarIngresosContaduria(){
       const ok=confirm('Estas seguro de esto?');
       if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('tipo','ingreso');
@@ -2077,14 +2196,16 @@ function renderCronograma(){
     async function retirarPagoVariable(){
       const persona=document.getElementById('contad-persona-variable')?.value||'';
       const fecha=document.getElementById('contad-variable-fecha')?.value||'';
+      const metodo=document.getElementById('contad-retiro-metodo')?.value||'';
       const montoRaw=document.getElementById('contad-variable-monto')?.value||'';
-      const monto=parseFloat(montoRaw);
-      if(!persona||!fecha||!Number.isFinite(monto)||monto<=0){
-        alert('Selecciona persona, fecha y cantidad valida.');
+      const monto=parseMontoInput(montoRaw);
+      if(!persona||!fecha||!metodo||!Number.isFinite(monto)||monto<=0){
+        alert('Selecciona persona, fecha, metodo y cantidad valida.');
         return;
       }
       const fechaIso=new Date(fecha+'T00:00:00').toISOString();
-      const payload={tipo:'egreso',persona:persona,categoria:'sueldo',monto:monto,fecha:fechaIso};
+      const meta=await buildEgresoMeta(metodo,monto);
+      const payload={tipo:'egreso',persona:persona,categoria:'sueldo|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el retiro.'); return; }
       alert('Retiro registrado.');
@@ -2118,7 +2239,7 @@ function buildMiniCalendar(dateObj){
     <div class="mini-cal-details">
       <div class="mini-cal-week">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
       <div class="mini-cal-grid">${cells}</div>
-      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `DÃ­a activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
+      <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
 
