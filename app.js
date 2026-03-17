@@ -2094,7 +2094,7 @@ function renderCronograma(){
       openModal('Detalle de ingreso', bodyHtml);
     }
 
-    async function openEgresoDetalle(id){
+    function openEgresoDetalle(id){
       const item=CONTADURIA_EGRESOS_BY_ID[id];
       if(!item){ alert('No se encontro el egreso.'); return; }
       const meta=parseContaduriaCategoria(item.categoria);
@@ -2104,21 +2104,26 @@ function renderCronograma(){
       const metodo=getContaduriaMetodoLabel(meta.metodo || item?.categoria || item?.persona);
       const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
       let montoVes=meta.montoVes||0;
-      if(!montoVes){
-        const rate=await fetchEuroVesRate();
-        montoVes=rate? (parseFloat(item.monto||0)*rate):0;
-      }
-      const montoVesLabel=formatVes(montoVes||0);
+      const montoVesLabel=montoVes?formatVes(montoVes):'...';
+      const bsId=`egreso-bs-${id}`;
       const bodyHtml=
         `<div class="modal-form-shell contaduria-detail-modal">
           <div style="font-weight:800;font-size:.95rem;margin-bottom:8px">${persona}</div>
           <div style="font-size:.9rem;opacity:.9">Categoria: ${categoria}</div>
           <div style="font-size:.9rem;opacity:.9">Fecha: ${fecha}</div>
           <div style="font-size:.9rem;opacity:.9">Metodo: ${metodo}</div>
-          <div style="font-size:1rem;margin-top:12px"><b>Monto USD:</b> $${montoUsd}</div>
-          <div style="font-size:1rem;margin-top:8px"><b>Monto Bs:</b> ${montoVesLabel} Bs.</div>
+          <div style="font-size:1rem;margin-top:12px"><b>Monto USD:</b> ${montoUsd}</div>
+          <div id="${bsId}" style="font-size:1rem;margin-top:8px"><b>Monto Bs:</b> ${montoVesLabel} Bs.</div>
         </div>`;
       openModal('Detalle de egreso', bodyHtml);
+      if(!montoVes){
+        fetchEuroVesRate().then(rate=>{
+          const el=document.getElementById(bsId);
+          if(!el) return;
+          const val=rate?formatVes(parseFloat(montoUsd||0)*rate):'N/D';
+          el.innerHTML = '<b>Monto Bs:</b> '+val+' Bs.';
+        });
+      }
     }
     function openIngresoEditor(id){
       const item=CONTADURIA_INGRESOS_BY_ID[id];
