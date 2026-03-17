@@ -1841,6 +1841,7 @@ function renderCronograma(){
     let CONTADURIA_LAST_INGRESO_TS=0;
     let CONTADURIA_INGRESO_SAVING=false;
     let CONTADURIA_INGRESOS_BY_ID={};
+    let CONTADURIA_EGRESOS_BY_ID={};
     let CONTADURIA_VES_RATE_CACHE={rate:null,ts:0};
     const CONTADURIA_VES_RATE_FALLBACK=510;
 
@@ -1980,6 +1981,8 @@ function renderCronograma(){
       }
       CONTADURIA_INGRESOS_BY_ID={};
       ingresos.forEach(item=>{ CONTADURIA_INGRESOS_BY_ID[item.id]=item; });
+      CONTADURIA_EGRESOS_BY_ID={};
+      egresos.forEach(item=>{ CONTADURIA_EGRESOS_BY_ID[item.id]=item; });
       const ingresoCards=ingresos.map(item=>{
         const meta=getIngresoMeta(item);
         const nombre=(item.estudiante||'N/A').trim();
@@ -2011,7 +2014,7 @@ function renderCronograma(){
         const montoVes=formatVes(meta.montoVes||0);
         const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
-        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+        return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
             '<div style="opacity:.75;font-size:.7rem">Sueldo • '+fecha+'</div>'+
@@ -2027,7 +2030,7 @@ function renderCronograma(){
         const montoVes=formatVes(meta.montoVes||0);
         const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
-        return '<div class="clase-box" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">'+
+        return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
             '<div style="opacity:.75;font-size:.7rem">Gasto suelto • '+fecha+'</div>'+
@@ -2085,12 +2088,38 @@ function renderCronograma(){
           <div style="font-weight:800;font-size:.95rem;margin-bottom:8px">${nombre}</div>
           <div style="font-size:.7rem;opacity:.8">Clase: ${nivel||'Sin clase'}</div>
           ${planLine}
-          <div style="font-size:.7rem;opacity:.8">Fecha: ${fecha}</div>
-          <div style="font-size:.7rem;opacity:.8">Metodo: ${metodo}</div>
+          <div style="font-size:.9rem;opacity:.9">Fecha: ${fecha}</div>
+          <div style="font-size:.9rem;opacity:.9">Metodo: ${metodo}</div>
         </div>`;
       openModal('Detalle de ingreso', bodyHtml);
     }
 
+    async function openEgresoDetalle(id){
+      const item=CONTADURIA_EGRESOS_BY_ID[id];
+      if(!item){ alert('No se encontro el egreso.'); return; }
+      const meta=parseContaduriaCategoria(item.categoria);
+      const persona=(item.persona||'Egreso').trim();
+      const categoria=(meta.categoriaBase||'egreso').trim();
+      const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+      const metodo=getContaduriaMetodoLabel(meta.metodo || item?.categoria || item?.persona);
+      const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
+      let montoVes=meta.montoVes||0;
+      if(!montoVes){
+        const rate=await fetchEuroVesRate();
+        montoVes=rate? (parseFloat(item.monto||0)*rate):0;
+      }
+      const montoVesLabel=formatVes(montoVes||0);
+      const bodyHtml=
+        `<div class="modal-form-shell contaduria-detail-modal">
+          <div style="font-weight:800;font-size:.95rem;margin-bottom:8px">${persona}</div>
+          <div style="font-size:.9rem;opacity:.9">Categoria: ${categoria}</div>
+          <div style="font-size:.9rem;opacity:.9">Fecha: ${fecha}</div>
+          <div style="font-size:.9rem;opacity:.9">Metodo: ${metodo}</div>
+          <div style="font-size:1rem;margin-top:12px"><b>Monto USD:</b> $${montoUsd}</div>
+          <div style="font-size:1rem;margin-top:8px"><b>Monto Bs:</b> ${montoVesLabel} Bs.</div>
+        </div>`;
+      openModal('Detalle de egreso', bodyHtml);
+    }
     function openIngresoEditor(id){
       const item=CONTADURIA_INGRESOS_BY_ID[id];
       if(!item){ alert('No se encontro el ingreso.'); return; }
