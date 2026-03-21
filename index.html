@@ -225,7 +225,20 @@
       <div id="contaduria-info" class="contaduria-shell" style="display:none">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase;margin:0">Informacion</h3>
-          <div id="contaduria-tasa-box" class="contaduria-rate-box"></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+            <div class="conta-month-income-box"><div id="contaduria-month-income"></div></div>
+            <div id="contaduria-tasa-box" class="contaduria-rate-box"></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+          <div id="contaduria-month-title" style="font-size:1.05rem;font-weight:800;letter-spacing:1px">CONTADURIA</div>
+          <div class="conta-month-nav">
+            <div class="conta-month-switch">
+              <button class="conta-month-btn" id="contaduria-prev-month" onclick="moveContaduriaMonth(-1)">MES ANTERIOR</button>
+              <button class="conta-month-btn" id="contaduria-next-month" onclick="moveContaduriaMonth(1)">SIGUIENTE MES</button>
+            </div>
+            <button class="conta-month-print" onclick="printContaduriaMonth()">IMPRIMIR</button>
+          </div>
         </div>
         <div id="contaduria-info-list" style="margin-top:12px"></div>
       </div>

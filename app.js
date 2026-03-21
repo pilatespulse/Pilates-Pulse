@@ -56,6 +56,8 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let BIRTHDAY_PROMPT_TIMER=null;
     let BIRTHDAY_FIREWORKS_CTRL=null;
     let CURRENT_NOTIF_SIGNATURE='';
+    let VENC_COUNTDOWN_TIMER=null;
+    const VENC_WEEK_TOAST_SHOWN=new Set();
     let LAST_SEEN_NOTIF_SIGNATURE='';
     let WEEK_TRASH_CACHE={};
 
@@ -324,7 +326,7 @@ function buildAlumnoIndex(){
         const modalidad=p[2]||'';
         const alumnos=formatAlumnosAgenda(p[3]||'',hora,tipo);
         const contenidoSeguro=(i.contenido||'').replace(/'/g,'&#39;');
-        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;•&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;&bull;&nbsp; <span style="color:${classColor(tipo)};font-weight:800">${tipo}</span><br><small style="color:#ffd36a;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
       }).join('');
       box.dataset.ver=ver;
       normalizeDomText(box);
@@ -608,7 +610,7 @@ async function pushClase(dia,editId="null"){
       const rows=data||[];
       const existentes=getAgendaRowsForWeek(rows,ACTIVE_WEEK_KEY);
       if(existentes.length){
-        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. ¿Deseas continuar?');
+        const reemplazar=confirm('Ya hay clases en esta semana. Si recuperas, se reemplazaran por la version eliminada. \u00bfDeseas continuar?');
         if(!reemplazar) return;
         await _sp.from('horarios').delete().in('id',existentes.map(r=>r.id));
       }
@@ -769,14 +771,48 @@ function renderCronograma(){
               const p=c.contenido.split('|').map(normalizeText);
               const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
               const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
-              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;•&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;&bull;&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
             }).join('')
           : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
         return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
       }).join('');
       normalizeDomText(container);
     }function toggleCronoDetail(id){const el=document.getElementById(`crono-detail-${id}`),v=el.style.display==='block';document.querySelectorAll('.crono-detail-box').forEach(b=>b.style.display='none');el.style.display=v?'none':'block';}
-    function checkVencimiento(f){if(!f)return false;const h=new Date(),v=new Date(f+"T23:59:59");return (v-h)/(1000*60*60)<=48;}
+    function parseVencDate(raw){
+      if(!raw) return null;
+      const s=String(raw||'').trim();
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s+'T00:00:00');
+      if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){
+        const y=s.slice(6,10), m=s.slice(3,5), d=s.slice(0,2);
+        return new Date(`${y}-${m}-${d}T00:00:00`);
+      }
+      return null;
+    }
+    function getVencimientoStatus(raw){
+      const target=parseVencDate(raw);
+      if(!target) return null;
+      const now=new Date();
+      const diffMs=target-now;
+      const dayMs=24*60*60*1000;
+      return {
+        target,
+        diffMs,
+        isOneDay: diffMs>0 && diffMs<=dayMs,
+        isOneWeek: diffMs>dayMs && diffMs<=7*dayMs
+      };
+    }
+    function formatCountdown(ms){
+      const total=Math.max(0,Math.floor(ms/1000));
+      const h=Math.floor(total/3600);
+      const m=Math.floor((total%3600)/60);
+      const s=total%60;
+      const pad=n=>String(n).padStart(2,'0');
+      return pad(h)+':'+pad(m)+':'+pad(s);
+    }
+    function checkVencimiento(f){
+      const info=getVencimientoStatus(f);
+      return !!(info && info.isOneDay);
+    }
 
     function renderAlumnosList(lista){
       const container=document.getElementById('render-alumnos');
@@ -794,7 +830,7 @@ function renderCronograma(){
         const dolorLesion=`${p[16]||'N/A'}${p[17]?` - ${p[17]}`:''}`;
         const cirugia=`${p[18]||'N/A'}${p[19]?` - ${p[19]}`:''}`;
         const partos=`${p[22]||'N/A'}${p[22]==='Si'&&p[23]?` - ${p[23]}`:''}`;
-        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> • ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
+        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> &bull; ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
       }).join('');
       normalizeDomText(container);
     }
@@ -823,19 +859,61 @@ function renderCronograma(){
       if(!error&&data&&data[0]&&data[0].id) NOTIF_STATE_ROW_ID=data[0].id;
     }
 
-    function processVencimientos(){
+        function startVencCountdownTimer(){
+      if(VENC_COUNTDOWN_TIMER) return;
+      VENC_COUNTDOWN_TIMER=setInterval(updateVencCountdowns,1000);
+    }
+    function updateVencCountdowns(){
+      document.querySelectorAll('.venc-countdown').forEach(el=>{
+        const ts=parseInt(el.dataset.target||'0',10);
+        if(!ts) return;
+        const diff=ts-Date.now();
+        el.textContent=formatCountdown(diff);
+      });
+    }
+    function showAgendaVencimientoToast(nombre){
+      const agenda=document.getElementById('modulo-agenda');
+      if(!agenda || getComputedStyle(agenda).display==='none') return;
+      const key=getTodayKey()+'|'+String(nombre||'').trim().toLowerCase();
+      if(VENC_WEEK_TOAST_SHOWN.has(key)) return;
+      VENC_WEEK_TOAST_SHOWN.add(key);
+      let toast=document.getElementById('agenda-venc-toast');
+      if(toast) toast.remove();
+      toast=document.createElement('div');
+      toast.id='agenda-venc-toast';
+      toast.style.cssText='position:fixed;left:50%;top:90px;transform:translateX(-50%);z-index:9999;background:rgba(10,10,10,.92);color:#fff;border:1px solid #39d98a;padding:10px 14px;border-radius:14px;font-size:.7rem;font-weight:600;box-shadow:0 10px 24px rgba(0,0,0,.5);';
+      toast.textContent=(nombre||'')+' se le acabara el plan en 1 semana';
+      document.body.appendChild(toast);
+      setTimeout(()=>{ if(toast) toast.remove(); }, 4000);
+    }
+function processVencimientos(){
       const listaNotif=document.getElementById('lista-notificaciones');
       if(!listaNotif) return;
 
-      const alertas=CACHE_ALUMNOS.filter(a=>checkVencimiento(a.contenido.split('|')[10])&&!NOTIF_DISMISSED.has(`v:${a.id}`));
+      const alertas24h=CACHE_ALUMNOS.filter(a=>{
+        const p=a.contenido.split('|');
+        const info=getVencimientoStatus(p[10]);
+        return info && info.isOneDay && !NOTIF_DISMISSED.has(`v:${a.id}`);
+      });
+      const alertasSemana=CACHE_ALUMNOS.filter(a=>{
+        const p=a.contenido.split('|');
+        const info=getVencimientoStatus(p[10]);
+        return info && info.isOneWeek;
+      });
       const cumplePend=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre)&&!NOTIF_DISMISSED.has(`c:${(c.nombre||'').trim().toLowerCase()}`));
 
-      document.getElementById('active-dot').style.display=(alertas.length+cumplePend.length)>0?'block':'none';
+      document.getElementById('active-dot').style.display=(alertas24h.length+cumplePend.length)>0?'block':'none';
       CURRENT_NOTIF_SIGNATURE=[
-        ...alertas.map(a=>`v:${a.id}`).sort(),
+        ...alertas24h.map(a=>`v:${a.id}`).sort(),
         ...cumplePend.map(c=>`c:${(c.nombre||'').trim().toLowerCase()}`).sort()
       ].join('|');
       updateNotifAttention();
+
+      if(alertasSemana.length){
+        const first=alertasSemana[0];
+        const p=first.contenido.split('|').map(normalizeText);
+        showAgendaVencimientoToast(p[1]||'');
+      }
 
       const htmlCumple=cumplePend.map(c=>{
         const tel=sanitizeTel(c.tel||'');
@@ -845,18 +923,32 @@ function renderCronograma(){
         const ws=hasWs
           ? `<a class="birthday-ws-link" href="#" onclick="sendBirthdayWhatsapp('${safeName}','${safeTel}'); return false;"><img src="${WS_ICON_URL}" class="ws-icon"></a>`
           : `<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
-        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumpleaños</b><br><small>${c.nombre} esta cumpliendo anos</small></div>${ws}</div>`;
+        return `<div class="clase-box birthday-inline" style="border-left:4px solid #ffd36a;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:#ffd36a">Nuevo cumplea\u00f1os</b><br><small>${c.nombre} esta cumpliendo a\u00f1os</small></div>${ws}</div>`;
       }).join('');
-      const htmlVence=alertas.map(a=>{
+      const htmlVence=alertas24h.map(a=>{
         const p=a.contenido.split('|').map(normalizeText);
-        return `<div class="clase-box" style="border-left:4px solid var(--danger)"><b style="color:var(--danger)">${p[1]}</b><br><small>Vence: <b>${p[10]}</b></small></div>`;
+        const info=getVencimientoStatus(p[10]);
+        const targetTs=info?info.target.getTime():0;
+        const countdown=info?formatCountdown(info.diffMs):'00:00:00';
+        const tel=sanitizeTel(p[2]||'');
+        const hasWs=tel&&tel.length>=8;
+        const safeName=(p[1]||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const safeTel=String(tel||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const ws=hasWs
+          ? `<a class="birthday-ws-link" href="#" onclick="sendVencimientoWhatsapp('${safeName}','${safeTel}'); return false;"><img src="${WS_ICON_URL}" class="ws-icon"></a>`
+          : `<span class="birthday-ws-link" style="opacity:.35"><img src="${WS_ICON_URL}" class="ws-icon"></span>`;
+        return `<div class="clase-box" style="border-left:4px solid var(--danger);display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="color:var(--danger)">${p[1]}</b><br><small>Le vencera su plan en: <b><span class="venc-countdown" data-target="${targetTs}">${countdown}</span></b></small></div>${ws}</div>`;
       }).join('');
 
-      const empty=(alertas.length===0&&cumplePend.length===0)
-        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumpleaños hoy.</p>'
+      const empty=(alertas24h.length===0&&cumplePend.length===0)
+        ? '<p style="text-align:center;opacity:.3;font-size:.7rem;font-style:italic;margin-top:30px">No hay vencimientos ni cumplea\u00f1os hoy.</p>'
         : '';
       listaNotif.innerHTML = htmlCumple + htmlVence + empty;
       normalizeDomText(listaNotif);
+      if(alertas24h.length){
+        startVencCountdownTimer();
+        updateVencCountdowns();
+      }
     }
     function updateNotifAttention(){
       const btn=document.getElementById('btn-notif');
@@ -869,7 +961,7 @@ function renderCronograma(){
 
     async function clearNotifications(){
       CACHE_ALUMNOS
-        .filter(a=>checkVencimiento(a.contenido.split('|')[10]))
+        .filter(a=>{const info=getVencimientoStatus(a.contenido.split('|')[10]);return info && info.isOneDay;})
         .forEach(a=>NOTIF_DISMISSED.add(getNotifVencKey(a.id))); 
       getCumpleanerosHoy()
         .forEach(c=>NOTIF_DISMISSED.add(getNotifBirthdayKey(c.nombre))); 
@@ -883,7 +975,7 @@ function renderCronograma(){
       const md=`${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
       return CACHE_ALUMNOS.map(a=>{
         const p=a.contenido.split('|').map(normalizeText);
-        return { nombre:normalizeText(p[1]||''), tel:normalizeText(p[2]||''), nac:normalizeText(p[12]||'') };
+        return { nombre:normalizeText(p[1]||'').trim(), tel:normalizeText(p[2]||''), nac:normalizeText(p[12]||'') };
       }).filter(x=>{
         if(!x.nombre || !x.nac) return false;
         const raw=(x.nac||'').trim();
@@ -960,9 +1052,12 @@ function renderCronograma(){
     function buildBirthdayWhatsappMessage(nombre){
       const wave=String.fromCodePoint(0x1F30A);
       const meditate=String.fromCodePoint(0x1F9D8)+String.fromCharCode(0x200D,0x2640,0xFE0F);
-      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumpleaños, gracias por compartir tu energía y tu esfuerzo con nosotros. Que este año sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
+      return 'Hola '+(nombre||'')+'. Pilates Pulse te desea un feliz cumplea\u00f1os, gracias por compartir tu energ\u00eda y tu esfuerzo con nosotros. Que este a\u00f1o sigas creciendo con fluidez y control'+wave +  meditate+'\nPilates Pulse.';
     }
 
+    function buildVencimientoWhatsappMessage(nombre){
+      return 'Hola, '+(nombre||'')+' es para informarte que tu fecha de vencimiento se acerca, avisanos si seguiras con nosotras! Pilates Pulse.';
+    }
     function openWhatsappWithMessage(tel,msg){
       const text=encodeURIComponent(msg||'');
       const webUrl='https://wa.me/'+tel+'?text='+text;
@@ -1004,6 +1099,30 @@ function renderCronograma(){
       await persistDismissedNotifications();
       closeBirthdayPrompt(()=>processVencimientos());
     }
+    async function sendVencimientoWhatsapp(nombre,telOverride=''){
+      const nombrePlano=(nombre||'').trim();
+      if(!nombrePlano) return;
+
+      let tel=normalizeTelForWhatsapp(telOverride||'');
+      if(!tel){
+        const found=CACHE_ALUMNOS.find(a=>{
+          const p=a.contenido.split('|').map(normalizeText);
+          return (p[1]||'').trim().toLowerCase()===nombrePlano.toLowerCase();
+        });
+        if(found){
+          const p=found.contenido.split('|');
+          tel=normalizeTelForWhatsapp(p[2]||'');
+        }
+      }
+
+      if(!tel||tel.length<8){
+        alert('Este alumno no tiene un numero valido para WhatsApp.');
+        return;
+      }
+
+      const msg=buildVencimientoWhatsappMessage(nombrePlano||nombre);
+      openWhatsappWithMessage(tel,msg);
+    }
     function openBirthdayPrompt(cumple){
       let root=document.getElementById('birthday-prompt-root');
       if(root) root.remove();
@@ -1016,8 +1135,8 @@ function renderCronograma(){
       + '<div class="birthday-prompt-backdrop">'
       +   '<div class="birthday-prompt-card">'
       +     '<button class="birthday-prompt-close" onclick="closeBirthdayPrompt()">&times;</button>'
-      +     '<div class="birthday-prompt-title">Nuevo cumpleaños</div>'
-      +     '<div class="birthday-prompt-sub">'+safeName+' esta cumpliendo anos</div>'
+      +     '<div class="birthday-prompt-title">Nuevo cumplea\u00f1os</div>'
+      +     '<div class="birthday-prompt-sub">'+safeName+' esta cumpliendo a\u00f1os</div>'
       +     '<div class="birthday-prompt-actions">'
       +       '<button class="btn-principal btn-fuse" style="margin:0" onclick="sendBirthdayWhatsapp(\''+safeName+'\',\''+safeTel+'\')">Mandar mensaje</button>'
       +       '<button class="btn-cancelar btn-fuse btn-ignore" style="margin:0" onclick="triggerIgnoreBirthday(this,\''+safeName+'\')">Eliminar</button>'
@@ -1197,7 +1316,7 @@ function renderCronograma(){
     }
 
     function showBirthdayNotices(force=false){
-      const pendientes=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre));
+      const pendientes=getCumpleanerosHoy().filter(c=>!isBirthdayHandledToday(c.nombre)&&!NOTIF_DISMISSED.has(getNotifBirthdayKey(c.nombre)));
       if(!pendientes.length) return;
       if(!shouldShowBirthdayCycle(force)) return;
       markBirthdayCycleNow();
@@ -1232,6 +1351,7 @@ function renderCronograma(){
       const tel=get(2,'');
       const nac=get(12,'');
       const profesion=get(13,'');
+      const venc=get(10,'');
 
       const act=get(14,(get(15,'')?'Si':'No'));
       const actCual=get(15,'');
@@ -1265,6 +1385,7 @@ function renderCronograma(){
         <label>Fecha de nacimiento</label><input type="date" id="db-nac" value="${nac}">
         <label>Tel&eacute;fono</label><input type="text" id="db-tel" value="${tel}">
         <label>Profesi&oacute;n / actividad principal</label><input type="text" id="db-prof" value="${profesion}">
+        <label>Vencimiento</label><input type="date" id="db-venc" value="${venc}">
 
         <label>&iquest;Realiza actualmente alguna actividad f&iacute;sica?</label>
         <select id="db-activa" onchange="toggleConditionalInput('db-activa','db-activa-cual-wrap')">
@@ -1350,6 +1471,7 @@ function renderCronograma(){
       const tel=d('db-tel').trim();
       const nac=d('db-nac');
       const profesion=d('db-prof').trim();
+      const venc=d('db-venc');
       const actividad=d('db-activa');
       const actividadCual=d('db-activa-cual').trim();
       const dolor=d('db-dolor');
@@ -1381,7 +1503,7 @@ function renderCronograma(){
         safe(cirugia==='Si'?cirugiaCual:''),
         safe(tension),
         safe(obs),
-        safe(''),
+        safe(venc),
         safe(''),
         safe(nac),
         safe(profesion),
@@ -1761,6 +1883,7 @@ function renderCronograma(){
       let moneda='USD';
       if(metodo==='pago_movil'){
         const rate=await fetchEuroVesRate();
+        CONTADURIA_LAST_RATE=rate;
         montoVes=totalInput;
         montoEur=rate? (montoVes/rate):0;
         montoUsd=montoEur;
@@ -1837,6 +1960,8 @@ function renderCronograma(){
     }
 
     let CONTADURIA_INFO_CACHE={};
+    let CONTADURIA_MONTH_CURSOR=null;
+    let CONTADURIA_LAST_RATE=null;
     let CONTADURIA_LAST_INGRESO_KEY="";
     let CONTADURIA_LAST_INGRESO_TS=0;
     let CONTADURIA_INGRESO_SAVING=false;
@@ -1943,6 +2068,116 @@ function renderCronograma(){
     }
 
 
+    function getContaduriaMonthCursor(){
+      if(!CONTADURIA_MONTH_CURSOR){
+        const now=new Date();
+        CONTADURIA_MONTH_CURSOR=new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      return CONTADURIA_MONTH_CURSOR;
+    }
+    function formatContaduriaMonthTitle(date){
+      const months=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+      return 'CONTADURIA DE '+months[date.getMonth()]+' '+date.getFullYear();
+    }
+    function updateContaduriaMonthTitle(){
+      const el=document.getElementById('contaduria-month-title');
+      if(!el) return;
+      const d=getContaduriaMonthCursor();
+      el.textContent=formatContaduriaMonthTitle(d);
+      updateContaduriaMonthNav();
+    }
+    function updateContaduriaMonthNav(){
+      const prevBtn=document.getElementById('contaduria-prev-month');
+      const nextBtn=document.getElementById('contaduria-next-month');
+      if(!prevBtn && !nextBtn) return;
+      const base=getContaduriaMonthCursor();
+      const prev=new Date(base.getFullYear(), base.getMonth()-1, 1);
+      const next=new Date(base.getFullYear(), base.getMonth()+1, 1);
+      const months=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+      if(prevBtn) prevBtn.textContent=months[prev.getMonth()];
+      if(nextBtn) nextBtn.textContent=months[next.getMonth()];
+    }
+    function moveContaduriaMonth(delta){
+      const base=getContaduriaMonthCursor();
+      CONTADURIA_MONTH_CURSOR=new Date(base.getFullYear(), base.getMonth()+delta, 1);
+      loadContaduriaInfo();
+    }
+    async function printContaduriaMonth(){
+      if(!CONTADURIA_INFO_CACHE.rowsMonth){
+        await loadContaduriaInfo();
+      }
+      const rowsMonth=CONTADURIA_INFO_CACHE.rowsMonth||[];
+      const monthCursor=getContaduriaMonthCursor();
+      const title=formatContaduriaMonthTitle(monthCursor);
+      const ingresos=rowsMonth.filter(r=>r.tipo==='ingreso');
+      const egresos=rowsMonth.filter(r=>r.tipo==='egreso');
+      const rate=CONTADURIA_LAST_RATE || await fetchEuroVesRate();
+
+      const ingresosUsd=ingresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const egresosUsd=egresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const ingresosBs=rate?ingresos.reduce((s,r)=>{const meta=getIngresoMeta(r); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+      const egresosBs=rate?egresos.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+
+      const ingresoRows=ingresos.map(r=>{
+        const meta=getIngresoMeta(r);
+        const fecha=r.fecha?new Date(r.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+        const nombre=(r.estudiante||'N/A');
+        const clase=(r.plan_nivel||'');
+        const plan=(r.plan||'');
+        const usd=(parseFloat(r.monto)||0).toFixed(2);
+        const bs=rate?(meta.montoVes||0)>0?formatVes(meta.montoVes||0):formatVes((parseFloat(r.monto)||0)*rate):'N/D';
+        return `<tr><td>${fecha}</td><td>${nombre}</td><td>${clase}</td><td>${plan}</td><td>$${usd}</td><td>${bs}</td></tr>`;
+      }).join('');
+
+      const egresoRows=egresos.map(r=>{
+        const meta=parseContaduriaCategoria(r.categoria);
+        const fecha=r.fecha?new Date(r.fecha).toLocaleDateString('es-VE'):'Sin fecha';
+        const persona=(r.persona||'N/A');
+        const categoria=(meta.categoriaBase||'egreso');
+        const usd=(parseFloat(r.monto)||0).toFixed(2);
+        const bs=rate?(meta.montoVes||0)>0?formatVes(meta.montoVes||0):formatVes((parseFloat(r.monto)||0)*rate):'N/D';
+        return `<tr><td>${fecha}</td><td>${persona}</td><td>${categoria}</td><td>$${usd}</td><td>${bs}</td></tr>`;
+      }).join('');
+
+      const win=window.open('', '_blank', 'width=920,height=720');
+      if(!win){ alert('No se pudo abrir la ventana de impresion.'); return; }
+      win.document.write(`
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              body{font-family:Arial, sans-serif;color:#111;padding:24px;}
+              h1{font-size:22px;margin:0 0 12px 0;}
+              h2{font-size:16px;margin:18px 0 8px 0;}
+              .totals{margin-top:8px;font-size:14px;}
+              table{width:100%;border-collapse:collapse;margin-top:6px;}
+              th,td{border:1px solid #ddd;padding:6px;font-size:12px;text-align:left;}
+              th{background:#f3f3f3;}
+            </style>
+          </head>
+          <body>
+            <h1>${title}</h1>
+            <div class="totals">
+              <div><b>Ingresos (USD):</b> $${ingresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Ingresos (Bs):</b> ${rate?formatVes(ingresosBs):'N/D'} Bs.</div>
+              <div><b>Egresos (USD):</b> $${egresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Egresos (Bs):</b> ${rate?formatVes(egresosBs):'N/D'} Bs.</div>
+            </div>
+            <h2>Clases (Ingresos)</h2>
+            <table>
+              <thead><tr><th>Fecha</th><th>Alumno</th><th>Clase</th><th>Plan</th><th>USD</th><th>Bs</th></tr></thead>
+              <tbody>${ingresoRows || '<tr><td colspan="6">Sin ingresos</td></tr>'}</tbody>
+            </table>
+            <h2>Egresos</h2>
+            <table>
+              <thead><tr><th>Fecha</th><th>Persona</th><th>Categoria</th><th>USD</th><th>Bs</th></tr></thead>
+              <tbody>${egresoRows || '<tr><td colspan="5">Sin egresos</td></tr>'}</tbody>
+            </table>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
     async function loadContaduriaInfo(){
       const list=document.getElementById('contaduria-info-list');
       const totalEl=document.getElementById('contaduria-info-total');
@@ -1953,33 +2188,66 @@ function renderCronograma(){
       if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
       const rows=res.data||[];
       const rowsFinal = rows.filter(r=>!isContaduriaEliminado(r));
-      if(!rowsFinal.length){ list.textContent='Sin movimientos aun.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
-      let ingresos=rowsFinal.filter(r=>r.tipo==='ingreso');
-      const egresos=rowsFinal.filter(r=>r.tipo==='egreso');
+      CONTADURIA_INFO_CACHE.rows=rowsFinal;
+      const monthCursor=getContaduriaMonthCursor();
+      const monthKey=monthCursor.getFullYear()+'-'+String(monthCursor.getMonth()+1).padStart(2,'0');
+      const rowsMonth=rowsFinal.filter(r=>{
+        const raw=String(r.fecha||'');
+        return raw.slice(0,7)===monthKey;
+      });
+      CONTADURIA_INFO_CACHE.rowsMonth=rowsMonth;
+      updateContaduriaMonthTitle();
+      let ingresos=rowsMonth.filter(r=>r.tipo==='ingreso');
+      const egresos=rowsMonth.filter(r=>r.tipo==='egreso');
       const totalIngresos=ingresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalEgresos=egresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
-      const totalActivo=totalIngresos-totalEgresos;
-                  if(totalEl){
+
+      const rowsToDate=rowsFinal.filter(r=>{
+        const raw=String(r.fecha||'');
+        return raw.slice(0,7)<=monthKey;
+      });
+      const ingresosToDate=rowsToDate.filter(r=>r.tipo==='ingreso');
+      const egresosToDate=rowsToDate.filter(r=>r.tipo==='egreso');
+      const totalIngresosToDate=ingresosToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalEgresosToDate=egresosToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalActivo=totalIngresosToDate-totalEgresosToDate;
+
+      if(totalEl){
         const rate=await fetchEuroVesRate();
+        CONTADURIA_LAST_RATE=rate;
         const tasaLabel=rate?formatVes(rate):'N/D';
         const tasaBox=document.getElementById('contaduria-tasa-box');
-        const bsActivo=rate?formatVes(totalActivo*rate):'N/D';
-        const bsIngresos=rate?formatVes(totalIngresos*rate):'N/D';
-        const bsEgresos=rate?formatVes(totalEgresos*rate):'N/D';
+        const monthIncomeEl=document.getElementById('contaduria-month-income');
+
+        const ingresosBs=rate?ingresos.reduce((s,r)=>{const meta=getIngresoMeta(r); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const egresosBs=rate?egresos.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const ingresosBsToDate=rate?ingresosToDate.reduce((s,r)=>{const meta=getIngresoMeta(r); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const egresosBsToDate=rate?egresosToDate.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+
+        const bsActivo=rate?formatVes(ingresosBsToDate-egresosBsToDate):'N/D';
+        const bsIngresos=rate?formatVes(ingresosBs):'N/D';
+        const bsEgresos=rate?formatVes(egresosBs):'N/D';
+
+        if(monthIncomeEl){
+          const ingresosUsdLabel='$'+totalIngresos.toFixed(2);
+          const ingresosBsLabel=rate?formatVes(ingresosBs):'N/D';
+          monthIncomeEl.innerHTML='<div style="font-size:.65rem;opacity:.7;letter-spacing:1px">INGRESOS DEL MES</div>'+
+            '<div style="font-size:1.1rem;font-weight:900">'+ingresosUsdLabel+'</div>'+
+            '<div style="font-size:.75rem;opacity:.75">'+ingresosBsLabel+' Bs.</div>';
+        }
         if(tasaBox){
           tasaBox.innerHTML='<div class="conta-rate-label">Tasa del dia</div><div class="conta-rate-value">'+tasaLabel+'</div><div class="conta-rate-sub">EUR/VES</div>';
         }
         totalEl.innerHTML=
           '<div class="conta-total-row">'+
             '<span class="conta-total-activo">Total activo: $'+totalActivo.toFixed(2)+'</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: $'+totalIngresos.toFixed(2)+'</span> | Egresos: $'+totalEgresos.toFixed(2)+'</span>'+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: $'+totalIngresos.toFixed(2)+'</span> | Egresos mes: $'+totalEgresos.toFixed(2)+'</span>'+
           '</div>'+
           '<div class="conta-total-row conta-total-ves">'+
             '<span class="conta-total-activo">Total activo: '+bsActivo+' Bs.</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos: '+bsIngresos+' Bs.</span> | Egresos: '+bsEgresos+' Bs.</span>'+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: '+bsIngresos+' Bs.</span> | Egresos mes: '+bsEgresos+' Bs.</span>'+
           '</div>';
-      }
-      CONTADURIA_INGRESOS_BY_ID={};
+      }      CONTADURIA_INGRESOS_BY_ID={};
       ingresos.forEach(item=>{ CONTADURIA_INGRESOS_BY_ID[item.id]=item; });
       CONTADURIA_EGRESOS_BY_ID={};
       egresos.forEach(item=>{ CONTADURIA_EGRESOS_BY_ID[item.id]=item; });
@@ -2017,7 +2285,7 @@ function renderCronograma(){
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Sueldo • '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Sueldo &bull; '+fecha+'</div>'+
           '</div>'+
           '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
@@ -2033,7 +2301,7 @@ function renderCronograma(){
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Gasto suelto • '+fecha+'</div>'+
+            '<div style="opacity:.75;font-size:.7rem">Gasto suelto &bull; '+fecha+'</div>'+
           '</div>'+
           '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
