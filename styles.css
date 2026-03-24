@@ -2906,3 +2906,51 @@ body.modal-open{
     padding-right: 16px;
   }
 }
+
+/* Safe area + app chrome background */
+:root{
+  --app-chrome-bg:
+    radial-gradient(900px 500px at 80% 8%, rgba(255,255,255,.06), transparent 65%),
+    radial-gradient(700px 420px at 10% 95%, rgba(255,255,255,.04), transparent 65%),
+    #060606;
+  --app-chrome-fill: #060606;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+html{
+  min-height: 100%;
+  background: var(--app-chrome-fill) !important;
+}
+
+body{
+  min-height: 100%;
+  background: var(--app-chrome-fill) !important;
+}
+
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--app-chrome-bg);
+  z-index: -2;
+  pointer-events: none;
+}
+
+#landing-section,
+#agenda-publica-section,
+#login-section{
+  padding-top: calc(22px + var(--safe-area-top)) !important;
+}
+
+#app-content,
+#modulo-contaduria{
+  padding-top: var(--safe-area-top);
+}
+
+#app-content .logout-container{
+  top: calc(22px + var(--safe-area-top));
+}
+
+#modulo-contaduria > div:first-child{
+  padding-top: calc(10px + var(--safe-area-top)) !important;
+}

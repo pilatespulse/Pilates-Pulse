@@ -141,11 +141,33 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     }
     function a24h(h){if(!h)return 0;let[t,ap]=h.split(' ');let[hh,mm]=t.split(':').map(Number);if(ap==="PM"&&hh<12)hh+=12;if(ap==="AM"&&hh===12)hh=0;return hh*60+mm;}
 
-    window.onload=()=>{initBokeh();bindLandingScrollState();localStorage.getItem('studio_auth')?startApp():openLanding();};
+    const APP_CHROME_THEMES={
+      landing:{
+        fill:'#060606',
+        bg:'radial-gradient(900px 500px at 80% 8%, rgba(255,255,255,.06), transparent 65%), radial-gradient(700px 420px at 10% 95%, rgba(255,255,255,.04), transparent 65%), #060606'
+      },
+      public:{
+        fill:'#c7beb3',
+        bg:'radial-gradient(800px 420px at 12% 10%, rgba(214,204,193,.42), transparent 60%), radial-gradient(720px 420px at 88% 16%, rgba(171,155,139,.28), transparent 62%), linear-gradient(180deg, #c7beb3 0%, #b8ac9e 100%)'
+      },
+      app:{
+        fill:'#c4b9ad',
+        bg:'radial-gradient(900px 520px at 0% 0%, rgba(213,203,192,.42), transparent 58%), radial-gradient(760px 480px at 100% 0%, rgba(169,153,137,.28), transparent 62%), linear-gradient(180deg, #c4b9ad 0%, #b3a698 100%)'
+      }
+    };
+    function setAppChromeTheme(mode){
+      const theme=APP_CHROME_THEMES[mode]||APP_CHROME_THEMES.landing;
+      document.documentElement.style.setProperty('--app-chrome-bg',theme.bg);
+      document.documentElement.style.setProperty('--app-chrome-fill',theme.fill);
+      const themeMeta=document.querySelector('meta[name="theme-color"]');
+      if(themeMeta) themeMeta.setAttribute('content',theme.fill);
+    }
+
+    window.onload=()=>{initBokeh();bindLandingScrollState();setAppChromeTheme(localStorage.getItem('studio_auth')?'app':'landing');localStorage.getItem('studio_auth')?startApp():openLanding();};
     function hidePublicScreens(){['landing-section','agenda-publica-section','login-section','app-content'].forEach(id=>document.getElementById(id).style.display='none');}
-    function openLanding(){hidePublicScreens();const landing=document.getElementById('landing-section');landing.style.display='flex';landing.classList.remove('about-open');landing.scrollTop=0;}
-    function openLogin(){hidePublicScreens();document.getElementById('login-section').style.display='flex';}
-    function openAgendaPublica(){hidePublicScreens();document.getElementById('agenda-publica-section').style.display='flex';}
+    function openLanding(){hidePublicScreens();setAppChromeTheme('landing');const landing=document.getElementById('landing-section');landing.style.display='flex';landing.classList.remove('about-open');landing.scrollTop=0;}
+    function openLogin(){hidePublicScreens();setAppChromeTheme('public');document.getElementById('login-section').style.display='flex';}
+    function openAgendaPublica(){hidePublicScreens();setAppChromeTheme('public');document.getElementById('agenda-publica-section').style.display='flex';}
     function bindLandingScrollState(){
       const landing=document.getElementById('landing-section');
       if(!landing||landing.dataset.aboutBound==='1') return;
@@ -237,6 +259,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
     async function startApp(){
       hidePublicScreens();
+      setAppChromeTheme('app');
       document.getElementById('app-content').style.display='block';
       const contBtn=document.getElementById('btn-contaduria');
       if(contBtn) contBtn.onclick=openContaduria;
@@ -1590,6 +1613,7 @@ function processVencimientos(){
       const btnMap={'modulo-agenda':'btn-agenda','modulo-cronograma':'btn-crono','modulo-alumnos':'btn-db','modulo-solicitudes':'btn-solicitudes','modulo-notificaciones':'btn-notif'};
       const target=document.getElementById(id);
       if(!target) return;
+      setAppChromeTheme('app');
       const cont=document.getElementById('modulo-contaduria');
       if(cont) cont.style.display='none';
       const app=document.getElementById('app-content');
@@ -1614,6 +1638,7 @@ function processVencimientos(){
 
         function openContaduria(){
       hidePublicScreens();
+      setAppChromeTheme('app');
       const cont=document.getElementById('modulo-contaduria');
       if(cont) cont.style.display='block';
       const app=document.getElementById('app-content');
@@ -2772,7 +2797,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
 
 
 
