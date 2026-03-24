@@ -114,27 +114,46 @@
 
       <div id="contaduria-ingresos" class="contaduria-shell" style="margin-bottom:24px">
         <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase">Registro de ingresos</h3>
-        <label>Nombre</label>
-        <div style="display:flex;gap:8px;align-items:center">
+        <label id="contad-nombre-label">Nombre</label>
+        <div id="contad-nombre-normal-wrap" style="display:flex;gap:8px;align-items:center">
           <select id="contad-alumno" style="flex:1;min-width:200px"></select>
           <input id="contad-alumno-search" type="search" placeholder="Buscar..." style="flex:0 0 160px" oninput="buscarAlumnoContaduria()">
           <button class="btn-cancelar" style="flex:0 0 42px;padding:10px" onclick="buscarAlumnoContaduria()" title="Buscar">&#128269;</button>
           <button class="btn-cancelar" style="flex:0 0 42px;padding:10px" onclick="toggleContaduriaManualName()" title="Escribir manualmente">&#9998;</button>
         </div>
         <input id="contad-alumno-manual" type="text" placeholder="Escribe un nombre" style="display:none;margin-top:8px;">
+        <button id="contad-custom-toggle" class="btn-cancelar" style="margin-top:10px;width:auto" onclick="toggleContaduriaCustomIngreso()">Ingreso personalizado</button>
+        <div id="contad-custom-wrap" style="display:none;margin-top:8px">
+          <input id="contad-custom-label" type="text" placeholder="Ej: Bono" style="width:100%">
+        </div>
 
-        <label style="margin-top:16px">Clase</label>
-        <select id="contad-plan-nivel" onchange="updateContaduriaPlanes()">
-          <option>Planes grupales</option>
-          <option>Planes semiprivados</option>
-          <option>Planes privados</option>
-                  <option>Privada suelta</option>
-          <option>Grupal suelta</option>
-</select>
-        <div id="contad-plan-wrap">
-          <label style="margin-top:16px">Plan</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="contad-plan-item" onchange="updateContaduriaTotal()" style="flex:1"></select>
+        <div id="contad-clase-block">
+          <label style="margin-top:16px">Clase</label>
+          <select id="contad-plan-nivel" onchange="updateContaduriaPlanes()">
+            <option>Planes grupales</option>
+            <option>Planes semiprivados</option>
+            <option>Planes privados</option>
+            <option>Privada suelta</option>
+            <option>Grupal suelta</option>
+            <option>Semiprivada suelta</option>
+            <option>Terapia</option>
+            <option>Masaje</option>
+            <option>Reiki</option>
+            <option>Cumpleaños</option>
+          </select>
+          <div id="contad-plan-wrap">
+            <label style="margin-top:16px" id="contad-plan-label">Plan</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="contad-plan-item" onchange="updateContaduriaTotal()" style="flex:1"></select>
+            </div>
+          </div>
+          <div id="contad-birthday-type-wrap" style="display:none">
+            <label style="margin-top:16px">Tipo</label>
+            <select id="contad-birthday-type" onchange="updateContaduriaTotal()"></select>
+          </div>
+          <div id="contad-birthday-qty-wrap" style="display:none">
+            <label style="margin-top:16px">Cantidad</label>
+            <select id="contad-birthday-qty" onchange="updateContaduriaTotal()"></select>
           </div>
         </div>
 
