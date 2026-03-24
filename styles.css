@@ -2954,3 +2954,330 @@ body::before{
 #modulo-contaduria > div:first-child{
   padding-top: calc(10px + var(--safe-area-top)) !important;
 }
+
+/* Final palette pass: jade, pewter, ash and linen */
+:root{
+  --faded-jade: #417076;
+  --juniper: #6B8994;
+  --ash: #C8C6B9;
+  --pewter: #97B1A4;
+  --linen: #FAE2DE;
+  --ink-soft: #365a60;
+  --ink-strong: #2c4b50;
+  --theme-shadow: 0 22px 44px rgba(65,112,118,.15);
+  --app-chrome-bg:
+    radial-gradient(900px 520px at 12% 8%, rgba(250,226,222,.72), transparent 58%),
+    radial-gradient(720px 420px at 88% 12%, rgba(151,177,164,.32), transparent 62%),
+    linear-gradient(180deg, #FAE2DE 0%, #C8C6B9 100%);
+  --app-chrome-fill: #FAE2DE;
+  --font-main: 'Manrope', sans-serif;
+  --font-fancy: 'Rasputin', 'Bodoni Moda', serif;
+}
+
+html,
+body{
+  color: var(--ink-strong);
+}
+
+body::before{
+  background: var(--app-chrome-bg) !important;
+}
+
+::selection{
+  background: rgba(65,112,118,.22);
+  color: var(--ink-strong);
+}
+
+#landing-section{
+  background:
+    radial-gradient(840px 500px at 18% 10%, rgba(250,226,222,.92), transparent 58%),
+    radial-gradient(760px 420px at 84% 16%, rgba(151,177,164,.38), transparent 60%),
+    linear-gradient(180deg, rgba(250,226,222,.96) 0%, rgba(200,198,185,.95) 100%) !important;
+}
+
+.pp-brand-word,
+.pp-hero-title,
+.pp-about-section-header,
+.pp-about-copy h3,
+#app-content .agenda-day-hero,
+#app-content .crono-header-text,
+#modulo-contaduria #contaduria-month-title{
+  font-family: var(--font-fancy) !important;
+}
+
+.pp-brand-word{
+  color: var(--faded-jade) !important;
+  text-shadow: 0 10px 24px rgba(250,226,222,.34) !important;
+}
+
+.pp-nav-link{
+  color: rgba(44,75,80,.78) !important;
+}
+
+.pp-nav-link:hover{
+  color: var(--faded-jade) !important;
+}
+
+.pp-nav-access{
+  border-color: rgba(65,112,118,.22) !important;
+  background: linear-gradient(135deg, rgba(250,226,222,.92), rgba(200,198,185,.98)) !important;
+  color: var(--ink-strong) !important;
+  box-shadow: 0 12px 24px rgba(65,112,118,.12) !important;
+}
+
+.pp-hero-title{
+  background: linear-gradient(135deg, var(--faded-jade) 0%, var(--juniper) 35%, var(--linen) 72%, var(--pewter) 100%) !important;
+  background-size: 220% 220% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  font-size: clamp(3rem, 7vw, 6.2rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: .9px !important;
+  text-shadow: none !important;
+}
+
+.pp-hero-sub{
+  color: rgba(44,75,80,.84) !important;
+}
+
+.pp-hero-cta{
+  border-color: rgba(65,112,118,.18) !important;
+  background: linear-gradient(135deg, var(--juniper), var(--faded-jade)) !important;
+  color: var(--linen) !important;
+  box-shadow: 0 18px 34px rgba(65,112,118,.22) !important;
+}
+
+.pp-hero-cta:hover{
+  box-shadow: 0 22px 40px rgba(65,112,118,.28) !important;
+}
+
+.pp-about-section-header{
+  margin-bottom: 16px !important;
+  letter-spacing: 1.8px !important;
+  background: linear-gradient(120deg, var(--faded-jade) 0%, var(--juniper) 42%, var(--pewter) 100%) !important;
+  background-size: 200% 200% !important;
+}
+
+.pp-about-section-header::after{
+  background: linear-gradient(90deg, transparent, rgba(65,112,118,.62), rgba(151,177,164,.84), transparent) !important;
+}
+
+.pp-about-section-card{
+  border-color: rgba(65,112,118,.18) !important;
+  background: linear-gradient(145deg, rgba(250,226,222,.64), rgba(200,198,185,.76)) !important;
+  box-shadow: var(--theme-shadow) !important;
+}
+
+.pp-about-carousel{
+  background: linear-gradient(180deg, rgba(250,226,222,.65), rgba(151,177,164,.26)) !important;
+}
+
+.pp-about-carousel::before{
+  background: linear-gradient(115deg, rgba(250,226,222,.32) 0%, transparent 24%, transparent 76%, rgba(151,177,164,.2) 100%) !important;
+}
+
+.pp-about-copy{
+  background: linear-gradient(180deg, rgba(250,226,222,.82), rgba(200,198,185,.88)) !important;
+  border-left-color: rgba(65,112,118,.14) !important;
+}
+
+.pp-about-copy h3{
+  color: var(--faded-jade) !important;
+  text-shadow: none !important;
+}
+
+.pp-about-copy p{
+  color: rgba(44,75,80,.88) !important;
+}
+
+#login-section,
+#agenda-publica-section,
+#app-content,
+#modulo-contaduria{
+  --access-bg: #C8C6B9;
+  --access-bg-soft: #FAE2DE;
+  --access-surface: rgba(250,226,222,.68);
+  --access-surface-strong: #97B1A4;
+  --access-border: rgba(65,112,118,.18);
+  --access-border-strong: rgba(65,112,118,.34);
+  --access-ink: var(--ink-strong);
+  --access-muted: var(--juniper);
+  --access-accent: var(--faded-jade);
+  --access-accent-deep: var(--faded-jade);
+  --access-shadow: var(--theme-shadow);
+  --access-panel-top: rgba(250,226,222,.96);
+  --access-panel-bottom: rgba(200,198,185,.94);
+  --access-card-top: rgba(250,226,222,.92);
+  --access-card-bottom: rgba(200,198,185,.92);
+  --access-field: rgba(250,226,222,.92);
+  --access-field-top: rgba(250,226,222,.96);
+  --access-field-bottom: rgba(200,198,185,.82);
+  --access-soft-block: rgba(250,226,222,.74);
+  --access-nav: rgba(250,226,222,.64);
+  color: var(--ink-strong) !important;
+}
+
+#login-section,
+#agenda-publica-section{
+  background:
+    radial-gradient(820px 440px at 12% 10%, rgba(250,226,222,.92), transparent 60%),
+    radial-gradient(720px 420px at 88% 18%, rgba(151,177,164,.32), transparent 60%),
+    linear-gradient(180deg, #FAE2DE 0%, #C8C6B9 100%) !important;
+}
+
+#app-content,
+#modulo-contaduria{
+  background:
+    radial-gradient(900px 500px at 0% 0%, rgba(250,226,222,.74), transparent 58%),
+    radial-gradient(760px 460px at 100% 0%, rgba(151,177,164,.28), transparent 62%),
+    linear-gradient(180deg, #FAE2DE 0%, #C8C6B9 100%) !important;
+}
+
+#login-section .logo-pulse-circle,
+#agenda-publica-section .logo-pulse-circle,
+#app-content .logo-pulse-circle,
+#modulo-contaduria .logo-pulse-circle{
+  background: linear-gradient(180deg, rgba(250,226,222,.98), rgba(200,198,185,.88)) !important;
+  border: 1px solid rgba(65,112,118,.16) !important;
+  box-shadow: 0 16px 30px rgba(65,112,118,.14) !important;
+}
+
+#login-section .brand-text,
+#agenda-publica-section .brand-text,
+#app-content .brand-text,
+#modulo-contaduria .brand-text{
+  color: var(--faded-jade) !important;
+  letter-spacing: 4px !important;
+}
+
+#login-section input,
+#agenda-publica-section input,
+#agenda-publica-section textarea,
+#app-content input,
+#app-content select,
+#app-content textarea,
+#modulo-contaduria input,
+#modulo-contaduria select,
+#modulo-contaduria textarea,
+#app-modal-root input,
+#app-modal-root select,
+#app-modal-root textarea,
+#app-content .search-input{
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52) !important;
+}
+
+#login-section .btn-principal,
+#agenda-publica-section .btn-principal,
+#app-content .btn-principal,
+#modulo-contaduria .btn-principal,
+#app-modal-root .btn-principal{
+  background: linear-gradient(135deg, var(--juniper), var(--faded-jade)) !important;
+  color: var(--linen) !important;
+  box-shadow: 0 16px 30px rgba(65,112,118,.2) !important;
+}
+
+#login-section .btn-principal::after,
+#agenda-publica-section .btn-principal::after,
+#app-content .btn-principal::after,
+#modulo-contaduria .btn-principal::after,
+#app-modal-root .btn-principal::after{
+  display: block !important;
+  background: linear-gradient(90deg, transparent, rgba(250,226,222,.48), transparent) !important;
+  opacity: .52 !important;
+}
+
+#app-content .btn-second,
+#modulo-contaduria .btn-second,
+#app-modal-root .btn-second,
+#login-section .btn-cancelar,
+#login-section .back-btn,
+#agenda-publica-section .btn-cancelar,
+#agenda-publica-section .back-btn,
+#app-content .btn-cancelar,
+#app-content .back-btn,
+#app-content .btn-logout,
+#modulo-contaduria .btn-cancelar,
+#modulo-contaduria .back-btn,
+#app-modal-root .btn-cancelar{
+  background: linear-gradient(180deg, rgba(250,226,222,.92), rgba(200,198,185,.9)) !important;
+  color: var(--ink-strong) !important;
+  border-color: rgba(65,112,118,.18) !important;
+}
+
+#app-content .dia-item,
+#app-content .clase-box,
+#app-content .ficha-detalles,
+#app-content .crono-detail-box,
+#modulo-contaduria .clase-box,
+#modulo-contaduria .contaduria-shell,
+#app-modal-root .app-modal-panel,
+#app-modal-root .modal-form-shell,
+#app-content .week-card,
+#app-content .mini-calendar,
+#modulo-cronograma .week-card,
+#modulo-contaduria .conta-month-nav,
+#modulo-contaduria .contaduria-rate-box,
+#modulo-contaduria .conta-month-income-box{
+  background: linear-gradient(180deg, rgba(250,226,222,.92), rgba(200,198,185,.88)) !important;
+  border-color: rgba(65,112,118,.16) !important;
+  box-shadow: var(--theme-shadow) !important;
+}
+
+#app-content .dia-header{
+  background: linear-gradient(180deg, rgba(250,226,222,.98), rgba(200,198,185,.9)) !important;
+}
+
+#app-content .ficha-detalles,
+#app-content .crono-detail-box{
+  background: linear-gradient(180deg, rgba(250,226,222,.84), rgba(151,177,164,.28)) !important;
+}
+
+#app-content .footer-nav{
+  background: linear-gradient(180deg, rgba(250,226,222,.78), rgba(200,198,185,.88)) !important;
+  border-color: rgba(65,112,118,.18) !important;
+  box-shadow: 0 18px 34px rgba(65,112,118,.12) !important;
+}
+
+#app-content .nav-btn{
+  color: rgba(54,90,96,.82) !important;
+}
+
+#app-content .nav-btn.active-btn,
+#modulo-contaduria .contaduria-tab.active{
+  background: linear-gradient(135deg, var(--pewter), var(--juniper)) !important;
+  color: var(--linen) !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 28px rgba(65,112,118,.18) !important;
+}
+
+#modulo-contaduria .contaduria-tab{
+  background: linear-gradient(180deg, rgba(250,226,222,.9), rgba(200,198,185,.84)) !important;
+  color: var(--juniper) !important;
+}
+
+#app-content .mini-cal-cell.active{
+  background: linear-gradient(135deg, var(--faded-jade), var(--juniper)) !important;
+  color: var(--linen) !important;
+}
+
+#app-content .dot-notif{
+  background: var(--faded-jade) !important;
+}
+
+#app-content .birthday-inline{
+  border-left-color: var(--juniper) !important;
+}
+
+#app-modal-root .app-modal-backdrop{
+  background: rgba(65,112,118,.18) !important;
+}
+
+#app-modal-root .app-modal-close,
+#modulo-contaduria .conta-month-btn,
+#modulo-contaduria .conta-month-print{
+  background: linear-gradient(180deg, rgba(250,226,222,.94), rgba(200,198,185,.88)) !important;
+  color: var(--ink-strong) !important;
+  border-color: rgba(65,112,118,.16) !important;
+}
