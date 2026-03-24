@@ -198,8 +198,16 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       </div>`;
       document.body.classList.add('modal-open');
     }
+    function setDatabaseFormUiHidden(hidden){
+      const footer=document.querySelector('#app-content .footer-nav');
+      if(!footer) return;
+      if(hidden) footer.style.setProperty('display','none','important');
+      else footer.style.removeProperty('display');
+    }
     function closeModal(){
       const root=document.getElementById('app-modal-root');
+      const modalType=root?.dataset.modalType||'';
+      if(modalType==='db-form') setDatabaseFormUiHidden(false);
       if(root) root.remove();
       document.body.classList.remove('modal-open');
     }
@@ -505,6 +513,8 @@ async function pushClase(dia,editId="null"){
       const cronoTodayEl = document.getElementById('crono-fecha-actual');
       const cronoRangeEl = document.getElementById('crono-week-range');
       const weekStatusEl = document.getElementById('week-status-indicator');
+      const agendaWeekCard = rangeEl ? rangeEl.closest('.week-card') : null;
+      const cronoWeekCard = cronoRangeEl ? cronoRangeEl.closest('.week-card') : null;
       let miniCalEl = document.getElementById('mini-calendar');
       if(!miniCalEl){
         const hero = document.querySelector('.agenda-hero');
@@ -524,6 +534,10 @@ async function pushClase(dia,editId="null"){
       const weekColor=weekIsCurrent ? '#5ee27a' : '#ff6b6b';
       if(rangeEl) rangeEl.style.color=weekColor;
       if(cronoRangeEl) cronoRangeEl.style.color=weekColor;
+      [agendaWeekCard, cronoWeekCard].forEach(card=>{
+        if(!card) return;
+        card.classList.toggle('week-card-outdated', !weekIsCurrent);
+      });
       if(weekStatusEl){
         weekStatusEl.textContent=weekIsCurrent ? '\u2713' : '\u2715';
         weekStatusEl.className='week-status-indicator '+(weekIsCurrent ? 'is-current' : 'is-other');
@@ -797,7 +811,7 @@ function renderCronograma(){
               const p=c.contenido.split('|').map(normalizeText);
               const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
               const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
-              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;&bull;&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#ffd36a;font-weight:800;"><b style="color:#ffd36a">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;&bull;&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#8d5b34;font-weight:800;"><b style="color:#8d5b34">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
             }).join('')
           : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
         return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
@@ -1481,6 +1495,9 @@ function processVencimientos(){
       </div>`;
 
       openModal(editId?'Editar alumno':'Registrar alumno',formHtml);
+      const modalRoot=document.getElementById('app-modal-root');
+      if(modalRoot) modalRoot.dataset.modalType='db-form';
+      setDatabaseFormUiHidden(true);
       toggleConditionalInput('db-activa','db-activa-cual-wrap');
       toggleConditionalInput('db-dolor','db-dolor-donde-wrap');
       toggleConditionalInput('db-cirugia','db-cirugia-cual-wrap');
@@ -2427,19 +2444,19 @@ function processVencimientos(){
         const metodo=getContaduriaMetodoLabel(meta.metodo || item.persona || item.categoria);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         const eurLine=isVes? '<div style="opacity:.7;font-size:.62rem;margin-top:4px">EUR: '+montoEur+'</div>' : '';
-        return '<div class="clase-box contaduria-ingreso-card" onclick="openIngresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
-          '<div style="flex:1;min-width:0">'+
+        return '<div class="clase-box contaduria-ingreso-card" onclick="openIngresoDetalle('+item.id+')" style="margin-bottom:10px;cursor:pointer">'+
+          '<div class="contaduria-ingreso-main">'+
             '<div style="font-size:.75rem;font-weight:700">'+nombre+'</div>'+
             '<div style="margin-top:6px;font-weight:800">'+montoLabel+'</div>'+
             eurLine+
           '</div>'+
-          '<div style="display:flex;gap:8px;align-items:center">'+
-            '<div style="min-width:112px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)">'+
+          '<div class="contaduria-ingreso-actions">'+
+            '<div class="contaduria-ingreso-meta">'+
               '<div style="font-size:.74rem;font-weight:800;line-height:1.1;color:#f0e3b2">'+metodo+'</div>'+
-              '<div style="margin-top:6px;font-size:.72rem;opacity:.78;line-height:1.1">'+fecha+'</div>'+
+              '<div style="margin-top:4px;font-size:.7rem;opacity:.78;line-height:1.1">'+fecha+'</div>'+
             '</div>'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+            '<button class="btn-cancelar contaduria-ingreso-btn" onclick="event.stopPropagation();openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
+            '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--icon" onclick="event.stopPropagation();eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -2493,17 +2510,17 @@ function processVencimientos(){
       }).join('');
       list.innerHTML=
         '<div class="contaduria-info-section">'+
-          '<div class="contaduria-info-title">Ingresos</div>'+
+          '<div class="contaduria-info-title contaduria-info-title--income">Ingresos</div>'+
           '<button class="btn-cancelar" style="padding:8px 10px;margin:6px 0 10px;width:auto" onclick="vaciarIngresosContaduria()">Vaciar registro</button>'+
           (ingresoCards||'<div style="opacity:.65;font-size:.72rem">Sin ingresos registrados.</div>')+
         '</div>'+
         '<div class="contaduria-info-section" style="margin-top:16px">'+
-          '<div class="contaduria-info-title">Sueldos</div>'+
+          '<div class="contaduria-info-title contaduria-info-title--expense">Sueldos</div>'+
           '<button class="btn-cancelar" style="padding:8px 10px;margin:6px 0 10px;width:auto" onclick="vaciarEgresosContaduria()">Vaciar registro</button>'+
           (sueldosCards||'<div style="opacity:.65;font-size:.72rem">Sin sueldos registrados.</div>')+
         '</div>'+
         '<div class="contaduria-info-section" style="margin-top:16px">'+
-          '<div class="contaduria-info-title">Gastos sueltos</div>'+
+          '<div class="contaduria-info-title contaduria-info-title--expense">Gastos sueltos</div>'+
           (gastosCards||'<div style="opacity:.65;font-size:.72rem">Sin gastos sueltos registrados.</div>')+
         '</div>';
     }
@@ -2551,14 +2568,22 @@ function processVencimientos(){
       const metodo=getContaduriaMetodoLabel(meta.metodo || item?.persona || item?.categoria);
       const isSuelta=isSueltaNivel(nivel);
       const detailLabel=isContaduriaBirthdayNivel(nivel)?'Tipo':'Plan';
-      const planLine=(!isSuelta && plan)?`<div style="font-size:.7rem;opacity:.8">${detailLabel}: ${plan}</div>`:'';
+      const planLine=(!isSuelta && plan)?`<div class="contaduria-detail-chip"><span>${detailLabel}</span><strong>${plan}</strong></div>`:'';
       const bodyHtml=
         `<div class="modal-form-shell contaduria-detail-modal">
-          <div style="font-weight:800;font-size:.95rem;margin-bottom:8px">${nombre}</div>
-          <div style="font-size:.7rem;opacity:.8">Clase: ${nivel||'Sin clase'}</div>
+          <div class="contaduria-detail-name">${nombre}</div>
+          <div class="contaduria-detail-chip"><span>Clase</span><strong>${nivel||'Sin clase'}</strong></div>
           ${planLine}
-          <div style="font-size:.9rem;opacity:.9">Fecha: ${fecha}</div>
-          <div style="font-size:.9rem;opacity:.9">Metodo: ${metodo}</div>
+          <div class="contaduria-detail-grid">
+            <div class="contaduria-detail-item">
+              <span>Fecha</span>
+              <strong>${fecha}</strong>
+            </div>
+            <div class="contaduria-detail-item">
+              <span>Metodo</span>
+              <strong>${metodo}</strong>
+            </div>
+          </div>
         </div>`;
       openModal('Detalle de ingreso', bodyHtml);
     }
@@ -2747,16 +2772,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

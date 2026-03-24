@@ -2050,11 +2050,70 @@ body.modal-open{
 
 .contaduria-detail-modal{
   padding: 18px 20px;
+  display: grid;
+  gap: 10px;
   font-size: .85rem;
   line-height: 1.45;
+  color: #241d17 !important;
 }
 .contaduria-detail-modal .detail-line{
   font-size: .8rem;
+}
+.contaduria-detail-name{
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #000 !important;
+  letter-spacing: -.01em;
+}
+.contaduria-detail-chip{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(202,187,170,.98), rgba(184,168,149,.98));
+  border: 1px solid rgba(96,74,53,.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,245,232,.18),
+    0 10px 20px rgba(83,62,44,.08);
+  color: #241d17 !important;
+}
+.contaduria-detail-chip span,
+.contaduria-detail-item span{
+  font-size: .66rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #000 !important;
+  font-weight: 800;
+}
+.contaduria-detail-chip strong,
+.contaduria-detail-item strong{
+  color: #000 !important;
+  font-size: .92rem;
+  font-weight: 900;
+}
+.contaduria-detail-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.contaduria-detail-item{
+  padding: 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(202,187,170,.98), rgba(184,168,149,.98));
+  border: 1px solid rgba(96,74,53,.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,245,232,.18),
+    0 10px 20px rgba(83,62,44,.08);
+  display: grid;
+  gap: 6px;
+  color: #241d17 !important;
+}
+@media (max-width: 560px){
+  .contaduria-detail-grid{
+    grid-template-columns: 1fr;
+  }
 }
 /* Contaduria month navigation */
 .conta-month-nav{
@@ -2123,4 +2182,727 @@ body.modal-open{
   background:rgba(12,12,12,.85);
   border:1px solid rgb(55,70,80);
   box-shadow:0 10px 22px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.7);
+}
+
+/* Access-forward light minimal refresh */
+#login-section,
+#agenda-publica-section,
+#app-content,
+#modulo-contaduria{
+  --access-bg: #c8bfb4;
+  --access-bg-soft: #d3c8bc;
+  --access-surface: rgba(202,190,176,.9);
+  --access-surface-strong: #c9bdaf;
+  --access-border: rgba(79,64,50,.22);
+  --access-border-strong: rgba(79,64,50,.34);
+  --access-ink: #2f2822;
+  --access-muted: #5f544a;
+  --access-accent: #a88260;
+  --access-accent-deep: #7f6148;
+  --access-shadow: 0 18px 40px rgba(71,55,42,.12);
+  --access-panel-top: #cfc4b7;
+  --access-panel-bottom: #c0b3a5;
+  --access-card-top: #ccc0b1;
+  --access-card-bottom: #bbad9d;
+  --access-field: #c6baab;
+  --access-field-top: #cdbfaf;
+  --access-field-bottom: #bcaf9f;
+  --access-soft-block: #c5b8a9;
+  --access-nav: rgba(193,181,167,.94);
+  color: var(--access-ink) !important;
+  font-family: 'Manrope', sans-serif;
+}
+
+#login-section,
+#agenda-publica-section{
+  background:
+    radial-gradient(800px 420px at 12% 10%, rgba(214,204,193,.42), transparent 60%),
+    radial-gradient(720px 420px at 88% 16%, rgba(171,155,139,.28), transparent 62%),
+    linear-gradient(180deg, #c7beb3 0%, #b8ac9e 100%) !important;
+}
+
+#app-content,
+#modulo-contaduria{
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 520px at 0% 0%, rgba(213,203,192,.42), transparent 58%),
+    radial-gradient(760px 480px at 100% 0%, rgba(169,153,137,.28), transparent 62%),
+    linear-gradient(180deg, #c4b9ad 0%, #b3a698 100%) !important;
+}
+
+#login-section .branding-container,
+#agenda-publica-section .branding-container,
+#app-content .branding-container,
+#modulo-contaduria .branding-container{
+  position: relative;
+  z-index: 1;
+}
+
+#login-section .logo-pulse-circle,
+#agenda-publica-section .logo-pulse-circle,
+#app-content .logo-pulse-circle,
+#modulo-contaduria .logo-pulse-circle{
+  background: linear-gradient(180deg, #d7cbbd, #bfb1a2) !important;
+  border: 1px solid rgba(146,104,71,.16) !important;
+  box-shadow: 0 16px 34px rgba(80,62,47,.13) !important;
+}
+
+#login-section .brand-text,
+#agenda-publica-section .brand-text,
+#app-content .brand-text,
+#modulo-contaduria .brand-text{
+  color: var(--access-ink) !important;
+  letter-spacing: 5px !important;
+}
+
+#login-section > div:last-child,
+#agenda-publica-section > div:first-child{
+  position: relative;
+  width: min(92vw, 620px) !important;
+  padding: 28px 24px 24px;
+  border-radius: 32px;
+  background: linear-gradient(180deg, var(--access-panel-top), var(--access-panel-bottom)) !important;
+  border: 1px solid var(--access-border);
+  box-shadow: var(--access-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+#login-section > div:last-child::before,
+#agenda-publica-section > div:first-child::before{
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(123,101,80,.15);
+  border-radius: 24px;
+  pointer-events: none;
+}
+
+#login-section > div:last-child{
+  max-width: 430px !important;
+}
+
+#agenda-publica-section > div:first-child{
+  max-width: 640px !important;
+}
+
+#agenda-publica-section .public-form-shell{
+  position: relative;
+  z-index: 1;
+  padding-top: 6px;
+}
+
+#login-section input,
+#agenda-publica-section input,
+#agenda-publica-section textarea,
+#app-content input,
+#app-content select,
+#app-content textarea,
+#modulo-contaduria input,
+#modulo-contaduria select,
+#modulo-contaduria textarea,
+#app-modal-root input,
+#app-modal-root select,
+#app-modal-root textarea,
+#app-content .search-input{
+  background: linear-gradient(180deg, var(--access-field-top), var(--access-field-bottom)) !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+#login-section input::placeholder,
+#agenda-publica-section input::placeholder,
+#agenda-publica-section textarea::placeholder,
+#app-content input::placeholder,
+#app-content textarea::placeholder,
+#modulo-contaduria input::placeholder,
+#modulo-contaduria textarea::placeholder,
+#app-content .search-input::placeholder{
+  color: rgba(122,109,97,.74) !important;
+}
+
+#login-section label,
+#agenda-publica-section label,
+#app-content label,
+#modulo-contaduria label,
+#app-modal-root label{
+  color: var(--access-muted) !important;
+}
+
+#login-section .btn-principal,
+#agenda-publica-section .btn-principal,
+#app-content .btn-principal,
+#modulo-contaduria .btn-principal,
+#app-modal-root .btn-principal{
+  background: linear-gradient(135deg, #a88464, #8f6d52) !important;
+  color: #fffaf5 !important;
+  border: 0 !important;
+  box-shadow: 0 16px 30px rgba(101,74,53,.22);
+}
+
+#login-section .btn-principal::after,
+#agenda-publica-section .btn-principal::after,
+#app-content .btn-principal::after,
+#modulo-contaduria .btn-principal::after,
+#app-modal-root .btn-principal::after{
+  display: none !important;
+}
+
+#app-content .btn-second,
+#modulo-contaduria .btn-second,
+#app-modal-root .btn-second{
+  background: linear-gradient(180deg, #cdc0b1, #bcaf9f) !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: none !important;
+}
+
+#login-section .btn-cancelar,
+#login-section .back-btn,
+#agenda-publica-section .btn-cancelar,
+#agenda-publica-section .back-btn,
+#app-content .btn-cancelar,
+#app-content .back-btn,
+#app-content .btn-logout,
+#modulo-contaduria .btn-cancelar,
+#modulo-contaduria .back-btn,
+#app-modal-root .btn-cancelar{
+  background: var(--access-surface) !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: none !important;
+}
+
+#app-modal-root .modal-form-shell,
+#app-modal-root .modal-form-shell div,
+#app-modal-root .modal-form-shell span,
+#app-modal-root .modal-form-shell b,
+#app-modal-root .modal-form-shell strong,
+#app-content .clase-box,
+#app-content .clase-box div,
+#app-content .clase-box span,
+#app-content .clase-box b,
+#app-content .clase-box strong,
+#app-content .crono-task,
+#app-content .crono-task-main,
+#app-content .crono-dia-label,
+#app-content .ficha-detalles,
+#modulo-contaduria .contaduria-shell,
+#modulo-contaduria .contaduria-shell div,
+#modulo-contaduria .contaduria-shell span,
+#modulo-contaduria .contaduria-shell b,
+#modulo-contaduria .contaduria-shell strong{
+  color: var(--access-ink) !important;
+}
+
+#app-modal-root .modal-form-shell label,
+#app-content .clase-box label,
+#modulo-contaduria .contaduria-shell label{
+  color: var(--access-muted) !important;
+}
+
+#app-modal-root .modal-form-shell label{
+  color: #5a4c3f !important;
+}
+
+#app-modal-root .modal-form-shell input,
+#app-modal-root .modal-form-shell select,
+#app-modal-root .modal-form-shell textarea{
+  min-height: 56px;
+  border-radius: 22px !important;
+  border: 1.5px solid rgba(112,90,69,.3) !important;
+  background: linear-gradient(180deg, #d2c5b6, #c0b2a2) !important;
+  color: #241d17 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 0 0 1px rgba(255,244,229,.08) !important;
+}
+
+#app-modal-root .modal-form-shell textarea{
+  min-height: 110px;
+  resize: vertical;
+}
+
+#app-modal-root .modal-form-shell input:hover,
+#app-modal-root .modal-form-shell select:hover,
+#app-modal-root .modal-form-shell textarea:hover{
+  border-color: rgba(112,90,69,.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 0 0 1px rgba(255,244,229,.12),
+    0 10px 24px rgba(88,67,49,.08) !important;
+}
+
+#app-modal-root .modal-form-shell input:focus,
+#app-modal-root .modal-form-shell select:focus,
+#app-modal-root .modal-form-shell textarea:focus{
+  border-color: rgba(147,111,78,.62) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 0 0 1px rgba(172,133,95,.18),
+    0 14px 28px rgba(95,73,54,.12) !important;
+}
+
+#app-content select,
+#modulo-contaduria select,
+#app-modal-root select{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 46px !important;
+  background-image:
+    linear-gradient(180deg, var(--access-field-top), var(--access-field-bottom)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3 5.25L7 9.25L11 5.25' stroke='%23584b40' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-position: 0 0, calc(100% - 16px) 50% !important;
+  background-size: 100% 100%, 14px 14px !important;
+  -webkit-text-fill-color: #241d17 !important;
+}
+
+#app-content select option,
+#modulo-contaduria select option,
+#app-modal-root select option{
+  background: #c4b6a5 !important;
+  color: #241d17 !important;
+}
+
+#app-content textarea,
+#app-modal-root textarea,
+#modulo-contaduria textarea,
+#app-content input,
+#app-modal-root input,
+#modulo-contaduria input{
+  -webkit-text-fill-color: #241d17 !important;
+  caret-color: var(--access-accent-deep) !important;
+}
+
+#app-modal-root .modal-form-shell input::placeholder,
+#app-modal-root .modal-form-shell textarea::placeholder{
+  color: rgba(36,29,23,.58) !important;
+}
+
+#app-modal-root .app-modal-title{
+  color: #43382e !important;
+}
+
+#app-modal-root .app-modal-close{
+  color: #5f544a !important;
+}
+
+#app-modal-root .btn-cancelar,
+#app-content .btn-cancelar,
+#modulo-contaduria .btn-cancelar,
+#app-content .back-btn,
+#modulo-contaduria .back-btn{
+  color: #43382e !important;
+}
+
+#app-content .btn-logout,
+#app-content .btn-refresh{
+  min-height: 44px;
+  background: var(--access-surface) !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: 0 10px 24px rgba(71,55,42,.11) !important;
+}
+
+#app-content .logout-container{
+  top: 22px;
+  right: 22px;
+  display: flex;
+  gap: 10px;
+}
+
+#app-content .btn-refresh{
+  top: 22px;
+  left: 22px;
+}
+
+#app-content .main-container{
+  max-width: 640px !important;
+  padding-top: 8px;
+}
+
+#app-content .agenda-day-hero,
+#app-content .crono-header-text,
+#modulo-contaduria #contaduria-month-title{
+  font-family: 'Bodoni Moda', serif;
+  color: var(--access-ink) !important;
+  letter-spacing: .4px !important;
+}
+
+#app-content .agenda-time-hero,
+#app-content .date-main,
+#app-content .date-week,
+#modulo-cronograma .date-week,
+#app-content .mini-cal-head,
+#app-content .mini-cal-summary,
+#app-content .mini-cal-topline,
+#app-content .mini-cal-daynote,
+#app-content .ws-number{
+  color: inherit;
+}
+
+#app-content .agenda-time-hero,
+#app-content .date-main,
+#app-content .mini-cal-topline,
+#app-content .mini-cal-week span,
+#app-content .mini-cal-daynote,
+#app-content .search-icon,
+#modulo-contaduria .contaduria-info-title,
+#modulo-contaduria .conta-rate-label,
+#modulo-contaduria .conta-rate-sub{
+  color: var(--access-muted) !important;
+}
+
+#modulo-contaduria .contaduria-info-title--income{
+  color: #2f8a57 !important;
+}
+
+#modulo-contaduria .contaduria-info-title--expense{
+  color: #b14848 !important;
+}
+
+#app-content .date-week,
+#modulo-cronograma .date-week,
+#app-content .mini-cal-head,
+#app-content .mini-cal-summary,
+#app-content .mini-cal-summary b,
+#modulo-contaduria .conta-rate-value,
+#modulo-contaduria #contaduria-info-total,
+#modulo-contaduria #contaduria-info-total .conta-total-activo{
+  color: var(--access-ink) !important;
+}
+
+#app-content .dia-item,
+#app-content .clase-box,
+#app-content .ficha-detalles,
+#app-content .crono-detail-box,
+#modulo-contaduria .clase-box,
+#modulo-contaduria .contaduria-shell,
+#app-modal-root .app-modal-panel,
+#app-modal-root .modal-form-shell{
+  background: linear-gradient(180deg, var(--access-card-top), var(--access-card-bottom)) !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: var(--access-shadow) !important;
+}
+
+#modulo-contaduria .contaduria-shell{
+  border-radius: 28px;
+  padding: 18px;
+}
+
+#app-content .dia-header{
+  background: linear-gradient(180deg, #cbbfaf, #bcae9e);
+}
+
+#app-content .week-card,
+#app-content .mini-calendar,
+#modulo-cronograma .week-card{
+  background: linear-gradient(180deg, #cbbfaf, #bcaf9f) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: none !important;
+}
+
+#app-content .mini-calendar:hover,
+#app-content .mini-calendar.expanded{
+  border-color: var(--access-border-strong) !important;
+  background: linear-gradient(180deg, #d2c5b6, #c0b2a3) !important;
+  box-shadow: 0 20px 36px rgba(71,55,42,.12) !important;
+}
+
+#app-content .mini-cal-cell{
+  color: var(--access-muted) !important;
+}
+
+#app-content .mini-cal-cell.active{
+  background: linear-gradient(135deg, #a78667, #8b6a51) !important;
+  color: #fffdf9 !important;
+}
+
+#app-content .ficha-detalles,
+#app-content .crono-detail-box{
+  background: var(--access-soft-block) !important;
+}
+
+#app-content .footer-nav{
+  padding: 10px !important;
+  border-radius: 28px !important;
+  background: var(--access-nav) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: 0 20px 36px rgba(71,55,42,.12) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+#app-content .nav-btn{
+  min-height: 54px;
+  background: transparent !important;
+  color: var(--access-muted) !important;
+  border: 1px solid transparent !important;
+}
+
+#app-content .nav-btn.active-btn{
+  background: var(--access-surface-strong) !important;
+  color: var(--access-ink) !important;
+  border-color: var(--access-border) !important;
+  box-shadow: 0 10px 22px rgba(71,55,42,.1) !important;
+}
+
+#app-content .dot-notif{
+  background: #d69462 !important;
+}
+
+#app-content .birthday-inline{
+  border-left-color: #d7a264 !important;
+}
+
+#app-modal-root .app-modal-backdrop{
+  background: rgba(85,72,60,.22) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#app-modal-root .app-modal-panel{
+  background: linear-gradient(180deg, #cec2b3, #bbad9d) !important;
+}
+
+#app-modal-root .app-modal-close{
+  background: #c6b9aa !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+}
+
+#app-modal-root .app-modal-title{
+  color: var(--access-muted) !important;
+}
+
+#app-modal-root .app-modal-title,
+#app-modal-root .contaduria-detail-modal,
+#app-modal-root .contaduria-detail-modal .contaduria-detail-name,
+#app-modal-root .contaduria-detail-modal .contaduria-detail-chip span,
+#app-modal-root .contaduria-detail-modal .contaduria-detail-chip strong,
+#app-modal-root .contaduria-detail-modal .contaduria-detail-item span,
+#app-modal-root .contaduria-detail-modal .contaduria-detail-item strong{
+  color: #2c2219 !important;
+}
+
+#modulo-contaduria{
+  color: var(--access-ink) !important;
+}
+
+#modulo-contaduria .contaduria-tabs{
+  gap: 12px;
+}
+
+#modulo-contaduria .contaduria-tab{
+  background: #c8bcad !important;
+  color: var(--access-muted) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: none !important;
+}
+
+#modulo-contaduria .contaduria-tab.active{
+  background: linear-gradient(135deg, #a88464, #8f6d52) !important;
+  color: #fffaf5 !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 28px rgba(101,74,53,.2) !important;
+}
+
+#modulo-contaduria .conta-month-nav,
+#modulo-contaduria .contaduria-rate-box,
+#modulo-contaduria .conta-month-income-box{
+  background: linear-gradient(180deg, #cdc1b2, #bbad9d) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: var(--access-shadow) !important;
+}
+
+#modulo-contaduria .conta-month-btn,
+#modulo-contaduria .conta-month-print{
+  background: #c8bcad !important;
+  color: var(--access-ink) !important;
+  border: 1px solid var(--access-border) !important;
+  box-shadow: none !important;
+}
+
+#modulo-contaduria .conta-month-btn:hover,
+#modulo-contaduria .conta-month-print:hover{
+  border-color: var(--access-border-strong) !important;
+  box-shadow: 0 12px 24px rgba(130,104,79,.12) !important;
+}
+
+#modulo-contaduria .contaduria-ingreso-card{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+#modulo-contaduria .contaduria-ingreso-main{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#modulo-contaduria .contaduria-ingreso-actions{
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+#modulo-contaduria .contaduria-ingreso-meta{
+  min-width: 118px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+#modulo-contaduria .contaduria-ingreso-btn{
+  width: auto;
+  min-width: 74px;
+  margin-top: 0 !important;
+  padding: 7px 12px !important;
+  line-height: 1.05;
+}
+
+#modulo-contaduria .contaduria-ingreso-btn--icon{
+  min-width: 40px;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+@media (max-width: 640px){
+  #modulo-contaduria .contaduria-ingreso-card{
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  #modulo-contaduria .contaduria-ingreso-actions{
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+#modulo-contaduria #contaduria-info-total .conta-total-breakdown{
+  color: var(--access-muted) !important;
+}
+
+#modulo-contaduria #contaduria-info-total .conta-total-ingresos{
+  background: linear-gradient(90deg, #b6855f, #7f6958) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+#app-content .week-card,
+#modulo-cronograma .week-card{
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+}
+
+#app-content .week-card::before,
+#app-content .week-card::after,
+#modulo-cronograma .week-card::before,
+#modulo-cronograma .week-card::after{
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s ease, transform .45s ease, box-shadow .45s ease, border-color .45s ease;
+}
+
+#app-content .week-card::before,
+#modulo-cronograma .week-card::before{
+  inset: -4px;
+  border-radius: calc(26px + 4px);
+  background: radial-gradient(circle, rgba(214,74,74,.22) 0%, rgba(214,74,74,0) 72%);
+  filter: blur(12px);
+  transform: scale(.985);
+  z-index: -1;
+}
+
+#app-content .week-card::after,
+#modulo-cronograma .week-card::after{
+  border: 1.5px solid rgba(214,74,74,.18);
+  box-shadow:
+    0 0 0 1px rgba(214,74,74,.08),
+    0 0 0 0 rgba(214,74,74,0);
+}
+
+#app-content .week-card.week-card-outdated::before,
+#app-content .week-card.week-card-outdated::after,
+#modulo-cronograma .week-card.week-card-outdated::before,
+#modulo-cronograma .week-card.week-card-outdated::after{
+  opacity: 1;
+}
+
+#app-content .week-card.week-card-outdated::before,
+#modulo-cronograma .week-card.week-card-outdated::before{
+  animation: weekCardRedAura 3.2s cubic-bezier(.22,.84,.28,1) infinite;
+}
+
+#app-content .week-card.week-card-outdated::after,
+#modulo-cronograma .week-card.week-card-outdated::after{
+  animation: weekCardRedBorder 3.2s cubic-bezier(.22,.84,.28,1) infinite;
+}
+
+@keyframes weekCardRedBorder{
+  0%, 100%{
+    border-color: rgba(214,74,74,.18);
+    box-shadow:
+      0 0 0 1px rgba(214,74,74,.06),
+      0 0 0 0 rgba(214,74,74,0);
+  }
+  45%{
+    border-color: rgba(214,74,74,.42);
+    box-shadow:
+      0 0 0 1px rgba(214,74,74,.12),
+      0 0 18px 2px rgba(214,74,74,.12);
+  }
+  70%{
+    border-color: rgba(214,74,74,.3);
+    box-shadow:
+      0 0 0 1px rgba(214,74,74,.1),
+      0 0 10px 1px rgba(214,74,74,.08);
+  }
+}
+
+@keyframes weekCardRedAura{
+  0%, 100%{
+    opacity: .28;
+    transform: scale(.985);
+  }
+  45%{
+    opacity: .56;
+    transform: scale(1.008);
+  }
+  70%{
+    opacity: .4;
+    transform: scale(.996);
+  }
+}
+
+@media (max-width: 640px){
+  #login-section > div:last-child,
+  #agenda-publica-section > div:first-child{
+    padding: 24px 18px 20px;
+    border-radius: 28px;
+  }
+
+  #app-content .main-container{
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
