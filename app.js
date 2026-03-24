@@ -2259,11 +2259,15 @@ function processVencimientos(){
         const montoVes=formatVes(meta.montoVes||0);
         const montoEur=(meta.montoEur||0).toFixed(2);
         const montoLabel=isVes? (montoVes+' Bs.') : ('$'+montoUsd);
+        const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         const eurLine=isVes? '<div style="opacity:.7;font-size:.62rem;margin-top:4px">EUR: '+montoEur+'</div>' : '';
         return '<div class="clase-box contaduria-ingreso-card" onclick="openIngresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+nombre+'</div>'+
-            '<div style="margin-top:6px;font-weight:800">'+montoLabel+'</div>'+
+            '<div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">'+
+              '<div style="font-weight:800">'+montoLabel+'</div>'+
+              '<div style="font-size:.8rem;opacity:.78">'+fecha+'</div>'+
+            '</div>'+
             eurLine+
           '</div>'+
           '<div style="display:flex;gap:8px;align-items:center">'+
@@ -2285,9 +2289,12 @@ function processVencimientos(){
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+quien+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Sueldo &bull; '+fecha+'</div>'+
+            '<div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">'+
+              '<div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div>'+
+              '<div style="font-size:.8rem;opacity:.78">'+fecha+'</div>'+
+            '</div>'+
           '</div>'+
-          '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
+          '<div style="display:flex;gap:8px;align-items:center"><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
       }).join('');
       const gastosCards=gastosSueltos.map(item=>{
@@ -2301,9 +2308,12 @@ function processVencimientos(){
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
           '<div>'+
             '<div style="font-size:.75rem;font-weight:700">'+razon+'</div>'+
-            '<div style="opacity:.75;font-size:.7rem">Gasto suelto &bull; '+fecha+'</div>'+
+            '<div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">'+
+              '<div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div>'+
+              '<div style="font-size:.8rem;opacity:.78">'+fecha+'</div>'+
+            '</div>'+
           '</div>'+
-          '<div style="display:flex;gap:8px;align-items:center"><div style="font-weight:800;color:#ffb3b3">'+montoLabel+'</div><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
+          '<div style="display:flex;gap:8px;align-items:center"><button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button></div>'+
         '</div>';
       }).join('');
       list.innerHTML=
@@ -2544,7 +2554,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
 
 
 
