@@ -87,7 +87,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let LAST_SEEN_NOTIF_SIGNATURE='';
     let WEEK_TRASH_CACHE={};
 
-    function classColor(){return 'var(--celeste)';}
+    function classColor(){return 'var(--access-accent-deep, #7f6148)';}
     function sanitizeTel(t){
       if(!t)return '';
       let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');
@@ -834,7 +834,7 @@ function renderCronograma(){
               const p=c.contenido.split('|').map(normalizeText);
               const contenidoSeguro=(c.contenido||'').replace(/'/g,'&#39;');
               const alumnos=(p[3]||'').split(',').map((n,i)=>`${i+1}- ${n.trim()}`).filter(Boolean).join('<br>')||'Sin alumnos';
-              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;&bull;&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--celeste)">ALUMNOS:</b><br><div style="margin-top:5px;color:#fff">${alumnos}</div><div style="margin-top:10px;color:#8d5b34;font-weight:800;"><b style="color:#8d5b34">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
+              return `<div class="crono-task"><div class="crono-task-main"><div style="display:flex;align-items:center;cursor:pointer" onclick="toggleCronoDetail('${c.id}')"><div class="crono-bullet"></div><b>${p[0]||''}</b>&nbsp;&bull;&nbsp;<span style="color:${classColor(p[1])};font-weight:800">${p[1]||''}</span></div><span style="cursor:pointer;font-size:1rem;padding:5px;opacity:.78" onclick="addClasePopup('${dia}','${c.id}','${contenidoSeguro}')">&#9998;</span></div><div id="crono-detail-${c.id}" class="crono-detail-box"><b style="color:var(--access-accent-deep, #7f6148)">ALUMNOS:</b><br><div style="margin-top:5px;color:var(--access-ink, #2f2822)">${alumnos}</div><div style="margin-top:10px;color:#8d5b34;font-weight:800;"><b style="color:#8d5b34">MODALIDAD:</b> ${p[2]||''}</div></div></div>`;
             }).join('')
           : '<div style="opacity:.2;font-size:.7rem;margin-left:18px;font-style:italic">Sin clases</div>';
         return `<div class="crono-row"><div class="crono-dia-label">${dia}</div><div class="crono-list">${htmlClases}</div></div>`;
@@ -2797,8 +2797,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
-
 
 
 
