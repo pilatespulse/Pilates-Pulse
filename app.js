@@ -383,7 +383,7 @@ function buildAlumnoIndex(){
         const modalidad=p[2]||'';
         const alumnos=formatAlumnosAgenda(p[3]||'',hora,tipo);
         const contenidoSeguro=(i.contenido||'').replace(/'/g,'&#39;');
-        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;&bull;&nbsp; <span style="color:#2f8a57;font-weight:800">${tipo}</span><br><small style="color:#2f8a57;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
+        return `<div class="clase-box" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><span style="font-size:.75rem;line-height:1.4;flex:1"><b>${hora}</b> &nbsp;&bull;&nbsp; <span style="color:#417076;font-weight:800">${tipo}</span><br><small style="color:#417076;font-weight:800;letter-spacing:.3px;">${modalidad}</small><div style="margin-top:8px">${alumnos}</div></span><div style="display:flex;gap:10px;align-items:center"><span onclick="addClasePopup('${dia}','${i.id}','${contenidoSeguro}')" style="cursor:pointer;font-size:.9rem;opacity:.72">&#9998;</span><span onclick="borrar('${i.id}')" style="opacity:.35;cursor:pointer;font-weight:900">&#10060;</span></div></div>`;
       }).join('');
       box.dataset.ver=ver;
       normalizeDomText(box);
@@ -2797,7 +2797,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
 
 
 
