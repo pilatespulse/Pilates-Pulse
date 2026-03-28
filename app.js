@@ -1,6 +1,6 @@
 const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
-    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align"];
+    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align","Reiki","Masaje","Rebozo"];
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const CONTADURIA_PLANES={
@@ -2797,7 +2797,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
 
 
 
