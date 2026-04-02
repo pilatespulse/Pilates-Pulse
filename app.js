@@ -1,6 +1,7 @@
 const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_publishable_uOUPFEp0T_uX85fjqi9xog_6WUS6dKg");
     const DIAS=["Lunes","Martes","Mi\u00E9rcoles","Jueves","Viernes","S\u00E1bado"];
-    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align","Reiki","Masaje","Rebozo"];
+    const CLASES=["Align Flow","Power Flow","Stretch&Release","Aerial Balance","Mega Core","Full Body","Life Align","Reiki","Masaje","Rebozo","Corredores","Padelistas","Reunión Interna"];
+    const AGENDA_INTERNAL_MEETING_TYPE='Reunión Interna';
     const MODALIDADES=["Grupales","Privadas","Masajes","Cumplea\u00F1os"];
     const FRECUENCIAS=["1/semana","2/semana","3/semana"];
     const CONTADURIA_PLANES={
@@ -26,7 +27,9 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       'semiprivada suelta':20,
       'terapia':40,
       'masaje':40,
-      'reiki':40
+      'reiki':40,
+      'corredores':12,
+      'padelistas':12
     };
     const CONTADURIA_BIRTHDAY_TYPES=[
       {name:'Birthday Fit', price:19},
@@ -43,6 +46,8 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       'Terapia',
       'Masaje',
       'Reiki',
+      'Corredores',
+      'Padelistas',
       'Cumpleaños'
     ];
     const CONTADURIA_PAYMENT_METHODS=['pago_movil','zelle','paypal','efectivo','binance','usdt'];
@@ -88,6 +93,18 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     let WEEK_TRASH_CACHE={};
 
     function classColor(){return 'var(--access-accent-deep, #7f6148)';}
+    function isAgendaInternalMeetingType(value){
+      return normalizeText(value).toLowerCase()===normalizeText(AGENDA_INTERNAL_MEETING_TYPE).toLowerCase();
+    }
+    function updateAgendaAlumnoField(dia){
+      const typeSelect=document.getElementById(`t-${dia}`);
+      const alumnosLabel=document.getElementById(`agenda-n-label-${dia}`);
+      const alumnosInput=document.getElementById(`n-${dia}`);
+      if(!typeSelect||!alumnosLabel||!alumnosInput) return;
+      const isInternal=isAgendaInternalMeetingType(typeSelect.value);
+      alumnosLabel.textContent=isInternal?'INVITADO(S) - (Separar por coma)':'ALUMNO(S) - (Separar por coma)';
+      alumnosInput.placeholder=isInternal?'Escribe invitado(s)':'Escribe alumno(s)';
+    }
     function sanitizeTel(t){
       if(!t)return '';
       let s=(''+t).replace(/\D/g,'').replace(/^00+/,'').replace(/^0+/,'');
@@ -313,13 +330,14 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       <div class="modal-form-shell">
         ${editId?`<button class="btn-cancelar" style="margin:0 0 12px 0;background:#b3261e;color:#fff;padding:12px;font-size:.56rem;border:none;font-weight:900;letter-spacing:1px" onclick="borrar('${editId}')">ELIMINAR CLASE</button>`:''}
         <label>HORA</label><select id="h-${dia}">${generarHoras(p[0])}</select>
-        <label>TIPO DE CLASE</label><select id="t-${dia}">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
+        <label>TIPO DE CLASE</label><select id="t-${dia}" onchange="updateAgendaAlumnoField('${dia}')">${CLASES.map(c=>`<option ${p[1]==c?'selected':''}>${c}</option>`).join('')}</select>
         <label>MODALIDAD</label><select id="m-${dia}">${MODALIDADES.map(m=>`<option ${p[2]==m?'selected':''}>${m}</option>`).join('')}</select>
-        <label>ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
+        <label id="agenda-n-label-${dia}">ALUMNO(S) - (Separar por coma)</label><input type="text" id="n-${dia}" value="${p[3]}">
         <button class="btn-principal" style="padding:12px;font-size:.6rem;letter-spacing:1px" onclick="pushClase('${dia}','${editId}')">GUARDAR</button>
         <button class="btn-cancelar" style="padding:10px;font-size:.5rem" onclick="closeModal()">CANCELAR</button>
       </div>`;
       openModal(editId?'Editar clase':'Nueva clase',formHtml);
+      updateAgendaAlumnoField(dia);
     }
 
     async function borrar(id){
@@ -2654,8 +2672,10 @@ function processVencimientos(){
         '<div class="modal-form-shell contaduria-edit-modal">'+
           '<label>Clase</label>'+
           '<select id="edit-ingreso-nivel" onchange="updateIngresoEditorPlan()">'+buildContaduriaNivelOptions(nivel)+'</select>'+
-          '<label>Plan</label>'+
-          '<select id="edit-ingreso-plan">'+buildContaduriaPlanOptions(nivel,plan)+'</select>'+
+          '<div id="edit-ingreso-plan-wrap">'+
+            '<label id="edit-ingreso-plan-label">Plan</label>'+
+            '<select id="edit-ingreso-plan">'+buildContaduriaPlanOptions(nivel,plan)+'</select>'+
+          '</div>'+
           '<label>Total</label>'+
           '<input id="edit-ingreso-total" type="number" min="0" step="0.01" value="'+monto+'">'+
           '<div style="display:flex;gap:10px;margin-top:14px">'+
@@ -2664,12 +2684,17 @@ function processVencimientos(){
           '</div>'+
         '</div>';
       openModal('Editar ingreso', bodyHtml);
+      updateIngresoEditorPlan();
     }
 
     function updateIngresoEditorPlan(){
       const nivel=document.getElementById('edit-ingreso-nivel')?.value||'';
       const plan=document.getElementById('edit-ingreso-plan');
+      const planWrap=document.getElementById('edit-ingreso-plan-wrap');
+      const planLabel=document.getElementById('edit-ingreso-plan-label');
       if(!plan) return;
+      if(planWrap) planWrap.style.display=isSueltaNivel(nivel)?'none':'block';
+      if(planLabel) planLabel.textContent=isContaduriaBirthdayNivel(nivel)?'Tipo':'Plan';
       plan.innerHTML=buildContaduriaPlanOptions(nivel,'');
     }
 
@@ -2797,11 +2822,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
-
-
-
-
 
 
 
