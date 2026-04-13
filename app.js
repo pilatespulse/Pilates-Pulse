@@ -180,7 +180,13 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(themeMeta) themeMeta.setAttribute('content',theme.fill);
     }
 
-    window.onload=()=>{initBokeh();bindLandingScrollState();setAppChromeTheme(localStorage.getItem('studio_auth')?'app':'landing');localStorage.getItem('studio_auth')?startApp():openLanding();};
+    window.onload=async()=>{
+      initBokeh();
+      bindLandingScrollState();
+      const { data:{ session } } = await _sp.auth.getSession();
+      setAppChromeTheme(session?'app':'landing');
+      session ? startApp() : openLanding();
+    };
     function hidePublicScreens(){['landing-section','agenda-publica-section','login-section','app-content'].forEach(id=>document.getElementById(id).style.display='none');}
     function openLanding(){hidePublicScreens();setAppChromeTheme('landing');const landing=document.getElementById('landing-section');landing.style.display='flex';landing.classList.remove('about-open');landing.scrollTop=0;}
     function openLogin(){hidePublicScreens();setAppChromeTheme('public');document.getElementById('login-section').style.display='flex';}
@@ -269,11 +275,23 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
     }
 
     async function handleLogin(){
-      const u=document.getElementById('adminUser').value,p=document.getElementById('adminPass').value;
-      const {data}=await _sp.from('usuarios_admin').select('id').eq('usuario',u).eq('password',p).maybeSingle();
-      if(data){localStorage.setItem('studio_auth','true');startApp();} else alert("Acceso denegado");
+      const email=(document.getElementById('adminUser').value||'').trim();
+      const password=document.getElementById('adminPass').value||'';
+      if(!email||!password){
+        alert('Completa correo y password.');
+        return;
+      }
+      const { error } = await _sp.auth.signInWithPassword({ email, password });
+      if(error){
+        alert(error.message||'Acceso denegado');
+        return;
+      }
+      startApp();
     }
-    function handleLogout(){localStorage.removeItem('studio_auth');location.reload();}
+    async function handleLogout(){
+      await _sp.auth.signOut();
+      location.reload();
+    }
     async function startApp(){
       hidePublicScreens();
       setAppChromeTheme('app');
@@ -2822,7 +2840,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
 
 
 
