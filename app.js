@@ -2353,7 +2353,12 @@ function processVencimientos(){
     function moveContaduriaMonth(delta){
       const base=getContaduriaMonthCursor();
       CONTADURIA_MONTH_CURSOR=new Date(base.getFullYear(), base.getMonth()+delta, 1);
-      loadContaduriaInfo();
+      const saldo=document.getElementById('contaduria-saldo');
+      if(saldo && saldo.style.display!=='none'){
+        loadContaduriaSaldo();
+      }else{
+        loadContaduriaInfo();
+      }
     }
     async function printContaduriaMonth(){
       if(!CONTADURIA_INFO_CACHE.rowsMonth){
@@ -2601,8 +2606,12 @@ function processVencimientos(){
 
     function getContaduriaCurrency(meta, rawFallback){
       const metodo=normalizeMetodoValue((meta&&meta.metodo)?meta.metodo:extractMetodoFromRaw(rawFallback));
-      if(metodo==='pago_movil' || (meta&&meta.moneda==='VES') || ((meta&&meta.montoVes)||0)>0) return 'VES';
+      if(metodo==='pago_movil' || (meta&&meta.moneda==='VES')) return 'VES';
       if(metodo==='usdt' || (meta&&meta.moneda==='USDT')) return 'USDT';
+      if(meta&&meta.moneda==='EUR') return 'EUR';
+      // Compatibilidad con registros viejos sin metodo/moneda:
+      // solo asumimos BS si no hay pista de EUR/USDT.
+      if(!metodo && !(meta&&meta.moneda) && ((meta&&meta.montoVes)||0)>0 && !((meta&&meta.montoEur)||0)) return 'VES';
       return 'EUR';
     }
 
@@ -2680,7 +2689,10 @@ function processVencimientos(){
               '<div class="conta-saldo-item-concept">'+item.concept+'</div>'+
               '<div class="conta-saldo-item-date">'+item.dateLabel+'</div>'+
             '</div>'+
-            '<div class="'+amountClass+'">'+prefix+amountText+'</div>'+
+            '<div class="conta-saldo-item-actions">'+
+              '<div class="'+amountClass+'">'+prefix+amountText+'</div>'+
+              '<button type="button" class="btn-cancelar conta-saldo-item-btn" onclick="deleteContaduriaSaldoMovement('+item.id+',\''+item.type+'\')">Quitar</button>'+
+            '</div>'+
           '</div>';
         }).join('');
       };
@@ -2694,6 +2706,18 @@ function processVencimientos(){
           '<div class="conta-saldo-detail-sub">Gastos</div>'+
           block('Gastos', egresos, true)+
         '</div>';
+    }
+
+    async function deleteContaduriaSaldoMovement(id,type){
+      if(type==='ingreso'){
+        await eliminarIngresoContaduria(id);
+      }else{
+        await eliminarEgresoContaduria(id);
+      }
+      const saldo=document.getElementById('contaduria-saldo');
+      if(saldo && saldo.style.display!=='none'){
+        await loadContaduriaSaldo();
+      }
     }
 
     function openContaduriaSaldoCurrency(currency){
@@ -2713,7 +2737,13 @@ function processVencimientos(){
       if(!CONTADURIA_INFO_CACHE.rows){
         await loadContaduriaInfo();
       }
-      const rows=CONTADURIA_INFO_CACHE.rows||[];
+      const allRows=CONTADURIA_INFO_CACHE.rows||[];
+      const monthCursor=getContaduriaMonthCursor();
+      const monthKey=monthCursor.getFullYear()+'-'+String(monthCursor.getMonth()+1).padStart(2,'0');
+      const rows=allRows.filter(r=>{
+        const raw=String(r.fecha||'');
+        return raw.slice(0,7)===monthKey;
+      });
       const rate=CONTADURIA_LAST_RATE || await fetchEuroVesRate();
       CONTADURIA_LAST_RATE=rate;
       const movementsByCurrency=buildContaduriaSaldoMovements(rows, rate);
@@ -3008,9 +3038,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
-
-
 
 
 
