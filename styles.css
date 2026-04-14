@@ -2010,7 +2010,7 @@ body.modal-open{
   }
 }
 
-.contaduria-tabs{display:flex;gap:10px;margin-bottom:18px}
+.contaduria-tabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .contaduria-tab{transition:transform .2s ease,background .25s ease,color .25s ease,box-shadow .25s ease}
 .contaduria-tab:active{transform:scale(0.98)}
 .contaduria-tab.active{background:#fff!important;color:#000!important;border-color:#fff!important;box-shadow:0 8px 20px rgba(0,0,0,.25)}
@@ -2046,6 +2046,123 @@ body.modal-open{
 
 
 #contaduria-info-total .conta-total-ingresos{background:linear-gradient(90deg, rgb(205,182,120), rgb(196,200,206));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+
+.conta-saldo-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.conta-saldo-card{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.24);
+  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  border-radius:16px;
+  padding:12px 10px;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .15s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.conta-saldo-card:active{
+  transform:scale(.98);
+}
+.conta-saldo-card.active{
+  border-color:rgba(255,255,255,.55);
+  box-shadow:0 10px 20px rgba(0,0,0,.2);
+}
+.conta-saldo-card-label{
+  font-size:.62rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  opacity:.8;
+}
+.conta-saldo-card-amount{
+  margin-top:6px;
+  font-size:.95rem;
+  font-weight:800;
+}
+.conta-saldo-card-meta{
+  margin-top:4px;
+  font-size:.64rem;
+  opacity:.75;
+}
+.conta-saldo-detail-title{
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:8px;
+  opacity:.8;
+}
+.conta-saldo-detail-group{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  padding:10px;
+  background:rgba(0,0,0,.14);
+  margin-bottom:10px;
+}
+.conta-saldo-detail-sub{
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  opacity:.8;
+}
+.conta-saldo-item{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  padding:8px 0;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.conta-saldo-item:first-of-type{
+  border-top:none;
+}
+.conta-saldo-item-main{
+  flex:1 1 auto;
+  min-width:0;
+}
+.conta-saldo-item-concept{
+  font-size:.74rem;
+  font-weight:700;
+  line-height:1.25;
+  word-break:break-word;
+}
+.conta-saldo-item-date{
+  margin-top:2px;
+  font-size:.67rem;
+  opacity:.72;
+}
+.conta-saldo-item-amount{
+  font-size:.74rem;
+  font-weight:800;
+  color:rgba(143,222,172,.94);
+  white-space:nowrap;
+}
+.conta-saldo-item-amount--expense{
+  color:rgba(255,166,166,.95);
+}
+.conta-saldo-empty{
+  font-size:.7rem;
+  opacity:.7;
+  padding:4px 0 8px;
+}
+@media (max-width:640px){
+  .conta-saldo-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+  .conta-saldo-card{
+    padding:10px 8px;
+    border-radius:14px;
+  }
+  .conta-saldo-card-amount{
+    font-size:.82rem;
+  }
+  .conta-saldo-card-meta{
+    font-size:.6rem;
+  }
+}
 
 
 .contaduria-detail-modal{

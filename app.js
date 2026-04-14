@@ -1714,19 +1714,25 @@ function processVencimientos(){
       const egresos=document.getElementById('contaduria-egresos');
       const retiro=document.getElementById('contaduria-retiro');
       const info=document.getElementById('contaduria-info');
+      const saldo=document.getElementById('contaduria-saldo');
       setContaduriaTabActive(view);
       const showIngresos=view==='ingresos';
       const showEgresos=view==='egresos';
       const showInfo=view==='info';
+      const showSaldo=view==='saldo';
       animateContaduriaShell(ingresos, showIngresos);
       animateContaduriaShell(egresos, showEgresos);
       animateContaduriaShell(retiro, showEgresos);
       animateContaduriaShell(info, showInfo);
+      animateContaduriaShell(saldo, showSaldo);
       const infoTotal=document.getElementById('contaduria-info-total');
       if(infoTotal) infoTotal.style.display=showInfo?'block':'none';
       if(showInfo){
         loadContaduriaInfo();
         startContaduriaRateAutoRefresh();
+      }
+      if(showSaldo){
+        loadContaduriaSaldo();
       }
     }
 
@@ -1747,6 +1753,8 @@ function processVencimientos(){
     function refreshContaduriaInfoIfVisible(){
       const info=document.getElementById('contaduria-info');
       if(info && info.style.display!=='none') loadContaduriaInfo();
+      const saldo=document.getElementById('contaduria-saldo');
+      if(saldo && saldo.style.display!=='none') loadContaduriaSaldo();
     }
 
     function startContaduriaRateAutoRefresh(){
@@ -1976,7 +1984,7 @@ function processVencimientos(){
       const metodo=document.getElementById('contad-metodo-pago')?.value||'';
       const label=document.getElementById('contad-total-label');
       if(label){
-        label.textContent = metodo==='pago_movil' ? 'Monto (Bs)' : 'Monto (USD)';
+        label.textContent = metodo==='pago_movil' ? 'Monto (Bs)' : (metodo==='usdt' ? 'Monto (USDT)' : 'Monto (EUR)');
       }
       updateContaduriaTotal();
     }
@@ -1985,7 +1993,7 @@ function processVencimientos(){
       const metodo=document.getElementById(`contad-${scope}-metodo`)?.value||'';
       const labelText=document.getElementById(`contad-${scope}-monto-label-text`);
       const label=document.getElementById(`contad-${scope}-monto-label`);
-      const nextText = metodo==='pago_movil' ? 'Monto (Bs)' : (scope==='retiro' ? 'Cantidad (USD)' : 'Monto (USD)');
+      const nextText = metodo==='pago_movil' ? 'Monto (Bs)' : (metodo==='usdt' ? 'Monto (USDT)' : (scope==='retiro' ? 'Cantidad (EUR)' : 'Monto (EUR)'));
       if(labelText){
         labelText.textContent = nextText;
       }else if(label && label.childNodes && label.childNodes.length){
@@ -2004,7 +2012,7 @@ function processVencimientos(){
       const inputId = scope==='retiro' ? 'contad-variable-monto' : `contad-${scope}-monto`;
       const inputEl = document.getElementById(inputId);
       const current = inputEl ? (inputEl.value||'') : '';
-      const label = metodo==='pago_movil' ? 'Monto (Bs)' : (scope==='retiro' ? 'Cantidad (USD)' : 'Monto (USD)');
+      const label = metodo==='pago_movil' ? 'Monto (Bs)' : (metodo==='usdt' ? 'Monto (USDT)' : (scope==='retiro' ? 'Cantidad (EUR)' : 'Monto (EUR)'));
       const bodyHtml =
         '<div class="modal-form-shell">'+
           '<label>'+label+'</label>'+
@@ -2036,7 +2044,7 @@ function processVencimientos(){
       let montoUsd=totalInput;
       let montoVes=0;
       let montoEur=0;
-      let moneda='USD';
+      let moneda='EUR';
       const rate=await fetchEuroVesRate();
       if(metodo==='pago_movil'){
         montoVes=totalInput;
@@ -2047,7 +2055,7 @@ function processVencimientos(){
         montoUsd=totalInput;
         montoEur=totalInput;
         montoVes=rate? (montoUsd*rate):0;
-        moneda='USD';
+        moneda=metodo==='usdt'?'USDT':'EUR';
       }
       const metaExtra='metodo='+metodo+'|ves='+montoVes.toFixed(2)+'|eur='+montoEur.toFixed(4)+'|moneda='+moneda;
       return {montoUsd,metaExtra};
@@ -2120,7 +2128,7 @@ function processVencimientos(){
       let montoUsd=totalInput;
       let montoVes=0;
       let montoEur=0;
-      let moneda='USD';
+      let moneda='EUR';
       if(metodo==='pago_movil'){
         const rate=await fetchEuroVesRate();
         CONTADURIA_LAST_RATE=rate;
@@ -2130,6 +2138,7 @@ function processVencimientos(){
         moneda='VES';
       }else{
         montoEur=totalInput;
+        moneda=metodo==='usdt'?'USDT':'EUR';
       }
       const fechaIso=new Date(fechaPago+'T00:00:00').toISOString();
       const metaExtra = metodo==='pago_movil'
@@ -2210,6 +2219,7 @@ function processVencimientos(){
     let CONTADURIA_INGRESO_SAVING=false;
     let CONTADURIA_INGRESOS_BY_ID={};
     let CONTADURIA_EGRESOS_BY_ID={};
+    let CONTADURIA_SALDO_ACTIVE='EUR';
     let CONTADURIA_VES_RATE_CACHE={rate:null,ts:0};
     const CONTADURIA_VES_RATE_FALLBACK=510;
 
@@ -2367,9 +2377,11 @@ function processVencimientos(){
         const nombre=(r.estudiante||'N/A');
         const clase=(r.plan_nivel||'');
         const plan=(r.plan||'');
-        const usd=(parseFloat(r.monto)||0).toFixed(2);
+        const currency=getContaduriaCurrency(meta, String(r.persona||'')+'|'+String(r.categoria||''));
+        const montoPrimario=getContaduriaCurrencyAmount(r,meta,currency,rate);
+        const montoLabel=formatContaduriaCurrencyValue(currency,montoPrimario);
         const bs=rate?(meta.montoVes||0)>0?formatVes(meta.montoVes||0):formatVes((parseFloat(r.monto)||0)*rate):'N/D';
-        return `<tr><td>${fecha}</td><td>${nombre}</td><td>${clase}</td><td>${plan}</td><td>$${usd}</td><td>${bs}</td></tr>`;
+        return `<tr><td>${fecha}</td><td>${nombre}</td><td>${clase}</td><td>${plan}</td><td>${montoLabel}</td><td>${bs}</td></tr>`;
       }).join('');
 
       const egresoRows=egresos.map(r=>{
@@ -2377,9 +2389,11 @@ function processVencimientos(){
         const fecha=r.fecha?new Date(r.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         const persona=(r.persona||'N/A');
         const categoria=(meta.categoriaBase||'egreso');
-        const usd=(parseFloat(r.monto)||0).toFixed(2);
+        const currency=getContaduriaCurrency(meta, String(r.categoria||'')+'|'+String(r.persona||''));
+        const montoPrimario=getContaduriaCurrencyAmount(r,meta,currency,rate);
+        const montoLabel=formatContaduriaCurrencyValue(currency,montoPrimario);
         const bs=rate?(meta.montoVes||0)>0?formatVes(meta.montoVes||0):formatVes((parseFloat(r.monto)||0)*rate):'N/D';
-        return `<tr><td>${fecha}</td><td>${persona}</td><td>${categoria}</td><td>$${usd}</td><td>${bs}</td></tr>`;
+        return `<tr><td>${fecha}</td><td>${persona}</td><td>${categoria}</td><td>${montoLabel}</td><td>${bs}</td></tr>`;
       }).join('');
 
       const win=window.open('', '_blank', 'width=920,height=720');
@@ -2401,17 +2415,17 @@ function processVencimientos(){
           <body>
             <h1>${title}</h1>
             <div class="totals">
-              <div><b>Ingresos (USD):</b> $${ingresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Ingresos (Bs):</b> ${rate?formatVes(ingresosBs):'N/D'} Bs.</div>
-              <div><b>Egresos (USD):</b> $${egresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Egresos (Bs):</b> ${rate?formatVes(egresosBs):'N/D'} Bs.</div>
+              <div><b>Ingresos (EUR):</b> EUR ${ingresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Ingresos (Bs):</b> ${rate?formatVes(ingresosBs):'N/D'} Bs.</div>
+              <div><b>Egresos (EUR):</b> EUR ${egresosUsd.toFixed(2)} &nbsp; | &nbsp; <b>Egresos (Bs):</b> ${rate?formatVes(egresosBs):'N/D'} Bs.</div>
             </div>
             <h2>Clases (Ingresos)</h2>
             <table>
-              <thead><tr><th>Fecha</th><th>Alumno</th><th>Clase</th><th>Plan</th><th>USD</th><th>Bs</th></tr></thead>
+              <thead><tr><th>Fecha</th><th>Alumno</th><th>Clase</th><th>Plan</th><th>Monto</th><th>Bs</th></tr></thead>
               <tbody>${ingresoRows || '<tr><td colspan="6">Sin ingresos</td></tr>'}</tbody>
             </table>
             <h2>Egresos</h2>
             <table>
-              <thead><tr><th>Fecha</th><th>Persona</th><th>Categoria</th><th>USD</th><th>Bs</th></tr></thead>
+              <thead><tr><th>Fecha</th><th>Persona</th><th>Categoria</th><th>Monto</th><th>Bs</th></tr></thead>
               <tbody>${egresoRows || '<tr><td colspan="5">Sin egresos</td></tr>'}</tbody>
             </table>
           </body>
@@ -2428,7 +2442,7 @@ function processVencimientos(){
       const res=await _sp.from(CONTADURIA_TABLE)
         .select('id,estudiante,plan,plan_nivel,monto,tipo,persona,categoria,fecha')
         .order('id',{ascending:false}).limit(600);
-      if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: $0.00'; return; }
+      if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: EUR 0.00'; return; }
       const rows=res.data||[];
       const rowsFinal = rows.filter(r=>!isContaduriaEliminado(r));
       CONTADURIA_INFO_CACHE.rows=rowsFinal;
@@ -2472,7 +2486,7 @@ function processVencimientos(){
         const bsEgresos=rate?formatVes(egresosBs):'N/D';
 
         if(monthIncomeEl){
-          const ingresosUsdLabel='$'+totalIngresos.toFixed(2);
+          const ingresosUsdLabel='EUR '+totalIngresos.toFixed(2);
           const ingresosBsLabel=rate?formatVes(ingresosBs):'N/D';
           monthIncomeEl.innerHTML='<div style="font-size:.65rem;opacity:.7;letter-spacing:1px">INGRESOS DEL MES</div>'+
             '<div style="font-size:1.1rem;font-weight:900">'+ingresosUsdLabel+'</div>'+
@@ -2483,28 +2497,29 @@ function processVencimientos(){
         }
         totalEl.innerHTML=
           '<div class="conta-total-row">'+
-            '<span class="conta-total-activo">Total activo: $'+totalActivo.toFixed(2)+'</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: $'+totalIngresos.toFixed(2)+'</span> | Egresos mes: $'+totalEgresos.toFixed(2)+'</span>'+
+            '<span class="conta-total-activo">Total activo: EUR '+totalActivo.toFixed(2)+'</span> '+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: EUR '+totalIngresos.toFixed(2)+'</span> | Egresos mes: EUR '+totalEgresos.toFixed(2)+'</span>'+
           '</div>'+
           '<div class="conta-total-row conta-total-ves">'+
             '<span class="conta-total-activo">Total activo: '+bsActivo+' Bs.</span> '+
             '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: '+bsIngresos+' Bs.</span> | Egresos mes: '+bsEgresos+' Bs.</span>'+
           '</div>';
-      }      CONTADURIA_INGRESOS_BY_ID={};
+      }
+      const rateForCards=CONTADURIA_LAST_RATE||0;
+      CONTADURIA_INGRESOS_BY_ID={};
       ingresos.forEach(item=>{ CONTADURIA_INGRESOS_BY_ID[item.id]=item; });
       CONTADURIA_EGRESOS_BY_ID={};
       egresos.forEach(item=>{ CONTADURIA_EGRESOS_BY_ID[item.id]=item; });
       const ingresoCards=ingresos.map(item=>{
         const meta=getIngresoMeta(item);
         const nombre=(item.estudiante||'N/A').trim();
-        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
-        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
-        const montoVes=formatVes(meta.montoVes||0);
-        const montoEur=(meta.montoEur||0).toFixed(2);
-        const montoLabel=isVes? (montoVes+' Bs.') : ('$'+montoUsd);
+        const currency=getContaduriaCurrency(meta, String(item.persona||'')+'|'+String(item.categoria||''));
+        const montoValue=getContaduriaCurrencyAmount(item,meta,currency,rateForCards);
+        const montoLabel=formatContaduriaCurrencyValue(currency,montoValue);
         const metodo=getContaduriaMetodoLabel(meta.metodo || item.persona || item.categoria);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
-        const eurLine=isVes? '<div style="opacity:.7;font-size:.62rem;margin-top:4px">EUR: '+montoEur+'</div>' : '';
+        const eurRef=(meta.montoEur||0)>0?(meta.montoEur||0):(rateForCards&&currency==='VES'?(montoValue/rateForCards):0);
+        const eurLine=currency==='VES' ? '<div style="opacity:.7;font-size:.62rem;margin-top:4px">EUR: '+eurRef.toFixed(2)+'</div>' : '';
         return '<div class="clase-box contaduria-ingreso-card" onclick="openIngresoDetalle('+item.id+')" style="margin-bottom:10px;cursor:pointer">'+
           '<div class="contaduria-ingreso-main">'+
             '<div style="font-size:.75rem;font-weight:700">'+nombre+'</div>'+
@@ -2526,10 +2541,9 @@ function processVencimientos(){
       const sueldosCards=sueldos.map(item=>{
         const quien=(item.persona||'Sueldo').trim();
         const meta=parseContaduriaCategoria(item.categoria);
-        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
-        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
-        const montoVes=formatVes(meta.montoVes||0);
-        const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
+        const currency=getContaduriaCurrency(meta, String(item.categoria||'')+'|'+String(item.persona||''));
+        const montoValue=getContaduriaCurrencyAmount(item,meta,currency,rateForCards);
+        const montoLabel='- '+formatContaduriaCurrencyValue(currency,montoValue);
         const metodo=getContaduriaMetodoLabel(meta.metodo || item.categoria || item.persona);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
@@ -2549,10 +2563,9 @@ function processVencimientos(){
       const gastosCards=gastosSueltos.map(item=>{
         const razon=(item.persona||'Gasto suelto').trim();
         const meta=parseContaduriaCategoria(item.categoria);
-        const isVes=(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0);
-        const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
-        const montoVes=formatVes(meta.montoVes||0);
-        const montoLabel=isVes ? (montoVes+' Bs.') : ('-$'+montoUsd);
+        const currency=getContaduriaCurrency(meta, String(item.categoria||'')+'|'+String(item.persona||''));
+        const montoValue=getContaduriaCurrencyAmount(item,meta,currency,rateForCards);
+        const montoLabel='- '+formatContaduriaCurrencyValue(currency,montoValue);
         const metodo=getContaduriaMetodoLabel(meta.metodo || item.categoria || item.persona);
         const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
         return '<div class="clase-box" onclick="openEgresoDetalle('+item.id+')" style="margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer">'+
@@ -2584,6 +2597,159 @@ function processVencimientos(){
           '<div class="contaduria-info-title contaduria-info-title--expense">Gastos sueltos</div>'+
           (gastosCards||'<div style="opacity:.65;font-size:.72rem">Sin gastos sueltos registrados.</div>')+
         '</div>';
+    }
+
+    function getContaduriaCurrency(meta, rawFallback){
+      const metodo=normalizeMetodoValue((meta&&meta.metodo)?meta.metodo:extractMetodoFromRaw(rawFallback));
+      if(metodo==='pago_movil' || (meta&&meta.moneda==='VES') || ((meta&&meta.montoVes)||0)>0) return 'VES';
+      if(metodo==='usdt' || (meta&&meta.moneda==='USDT')) return 'USDT';
+      return 'EUR';
+    }
+
+    function getContaduriaCurrencyAmount(row, meta, currency, rate){
+      if(currency==='VES'){
+        const ves=(meta&&meta.montoVes)?Number(meta.montoVes):0;
+        if(Number.isFinite(ves) && ves>0) return ves;
+        const base=Number(parseFloat(row?.monto)||0);
+        if(Number.isFinite(base) && Number.isFinite(rate) && rate>0) return base*rate;
+        return 0;
+      }
+      return Number(parseFloat(row?.monto)||0);
+    }
+
+    function formatContaduriaCurrencyValue(currency, amount){
+      const val=Number(amount)||0;
+      if(currency==='VES') return formatVes(val)+' Bs.';
+      if(currency==='USDT') return val.toFixed(2)+' USDT';
+      return 'EUR '+val.toFixed(2);
+    }
+
+    function buildContaduriaSaldoMovements(rows, rate){
+      const out={EUR:[],USDT:[],VES:[]};
+      (rows||[]).forEach(row=>{
+        if(row.tipo==='ingreso'){
+          const meta=getIngresoMeta(row);
+          const currency=getContaduriaCurrency(meta, String(row.persona||'')+'|'+String(row.categoria||''));
+          const amount=getContaduriaCurrencyAmount(row,meta,currency,rate);
+          const baseName=(row.estudiante||'Ingreso').trim()||'Ingreso';
+          const level=(row.plan_nivel||'').trim();
+          const concept=level? (baseName+' - '+level) : baseName;
+          out[currency].push({
+            id:row.id,
+            type:'ingreso',
+            amount:amount,
+            concept:concept,
+            dateLabel:row.fecha?new Date(row.fecha).toLocaleDateString('es-VE'):'Sin fecha'
+          });
+          return;
+        }
+        if(row.tipo==='egreso'){
+          const meta=parseContaduriaCategoria(row.categoria);
+          const currency=getContaduriaCurrency(meta, String(row.categoria||'')+'|'+String(row.persona||''));
+          const amount=getContaduriaCurrencyAmount(row,meta,currency,rate);
+          const cat=(meta.categoriaBase||'egreso').replace(/_/g,' ');
+          const person=(row.persona||'Egreso').trim()||'Egreso';
+          out[currency].push({
+            id:row.id,
+            type:'egreso',
+            amount:amount,
+            concept:person+' - '+cat,
+            dateLabel:row.fecha?new Date(row.fecha).toLocaleDateString('es-VE'):'Sin fecha'
+          });
+        }
+      });
+      return out;
+    }
+
+    function renderContaduriaSaldoDetail(movementsByCurrency, currency){
+      const detail=document.getElementById('contaduria-saldo-detail');
+      if(!detail) return;
+      const list=(movementsByCurrency&&movementsByCurrency[currency])?movementsByCurrency[currency]:[];
+      const ingresos=list.filter(item=>item.type==='ingreso');
+      const egresos=list.filter(item=>item.type==='egreso');
+      const block=(title,items,isExpense)=>{
+        if(!items.length){
+          return '<div class="conta-saldo-empty">Sin '+(isExpense?'gastos':'ingresos')+' en esta moneda.</div>';
+        }
+        return items.map(item=>{
+          const amountText=formatContaduriaCurrencyValue(currency,item.amount);
+          const amountClass=isExpense?'conta-saldo-item-amount conta-saldo-item-amount--expense':'conta-saldo-item-amount';
+          const prefix=isExpense?'- ':'+ ';
+          return '<div class="conta-saldo-item">'+
+            '<div class="conta-saldo-item-main">'+
+              '<div class="conta-saldo-item-concept">'+item.concept+'</div>'+
+              '<div class="conta-saldo-item-date">'+item.dateLabel+'</div>'+
+            '</div>'+
+            '<div class="'+amountClass+'">'+prefix+amountText+'</div>'+
+          '</div>';
+        }).join('');
+      };
+      detail.innerHTML=
+        '<div class="conta-saldo-detail-title">Movimientos '+(currency==='VES'?'BS':currency)+'</div>'+
+        '<div class="conta-saldo-detail-group">'+
+          '<div class="conta-saldo-detail-sub">Ingresos</div>'+
+          block('Ingresos', ingresos, false)+
+        '</div>'+
+        '<div class="conta-saldo-detail-group">'+
+          '<div class="conta-saldo-detail-sub">Gastos</div>'+
+          block('Gastos', egresos, true)+
+        '</div>';
+    }
+
+    function openContaduriaSaldoCurrency(currency){
+      CONTADURIA_SALDO_ACTIVE=currency;
+      const buttons=document.querySelectorAll('.conta-saldo-card');
+      buttons.forEach(btn=>{
+        const active=btn.getAttribute('data-currency')===currency;
+        btn.classList.toggle('active',active);
+      });
+      renderContaduriaSaldoDetail(CONTADURIA_INFO_CACHE.saldoMovements||{EUR:[],USDT:[],VES:[]}, currency);
+    }
+
+    async function loadContaduriaSaldo(){
+      const grid=document.getElementById('contaduria-saldo-grid');
+      const detail=document.getElementById('contaduria-saldo-detail');
+      if(!grid || !detail) return;
+      if(!CONTADURIA_INFO_CACHE.rows){
+        await loadContaduriaInfo();
+      }
+      const rows=CONTADURIA_INFO_CACHE.rows||[];
+      const rate=CONTADURIA_LAST_RATE || await fetchEuroVesRate();
+      CONTADURIA_LAST_RATE=rate;
+      const movementsByCurrency=buildContaduriaSaldoMovements(rows, rate);
+      CONTADURIA_INFO_CACHE.saldoMovements=movementsByCurrency;
+
+      const currencies=['USDT','EUR','VES'];
+      const balances={EUR:0,USDT:0,VES:0};
+      const incomes={EUR:0,USDT:0,VES:0};
+      const expenses={EUR:0,USDT:0,VES:0};
+      currencies.forEach(cur=>{
+        const list=movementsByCurrency[cur]||[];
+        list.forEach(item=>{
+          if(item.type==='ingreso'){
+            incomes[cur]+=item.amount;
+            balances[cur]+=item.amount;
+          }else{
+            expenses[cur]+=item.amount;
+            balances[cur]-=item.amount;
+          }
+        });
+      });
+      grid.innerHTML=
+        '<div class="conta-saldo-grid">'+
+          currencies.map(cur=>{
+            const label=(cur==='VES'?'BS':cur);
+            const activeClass=CONTADURIA_SALDO_ACTIVE===cur?' active':'';
+            return '<button type="button" class="conta-saldo-card'+activeClass+'" data-currency="'+cur+'" onclick="openContaduriaSaldoCurrency(\''+cur+'\')">'+
+              '<div class="conta-saldo-card-label">'+label+'</div>'+
+              '<div class="conta-saldo-card-amount">'+formatContaduriaCurrencyValue(cur, balances[cur])+'</div>'+
+              '<div class="conta-saldo-card-meta">Ingreso: '+formatContaduriaCurrencyValue(cur, incomes[cur])+'</div>'+
+              '<div class="conta-saldo-card-meta">Gasto: '+formatContaduriaCurrencyValue(cur, expenses[cur])+'</div>'+
+            '</button>';
+          }).join('')+
+        '</div>';
+      if(!currencies.includes(CONTADURIA_SALDO_ACTIVE)) CONTADURIA_SALDO_ACTIVE='EUR';
+      openContaduriaSaldoCurrency(CONTADURIA_SALDO_ACTIVE);
     }
 
     function buildContaduriaNivelOptions(selected){
@@ -2657,7 +2823,9 @@ function processVencimientos(){
       const categoria=(meta.categoriaBase||'egreso').trim();
       const fecha=item.fecha?new Date(item.fecha).toLocaleDateString('es-VE'):'Sin fecha';
       const metodo=getContaduriaMetodoLabel(meta.metodo || item?.categoria || item?.persona);
-      const montoUsd=(parseFloat(item.monto)||0).toFixed(2);
+      const currency=getContaduriaCurrency(meta, String(item.categoria||'')+'|'+String(item.persona||''));
+      const montoPrimario=getContaduriaCurrencyAmount(item,meta,currency,CONTADURIA_LAST_RATE||0);
+      const montoLabel=formatContaduriaCurrencyValue(currency,montoPrimario);
       let montoVes=meta.montoVes||0;
       const montoVesLabel=montoVes?formatVes(montoVes):'...';
       const bsId=`egreso-bs-${id}`;
@@ -2667,7 +2835,7 @@ function processVencimientos(){
           <div style="font-size:.9rem;opacity:.9">Categoria: ${categoria}</div>
           <div style="font-size:.9rem;opacity:.9">Fecha: ${fecha}</div>
           <div style="font-size:.9rem;opacity:.9">Metodo: ${metodo}</div>
-          <div style="font-size:1rem;margin-top:12px"><b>Monto USD:</b> ${montoUsd}</div>
+          <div style="font-size:1rem;margin-top:12px"><b>Monto:</b> ${montoLabel}</div>
           <div id="${bsId}" style="font-size:1rem;margin-top:8px"><b>Monto Bs:</b> ${montoVesLabel} Bs.</div>
         </div>`;
       openModal('Detalle de egreso', bodyHtml);
@@ -2675,7 +2843,7 @@ function processVencimientos(){
         fetchEuroVesRate().then(rate=>{
           const el=document.getElementById(bsId);
           if(!el) return;
-          const val=rate?formatVes(parseFloat(montoUsd||0)*rate):'N/D';
+          const val=rate?formatVes(parseFloat(item.monto||0)*rate):'N/D';
           el.innerHTML = '<b>Monto Bs:</b> '+val+' Bs.';
         });
       }
@@ -2840,11 +3008,6 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
 }
-
-
-
-
-
 
 
 

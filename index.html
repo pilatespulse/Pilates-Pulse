@@ -112,6 +112,7 @@
         <button class="btn-principal contaduria-tab" data-view="ingresos" style="flex:1" onclick="switchContaduriaView('ingresos')">Registro de ingresos</button>
         <button class="btn-cancelar contaduria-tab" data-view="egresos" style="flex:1" onclick="switchContaduriaView('egresos')">Precios fijos y retirar pago</button>
         <button class="btn-cancelar contaduria-tab" data-view="info" style="flex:1" onclick="switchContaduriaView('info')">Informacion</button>
+        <button class="btn-cancelar contaduria-tab" data-view="saldo" style="flex:1" onclick="switchContaduriaView('saldo')">Saldo</button>
       </div>
 
       <div id="contaduria-ingresos" class="contaduria-shell" style="margin-bottom:24px">
@@ -165,10 +166,11 @@
         <select id="contad-metodo-pago" onchange="handleContaduriaMetodoPagoChange()">
           <option value="">Selecciona metodo de pago</option>
           <option value="pago_movil">Pago movil (Bs)</option>
-          <option value="zelle">Zelle (USD)</option>
-          <option value="paypal">PayPal (USD)</option>
-          <option value="efectivo">Efectivo (USD)</option>
-          <option value="binance">Binance (USD)</option>
+          <option value="zelle">Zelle (EUR)</option>
+          <option value="paypal">PayPal (EUR)</option>
+          <option value="efectivo">Efectivo (EUR)</option>
+          <option value="binance">Binance (EUR)</option>
+          <option value="usdt">USDT</option>
         </select>
 
         <label style="margin-top:16px">Fecha de pago</label>
@@ -176,7 +178,7 @@
 
 
 
-        <label style="margin-top:16px" id="contad-total-label">Monto (USD)</label>
+        <label style="margin-top:16px" id="contad-total-label">Monto (EUR)</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="contad-total" type="number" min="0" step="0.01" style="flex:1;height:52px;font-size:1rem;padding:12px 14px">
         </div>
@@ -192,13 +194,13 @@
             <label style="flex:1">Metodo de pago
               <select id="contad-tatiana-metodo" onchange="handleEgresoMetodoChange('tatiana')">
                 <option value="">Selecciona metodo</option>
-                <option value="usdt">USDT (USD)</option>
-                <option value="zelle">Zelle (USD)</option>
+                <option value="usdt">USDT</option>
+                <option value="zelle">Zelle (EUR)</option>
                 <option value="pago_movil">Pago movil (Bs)</option>
-                <option value="efectivo">Efectivo (USD)</option>
+                <option value="efectivo">Efectivo (EUR)</option>
               </select>
             </label>
-            <label style="width:160px" id="contad-tatiana-monto-label"><span id="contad-tatiana-monto-label-text">Monto (USD)</span> <input type="number" id="contad-tatiana-monto" value="225" min="0" step="0.01"></label>
+            <label style="width:160px" id="contad-tatiana-monto-label"><span id="contad-tatiana-monto-label-text">Monto (EUR)</span> <input type="number" id="contad-tatiana-monto" value="225" min="0" step="0.01"></label>
           </div>
           <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoTatiana()">Registrar quincena</button>
         </div>
@@ -210,13 +212,13 @@
             <label style="flex:1">Metodo de pago
               <select id="contad-suelto-metodo" onchange="handleEgresoMetodoChange('suelto')">
                 <option value="">Selecciona metodo</option>
-                <option value="usdt">USDT (USD)</option>
-                <option value="zelle">Zelle (USD)</option>
+                <option value="usdt">USDT</option>
+                <option value="zelle">Zelle (EUR)</option>
                 <option value="pago_movil">Pago movil (Bs)</option>
-                <option value="efectivo">Efectivo (USD)</option>
+                <option value="efectivo">Efectivo (EUR)</option>
               </select>
             </label>
-            <label style="width:160px" id="contad-suelto-monto-label"><span id="contad-suelto-monto-label-text">Monto (USD)</span> <input type="number" id="contad-suelto-monto" min="0" step="0.01" placeholder="0.00"></label>
+            <label style="width:160px" id="contad-suelto-monto-label"><span id="contad-suelto-monto-label-text">Monto (EUR)</span> <input type="number" id="contad-suelto-monto" min="0" step="0.01" placeholder="0.00"></label>
           </div>
           <button class="btn-cancelar" style="margin-top:10px" onclick="registrarPagoSuelto()">Registrar pago</button>
         </div>
@@ -234,13 +236,13 @@
           <label style="flex:1">Metodo de pago
             <select id="contad-retiro-metodo" onchange="handleEgresoMetodoChange('retiro')">
               <option value="">Selecciona metodo</option>
-              <option value="usdt">USDT (USD)</option>
-              <option value="zelle">Zelle (USD)</option>
+              <option value="usdt">USDT</option>
+              <option value="zelle">Zelle (EUR)</option>
               <option value="pago_movil">Pago movil (Bs)</option>
-              <option value="efectivo">Efectivo (USD)</option>
+              <option value="efectivo">Efectivo (EUR)</option>
             </select>
           </label>
-          <label style="flex:1" id="contad-retiro-monto-label"><span id="contad-retiro-monto-label-text">Cantidad (USD)</span> <input type="number" id="contad-variable-monto" min="0" step="0.01" placeholder="0.00"></label>
+          <label style="flex:1" id="contad-retiro-monto-label"><span id="contad-retiro-monto-label-text">Cantidad (EUR)</span> <input type="number" id="contad-variable-monto" min="0" step="0.01" placeholder="0.00"></label>
         </div>
         <button class="btn-principal" style="margin-top:12px" onclick="retirarPagoVariable()">Retirar pago</button>
       </div>
@@ -266,7 +268,13 @@
         <div id="contaduria-info-list" style="margin-top:12px"></div>
       </div>
 
-      <div id="contaduria-info-total" style="margin-top:10px;color:#73b8ff;font-weight:800">Total: $0.00</div>
+      <div id="contaduria-saldo" class="contaduria-shell" style="display:none">
+        <h3 style="letter-spacing:1px;font-size:.85rem;text-transform:uppercase;margin:0 0 12px">Saldo por moneda</h3>
+        <div id="contaduria-saldo-grid"></div>
+        <div id="contaduria-saldo-detail" style="margin-top:12px"></div>
+      </div>
+
+      <div id="contaduria-info-total" style="margin-top:10px;color:#73b8ff;font-weight:800">Total: EUR 0.00</div>
       <button class="back-btn" style="margin-top:16px" onclick="switchModulo('modulo-agenda')">Volver</button>
     </div>
   </div>
