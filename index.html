@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -88,6 +88,18 @@
       <div id="modulo-notificaciones" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:10px">PROXIMOS VENCIMIENTOS</h3><button class="btn-cancelar btn-clear-notif" onclick="clearNotifications()">VACIAR NOTIFICACIONES</button><div id="lista-notificaciones"></div></div>
       <div id="modulo-alumnos" style="display:none;"><div class="search-container"><span class="search-icon">&#128269;</span><input type="text" id="buscadorAlumnos" class="search-input" placeholder="Buscar alumno..." onkeyup="filtrarAlumnos()"></div><button id="btn-abrir-registro" class="btn-principal" style="margin-bottom:20px;font-size:.7rem" onclick="abrirFormNuevoAlumno()">+ REGISTRAR ALUMNO</button><div id="form-alumno-nuevo"></div><div id="render-alumnos"></div></div>
       <div id="modulo-solicitudes" style="display:none;"><h3 style="font-size:.7rem;letter-spacing:2px;text-align:center;margin-bottom:20px">SOLICITUDES WEB</h3><div id="lista-solicitudes"></div></div>
+
+      <!-- From Uiverse.io by vnuny -->
+      <div class="container" id="search-container-bottom">
+        <input checked="" class="checkbox" type="checkbox" id="search-checkbox-bottom" onchange="onSearchCheckboxChange(this)">
+        <div class="mainbox">
+            <div class="iconContainer">
+                <svg viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="search_icon"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"></path></svg>
+            </div>
+            <input class="search_input" placeholder="Buscar alumna..." type="text" id="search-input-bottom" oninput="onSearchInputBottom(this.value)" autocomplete="off">
+        </div>
+        <div id="search-suggestions-bottom" class="search-suggestions" style="display: none;"></div>
+      </div>
 
       <div class="footer-nav">
         <button class="nav-btn" id="btn-agenda" onclick="switchModulo('modulo-agenda')">AGENDA</button>

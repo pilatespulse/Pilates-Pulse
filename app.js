@@ -147,14 +147,9 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       return normalizeText(v).replace(/[<>`]/g,'').trim().slice(0,maxLen);
     }
     function normalizeDomText(root){
-      const base=root||document.body;
-      if(!base) return;
-      const walker=document.createTreeWalker(base, NodeFilter.SHOW_TEXT);
-      let n;
-      while((n=walker.nextNode())){
-        const fixed=normalizeText(n.nodeValue||'');
-        if(fixed!==n.nodeValue) n.nodeValue=fixed;
-      }
+      // Los datos ya se limpian y normalizan directamente a nivel de variables de base de datos
+      // antes de renderizarse. Evitamos el recorrido global del DOM para lograr fluidez a 60fps.
+      return;
     }
     function a24h(h){if(!h)return 0;let[t,ap]=h.split(' ');let[hh,mm]=t.split(':').map(Number);if(ap==="PM"&&hh<12)hh+=12;if(ap==="AM"&&hh===12)hh=0;return hh*60+mm;}
 
@@ -1636,8 +1631,7 @@ function processVencimientos(){
       const items = Array.from(container.querySelectorAll('.dia-item,.clase-box,.crono-row,.crono-task,.search-container,h3,.crono-header-text')).slice(0,36);
       items.forEach((el,i)=>{
         el.classList.remove('seq-item');
-        el.style.animationDelay = (i*85)+'ms';
-        void el.offsetWidth;
+        el.style.animationDelay = (i*12)+'ms';
         el.classList.add('seq-item');
         const done=()=>{el.classList.remove('seq-item');el.style.animationDelay='';el.removeEventListener('animationend',done);};
         el.addEventListener('animationend',done);
@@ -3037,6 +3031,478 @@ function buildMiniCalendar(dateObj){
       <div class="mini-cal-grid">${cells}</div>
       <div class="mini-cal-daynote">${todayInfo.hasAgendaDay ? `Día activo: ${todayInfo.dia}` : 'Hoy no hay agenda (domingo)'}</div>
     </div>`;
+}
+
+/* --- NEW Interactive Search Autocomplete & AI Chat Assistant --- */
+
+let CURRENT_STUDENT_HEALTH_CONTEXT = null;
+let CURRENT_CHAT_HISTORY = [];
+let CURRENT_STUDENT_SEMAFORO_GENERATED = false;
+let CURRENT_STUDENT_SEMAFORO_GENERATING = false;
+
+function onSearchInputBottom(val) {
+  const query = (val || '').toLowerCase().trim();
+  const suggestionsEl = document.getElementById('search-suggestions-bottom');
+  if (!suggestionsEl) return;
+  
+  if (!query) {
+    suggestionsEl.style.display = 'none';
+    return;
+  }
+
+  if (typeof CACHE_ALUMNOS === 'undefined' || !CACHE_ALUMNOS.length) {
+    suggestionsEl.style.display = 'none';
+    return;
+  }
+
+  // Filter matched student profiles
+  const matches = CACHE_ALUMNOS.filter(a => {
+    const parts = a.contenido.split('|');
+    const name = (parts[1] || '').toLowerCase();
+    return name.includes(query) && name.trim() !== '' && name.trim() !== 'sin nombre';
+  }).slice(0, 5); // Display top 5 matches
+
+  if (!matches.length) {
+    suggestionsEl.innerHTML = '<div class="search-suggestion-item" style="opacity: 0.6; cursor: default;">No hay resultados</div>';
+    suggestionsEl.style.display = 'block';
+    return;
+  }
+
+  suggestionsEl.innerHTML = matches.map(a => {
+    const parts = a.contenido.split('|');
+    const name = parts[1] || 'Sin Nombre';
+    return `<div class="search-suggestion-item" onclick="selectStudentBottom('${a.id}', '${name.replace(/'/g, "\\'")}')">${name}</div>`;
+  }).join('');
+  suggestionsEl.style.display = 'block';
+}
+
+function selectStudentBottom(id, name) {
+  const input = document.getElementById('search-input-bottom');
+  if (input) input.value = name;
+  
+  const suggestionsEl = document.getElementById('search-suggestions-bottom');
+  if (suggestionsEl) suggestionsEl.style.display = 'none';
+
+  // Open clinical profile and IA chatbot panel in modal
+  openStudentInteractivePanel(id, name);
+}
+
+function onSearchCheckboxChange(chk) {
+  if (chk.checked) {
+    const suggestionsEl = document.getElementById('search-suggestions-bottom');
+    if (suggestionsEl) suggestionsEl.style.display = 'none';
+    const input = document.getElementById('search-input-bottom');
+    if (input) input.value = '';
+  }
+}
+
+function parseStudentContent(contenido) {
+  const p = (contenido || '').split('|').map(x => (x || '').trim());
+  
+  // Custom helper to fetch fields while resolving standard "No" / "N/A" placeholders
+  const getField = (mainIdx, detailIdx) => {
+    let mainVal = p[mainIdx] || '';
+    let detailVal = detailIdx !== null ? (p[detailIdx] || '') : '';
+    
+    // Clean placeholders
+    if (mainVal.toLowerCase() === 'no' || mainVal.toLowerCase() === 'ninguno' || mainVal.toLowerCase() === 'n/a') {
+      mainVal = '';
+    }
+    if (detailVal.toLowerCase() === 'no' || detailVal.toLowerCase() === 'ninguno' || detailVal.toLowerCase() === 'n/a') {
+      detailVal = '';
+    }
+    
+    if (!mainVal && !detailVal) return 'Ninguno';
+    if (mainVal && detailVal) return `${mainVal} (${detailVal})`;
+    return mainVal || detailVal;
+  };
+
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return 'No registrada';
+    const birth = new Date(birthdate);
+    if (isNaN(birth.getTime())) return 'No registrada';
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return `${age} años`;
+  };
+
+  const birthdate = p[12] || '';
+  const ageStr = calculateAge(birthdate);
+
+  return {
+    nombre: p[1] || 'Sin nombre',
+    telefono: p[2] || 'No registrado',
+    nacimiento: birthdate ? `${birthdate} (${ageStr})` : 'No registrado',
+    profesion: p[13] || 'No registrada',
+    vencimiento: p[10] || 'No registrado',
+    actividadFisica: getField(14, 15),
+    dolorLesion: getField(16, 17),
+    cirugia: getField(18, 19),
+    tension: p[20] || p[8] || 'Ninguna',
+    embarazo: getField(21, null),
+    partosCesareas: getField(22, 23),
+    objetivo: p[24] || p[4] || 'Ninguno',
+    observaciones: p[25] || p[9] || 'Ninguna',
+    autorizacion: p[26] || 'No registrada'
+  };
+}
+
+function openStudentInteractivePanel(id, name) {
+  const student = CACHE_ALUMNOS.find(a => String(a.id) === String(id));
+  if (!student) {
+    alert("No se encontró la información de la alumna.");
+    return;
+  }
+
+  // Parse health history
+  const history = parseStudentContent(student.contenido);
+  CURRENT_STUDENT_HEALTH_CONTEXT = history;
+  CURRENT_CHAT_HISTORY = []; // reset chat
+  CURRENT_STUDENT_SEMAFORO_GENERATED = false;
+  CURRENT_STUDENT_SEMAFORO_GENERATING = false;
+
+  const bodyHtml = `
+    <div class="interactive-panel-tabs">
+      <button class="interactive-tab-btn active" id="tab-btn-history" onclick="switchInteractiveTab('history')">Historia</button>
+      <button class="interactive-tab-btn" id="tab-btn-ia" onclick="switchInteractiveTab('ia')">Asistente IA</button>
+    </div>
+
+    <!-- HISTORIA TAB CONTENT -->
+    <div class="interactive-tab-content active-content" id="tab-content-history">
+      <div class="history-grid">
+        <div style="font-size: .65rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faded-jade); margin-bottom: 4px; padding-left: 2px;">Datos Generales</div>
+        <div class="history-card" style="background: linear-gradient(180deg, rgba(65,112,118,.05), rgba(65,112,118,.01)) !important; border-color: rgba(65,112,118,.2) !important;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .78rem; font-weight: 700; color: var(--ink-strong);">
+            <div><span style="opacity: 0.6; font-size: .65rem; display: block; margin-bottom: 2px;">Teléfono</span>${history.telefono}</div>
+            <div><span style="opacity: 0.6; font-size: .65rem; display: block; margin-bottom: 2px;">Nacimiento</span>${history.nacimiento}</div>
+            <div><span style="opacity: 0.6; font-size: .65rem; display: block; margin-bottom: 2px;">Profesión</span>${history.profesion}</div>
+            <div><span style="opacity: 0.6; font-size: .65rem; display: block; margin-bottom: 2px;">Vencimiento Plan</span><span style="color: var(--juniper);">${history.vencimiento}</span></div>
+          </div>
+        </div>
+
+        <div style="font-size: .65rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faded-jade); margin: 8px 0 4px 0; padding-left: 2px;">Historial Médico & Objetivos</div>
+        <div class="history-card">
+          <div class="history-card-header">Actividad física</div>
+          <div class="history-card-body">${history.actividadFisica}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Dolor o lesión</div>
+          <div class="history-card-body">${history.dolorLesion}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Cirugía</div>
+          <div class="history-card-body">${history.cirugia}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Tensión muscular</div>
+          <div class="history-card-body">${history.tension}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Embarazo</div>
+          <div class="history-card-body">${history.embarazo}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Partos o cesáreas</div>
+          <div class="history-card-body">${history.partosCesareas}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Objetivo</div>
+          <div class="history-card-body">${history.objetivo}</div>
+        </div>
+        <div class="history-card">
+          <div class="history-card-header">Observaciones del profesor</div>
+          <div class="history-card-body">${history.observaciones}</div>
+        </div>
+        <div class="history-card" style="background: rgba(65,112,118,.03) !important;">
+          <div class="history-card-header" style="color: var(--faded-jade) !important;">Autorización de Participación</div>
+          <div class="history-card-body" style="font-size: .75rem;">¿Autorizó clases bajo su responsabilidad?: <strong>${history.autorizacion}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IA TAB CONTENT -->
+    <div class="interactive-tab-content" id="tab-content-ia">
+      <div class="ia-chat-container">
+        <div class="ia-chat-history" id="ia-chat-history">
+          <div class="chat-bubble assistant" id="welcome-chat-bubble">
+            Hola, soy tu asistente de Pilates Pulse IA.<br><br>
+            He analizado la historia clínica y la base de datos de <strong>${name}</strong> para generar su <strong>Semáforo de Seguridad</strong> personalizado de forma inmediata. ¡Vayamos a ello!
+          </div>
+        </div>
+        
+        <!-- Suggestions Chips -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <button class="btn-cancelar" style="margin:0; font-size:.6rem; padding:8px 12px; width:auto; border-radius:10px;" onclick="sendQuickIaPrompt('¿Qué ejercicios evitar?')">¿Qué evitar?</button>
+          <button class="btn-cancelar" style="margin:0; font-size:.6rem; padding:8px 12px; width:auto; border-radius:10px;" onclick="sendQuickIaPrompt('¿Cuáles son sus precauciones principales?')">Precauciones</button>
+          <button class="btn-cancelar" style="margin:0; font-size:.6rem; padding:8px 12px; width:auto; border-radius:10px;" onclick="sendQuickIaPrompt('Recomienda una rutina corta de Pilates adaptable para ella')">Rutina sugerida</button>
+        </div>
+
+        <div class="ia-chat-input-bar">
+          <input type="text" id="ia-chat-input" placeholder="Pregúntame algo..." onkeydown="if(event.key==='Enter') sendIaChatMessage()">
+          <button class="ia-chat-send-btn" onclick="sendIaChatMessage()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  openModal(`Perfil interactivo: ${name}`, bodyHtml);
+}
+
+async function triggerSemaforoGeneration() {
+  if (CURRENT_STUDENT_SEMAFORO_GENERATED || CURRENT_STUDENT_SEMAFORO_GENERATING) return;
+  CURRENT_STUDENT_SEMAFORO_GENERATING = true;
+
+  const historyEl = document.getElementById('ia-chat-history');
+  if (!historyEl) return;
+
+  // Append semaforo specific loader bubble
+  const loadingBubble = document.createElement('div');
+  loadingBubble.className = 'ia-loading-bubble';
+  loadingBubble.id = 'semaforo-loading-bubble';
+  loadingBubble.innerHTML = `
+    <div style="font-size: 0.7rem; font-weight: 800; color: var(--juniper); margin-right: 8px;">Generando Semáforo de Seguridad...</div>
+    <div class="ia-loading-dot"></div>
+    <div class="ia-loading-dot"></div>
+    <div class="ia-loading-dot"></div>
+  `;
+  historyEl.appendChild(loadingBubble);
+  historyEl.scrollTop = historyEl.scrollHeight;
+
+  const prompt = `Analiza mi perfil clínico de la base de datos y genera mi 'Semáforo de Seguridad de Pilates' de forma ultra directa y estructurada. Clasifícalo estrictamente bajo estos 3 encabezados usando este formato de viñetas:
+
+🔴 **PROHIBIDO / EVITAR**
+- Detalle muy corto del primer movimiento prohibido
+- Detalle muy corto del segundo movimiento prohibido
+
+🟡 **PRECAUCIÓN / MODIFICAR**
+- Detalle muy corto de la primera precaución
+- Detalle muy corto de la segunda precaución
+
+🟢 **RECOMENDADO / POTENCIAR**
+- Detalle muy corto del primer beneficio
+- Detalle muy corto del segundo beneficio
+
+Termina diciendo exactamente esto en una nueva línea con una separación elegante:
+¿En qué necesitas ayuda hoy?`;
+
+  // Trigger the Groq API call in autoRequest mode (so it does not display the system prompt inside the chat history)
+  await sendIaChatMessage(prompt, true);
+
+  CURRENT_STUDENT_SEMAFORO_GENERATED = true;
+  CURRENT_STUDENT_SEMAFORO_GENERATING = false;
+}
+
+function switchInteractiveTab(tab) {
+  const btnHistory = document.getElementById('tab-btn-history');
+  const btnIa = document.getElementById('tab-btn-ia');
+  const contentHistory = document.getElementById('tab-content-history');
+  const contentIa = document.getElementById('tab-content-ia');
+
+  if (tab === 'history') {
+    btnHistory.classList.add('active');
+    btnIa.classList.remove('active');
+    contentHistory.classList.add('active-content');
+    contentIa.classList.remove('active-content');
+  } else {
+    btnHistory.classList.remove('active');
+    btnIa.classList.add('active');
+    contentHistory.classList.remove('active-content');
+    contentIa.classList.add('active-content');
+    
+    // Auto-scroll chat history to bottom when switching to IA tab
+    setTimeout(() => {
+      const historyEl = document.getElementById('ia-chat-history');
+      if (historyEl) historyEl.scrollTop = historyEl.scrollHeight;
+    }, 50);
+
+    // Auto-trigger semaforo generation on first visit
+    triggerSemaforoGeneration();
+  }
+}
+
+function sendQuickIaPrompt(text) {
+  sendIaChatMessage(text);
+}
+
+async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
+  const inputEl = document.getElementById('ia-chat-input');
+  if (!inputEl) return;
+  
+  const text = (overrideText || inputEl.value || '').trim();
+  if (!text) return;
+
+  // Clear input
+  if (!overrideText) inputEl.value = '';
+
+  const historyEl = document.getElementById('ia-chat-history');
+  if (!historyEl) return;
+
+  // Helper function to render bold titles and structured bullets
+  const formatMarkdownToHtml = (str) => {
+    if (!str) return '';
+    let res = str;
+    
+    // Callout alert box styling for Semáforo headings
+    res = res.replace(/🔴 \*\*PROHIBIDO \/ EVITAR\*\*/gi, '<div style="background: rgba(239, 68, 68, 0.08) !important; border-left: 4px solid #ef4444 !important; padding: 10px 14px !important; border-radius: 8px !important; margin: 12px 0 8px 0 !important; color: #7f1d1d !important; font-weight: 800 !important; font-size: 0.78rem !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; font-family: var(--font-main) !important;">🔴 PROHIBIDO / EVITAR</div>');
+    res = res.replace(/🟡 \*\*PRECAUCIÓN \/ MODIFICAR\*\*/gi, '<div style="background: rgba(245, 158, 11, 0.08) !important; border-left: 4px solid #f59e0b !important; padding: 10px 14px !important; border-radius: 8px !important; margin: 12px 0 8px 0 !important; color: #78350f !important; font-weight: 800 !important; font-size: 0.78rem !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; font-family: var(--font-main) !important;">🟡 PRECAUCIÓN / MODIFICAR</div>');
+    res = res.replace(/🟢 \*\*RECOMENDADO \/ POTENCIAR\*\*/gi, '<div style="background: rgba(16, 185, 129, 0.08) !important; border-left: 4px solid #10b981 !important; padding: 10px 14px !important; border-radius: 8px !important; margin: 12px 0 8px 0 !important; color: #064e3b !important; font-weight: 800 !important; font-size: 0.78rem !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; font-family: var(--font-main) !important;">🟢 RECOMENDADO / POTENCIAR</div>');
+    
+    // Standalone headings (### or ##)
+    res = res.replace(/^###\s+(.*)$/gm, '<h3 style="color: #000000; font-size: 0.95rem; font-weight: 900; margin: 12px 0 6px; font-family: var(--font-fancy);">$1</h3>');
+    res = res.replace(/^##\s+(.*)$/gm, '<h2 style="color: #000000; font-size: 1.05rem; font-weight: 900; margin: 14px 0 8px; font-family: var(--font-fancy);">$1</h2>');
+    // Bold markers: **text** -> high contrast solid black
+    res = res.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #000000; font-weight: 900; font-size: 0.84rem;">$1</strong>');
+    // Bullet point lists: lines starting with "-" or "*"
+    res = res.replace(/^\s*[-*]\s+(.*)$/gm, '<div style="margin-left: 6px; margin-bottom: 6px; display: flex; gap: 6px; align-items: flex-start; color: #151515;"><span style="color: var(--juniper); font-weight: 900; font-size: 0.9rem; line-height: 1.25;">•</span><span style="font-size: 0.78rem; line-height: 1.4;">$1</span></div>');
+    // Convert newlines to HTML breaks
+    res = res.replace(/\n/g, '<br>');
+    // Clean up multiple sequential line breaks
+    res = res.replace(/(<br>){3,}/g, '<br><br>');
+    return res;
+  };
+
+  // Remove existing auto-loading bubble if visible
+  const semaforoLoader = document.getElementById('semaforo-loading-bubble');
+  if (semaforoLoader) semaforoLoader.remove();
+
+  // Append user message bubble if not an automatic request
+  if (!isAutoRequest) {
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chat-bubble user';
+    userBubble.textContent = text;
+    historyEl.appendChild(userBubble);
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
+
+  // Append loading bubble
+  const loadingBubble = document.createElement('div');
+  loadingBubble.className = 'ia-loading-bubble';
+  loadingBubble.innerHTML = `
+    <div class="ia-loading-dot"></div>
+    <div class="ia-loading-dot"></div>
+    <div class="ia-loading-dot"></div>
+  `;
+  historyEl.appendChild(loadingBubble);
+  historyEl.scrollTop = historyEl.scrollHeight;
+
+  // Prepare call history
+  const apiHistory = CURRENT_CHAT_HISTORY.map(msg => ({
+    role: msg.role,
+    content: msg.content
+  }));
+
+  try {
+    const apiKey = "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";
+    
+    // Highly tailored system prompt to enforce extreme brevity, structure, and bolding
+    const systemPrompt = `Eres un experto fisioterapeuta y maestro elite del método Pilates. Tu labor es dar soluciones, rutinas, precauciones y recomendaciones específicas de Pilates basadas en el perfil clínico y la base de datos de la alumna provista.
+    
+    REGLAS DE FORMATO Y ESTILO (ESTRICTAS):
+    1. Sé extremadamente DIRECTO, CONCISO y FÁCIL DE ENTENDER. Evita largas introducciones o rodeos retóricos.
+    2. Cuando te pregunten qué evitar o precauciones, responde en un máximo de 3 o 4 puntos cortos, extremadamente claros y al grano.
+    3. Es OBLIGATORIO que todos los títulos o puntos importantes estén en NEGRITAS utilizando doble asterisco (ej. **1. Evitar flexión cervical profunda:** Explicación muy breve). Esto ayuda al instructor a leer la advertencia en 2 segundos mientras da clase.
+    4. Usa listas limpias con viñetas para organizar la información.
+    
+    Perfil Completo de la Alumna (Base de Datos):
+    - Nombre: ${CURRENT_STUDENT_HEALTH_CONTEXT.nombre}
+    - Edad/Fecha de Nacimiento: ${CURRENT_STUDENT_HEALTH_CONTEXT.nacimiento}
+    - Teléfono: ${CURRENT_STUDENT_HEALTH_CONTEXT.telefono}
+    - Profesión / Actividad Principal: ${CURRENT_STUDENT_HEALTH_CONTEXT.profesion}
+    - Fecha de Vencimiento de Plan: ${CURRENT_STUDENT_HEALTH_CONTEXT.vencimiento}
+    
+    Historial Clínico:
+    - Actividad Física actual: ${CURRENT_STUDENT_HEALTH_CONTEXT.actividadFisica}
+    - Dolor o lesión actual: ${CURRENT_STUDENT_HEALTH_CONTEXT.dolorLesion}
+    - Cirugías previas importantes: ${CURRENT_STUDENT_HEALTH_CONTEXT.cirugia}
+    - Áreas de mayor tensión muscular o molestias: ${CURRENT_STUDENT_HEALTH_CONTEXT.tension}
+    - Estado de embarazo: ${CURRENT_STUDENT_HEALTH_CONTEXT.embarazo}
+    - Partos o cesáreas: ${CURRENT_STUDENT_HEALTH_CONTEXT.partosCesareas}
+    - Objetivo principal en Pilates Pulse: ${CURRENT_STUDENT_HEALTH_CONTEXT.objetivo}
+    - Observaciones internas del profesor: ${CURRENT_STUDENT_HEALTH_CONTEXT.observaciones}
+    - Autorización/Consentimiento de responsabilidad: ${CURRENT_STUDENT_HEALTH_CONTEXT.autorizacion}`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...apiHistory,
+      { role: "user", content: text }
+    ];
+
+    let response;
+    let fallbackUsed = false;
+
+    // Dual-proxy mechanism to handle CORS in browser environments reliably
+    try {
+      response = await fetch("https://corsproxy.io/?url=https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 800
+        })
+      });
+      if (!response.ok) throw new Error("CORSProxy failed or unauthorized.");
+    } catch (proxyError) {
+      console.warn("Primary corsproxy.io failed, attempting fallback to cors-anywhere...");
+      fallbackUsed = true;
+      response = await fetch("https://cors-anywhere.herokuapp.com/https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "x-requested-with": "XMLHttpRequest"
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 800
+        })
+      });
+    }
+
+    if (!response.ok) throw new Error("API call failed on both proxies.");
+    const data = await response.json();
+    const reply = data.choices[0].message.content;
+
+    // Remove loading bubble
+    loadingBubble.remove();
+
+    // Save chat history
+    CURRENT_CHAT_HISTORY.push({ role: "user", content: text });
+    CURRENT_CHAT_HISTORY.push({ role: "assistant", content: reply });
+
+    // Append assistant bubble with reply (supporting safe line break and bold title rendering)
+    const replyBubble = document.createElement('div');
+    replyBubble.className = 'chat-bubble assistant';
+    replyBubble.innerHTML = formatMarkdownToHtml(reply);
+    historyEl.appendChild(replyBubble);
+    historyEl.scrollTop = historyEl.scrollHeight;
+
+  } catch (err) {
+    console.error("Groq chat error:", err);
+    loadingBubble.remove();
+    const errorBubble = document.createElement('div');
+    errorBubble.className = 'chat-bubble assistant';
+    errorBubble.style.borderColor = 'var(--danger)';
+    errorBubble.innerHTML = `
+      Lo siento, ha ocurrido un error al conectar con el Asistente de IA.<br><br>
+      <strong>Cómo solucionarlo en 2 segundos:</strong><br>
+      1. Abre este enlace en otra pestaña: <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--juniper); text-decoration:underline; font-weight:bold;">Activar Acceso de IA temporal</a> y haz clic en el botón de activación.<br>
+      2. Una vez activado, escribe tu mensaje aquí de nuevo.<br><br>
+      <em>(Alternativamente, puedes usar una extensión de navegador como "Allow CORS" para desarrollo local).</em>
+    `;
+    historyEl.appendChild(errorBubble);
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
 }
 
 
