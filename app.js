@@ -963,6 +963,108 @@ function renderCronograma(){
       if (el) el.remove();
     };
 
+    window.CURRENT_CHAT_ATTACHMENTS = [];
+
+    window.handleIaImageUpload = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDim = 1000;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          
+          window.CURRENT_CHAT_ATTACHMENTS.push({
+            type: 'local',
+            url: compressedBase64,
+            name: file.name
+          });
+          window.renderIaAttachmentsPreview();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    };
+
+    window.attachStudentDbImages = function(alumnoId) {
+      const student = CACHE_ALUMNOS.find(a => String(a.id) === String(alumnoId));
+      if (!student) return;
+      const p = student.contenido.split('|').map(normalizeText);
+      const dbImages = [p[27], p[28], p[29]].filter(Boolean);
+      
+      if (dbImages.length === 0) {
+        alert("Esta alumna no tiene imágenes cargadas en su base de datos. Puedes subirlas desde su ficha o usar el botón '+' para adjuntar una desde tu dispositivo.");
+        return;
+      }
+      
+      let attachedCount = 0;
+      dbImages.forEach((imgUrl, idx) => {
+        const alreadyAttached = window.CURRENT_CHAT_ATTACHMENTS.some(att => att.url === imgUrl);
+        if (!alreadyAttached) {
+          window.CURRENT_CHAT_ATTACHMENTS.push({
+            type: 'db',
+            url: imgUrl,
+            name: `Foto DB ${idx + 1}`
+          });
+          attachedCount++;
+        }
+      });
+      
+      if (attachedCount > 0) {
+        window.renderIaAttachmentsPreview();
+      } else {
+        alert("Las imágenes de la base de datos de esta alumna ya están adjuntadas.");
+      }
+    };
+
+    window.removeIaAttachment = function(index) {
+      window.CURRENT_CHAT_ATTACHMENTS.splice(index, 1);
+      window.renderIaAttachmentsPreview();
+    };
+
+    window.renderIaAttachmentsPreview = function() {
+      const container = document.getElementById('ia-chat-attachments-preview');
+      if (!container) return;
+      
+      if (window.CURRENT_CHAT_ATTACHMENTS.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.style.display = 'flex';
+      container.innerHTML = window.CURRENT_CHAT_ATTACHMENTS.map((att, idx) => `
+        <div style="position:relative; width:52px; height:52px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.15); box-shadow:0 4px 8px rgba(0,0,0,0.3); background:#000;">
+          <img src="${att.url}" style="width:100%; height:100%; object-fit:cover;">
+          <button type="button" onclick="window.removeIaAttachment(${idx})" style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); border:none; color:#fff; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:bold; cursor:pointer; padding:0; line-height:1;" title="Quitar">&times;</button>
+        </div>
+      `).join('') + `
+        <span style="font-size:0.5rem; color:#aaa; font-weight:600; margin-left:6px;">${window.CURRENT_CHAT_ATTACHMENTS.length} Imagen(es) adjunta(s)</span>
+      `;
+    };
+
     window.deleteStudentImageFromCarousel = async function(alumnoId, index) {
       if (!alumnoId || alumnoId === 'null') return;
       const ok = confirm("¿Deseas eliminar esta imagen permanentemente de la base de datos de la alumna?");
@@ -3466,6 +3568,7 @@ function openStudentInteractivePanel(id, name) {
   const history = parseStudentContent(student.contenido);
   CURRENT_STUDENT_HEALTH_CONTEXT = history;
   CURRENT_CHAT_HISTORY = []; // reset chat
+  window.CURRENT_CHAT_ATTACHMENTS = []; // reset attachments
   CURRENT_STUDENT_SEMAFORO_GENERATED = false;
   CURRENT_STUDENT_SEMAFORO_GENERATING = false;
 
@@ -3558,9 +3661,15 @@ function openStudentInteractivePanel(id, name) {
           <button class="btn-cancelar" style="margin:0; font-size:.6rem; padding:8px 12px; width:auto; border-radius:10px;" onclick="sendQuickIaPrompt('Recomienda una rutina corta de Pilates adaptable para ella')">Rutina sugerida</button>
         </div>
 
-        <div class="ia-chat-input-bar">
-          <input type="text" id="ia-chat-input" placeholder="Pregúntame algo..." onkeydown="if(event.key==='Enter') sendIaChatMessage()">
-          <button class="ia-chat-send-btn" onclick="sendIaChatMessage()">Enviar</button>
+        <!-- Attachments Preview Area -->
+        <div id="ia-chat-attachments-preview" style="display:none; gap:10px; flex-wrap:wrap; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:8px 12px; border-radius:14px; margin-bottom:10px; width:100%; align-items:center;"></div>
+
+        <input type="file" id="ia-image-upload-input" accept="image/*" style="display:none;" onchange="window.handleIaImageUpload(event)">
+        <div class="ia-chat-input-bar" style="display:flex; gap:8px; align-items:center; width:100%;">
+          <button type="button" onclick="document.getElementById('ia-image-upload-input').click()" title="Adjuntar foto o tomar foto" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; font-weight:bold; transition:all 0.2s; flex-shrink:0; margin:0;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">+</button>
+          <button type="button" onclick="window.attachStudentDbImages('${id}')" title="Usar imágenes de la alumna" style="background:rgba(65, 112, 118, 0.2); border:1px solid rgba(65,112,118,0.4); color:var(--juniper); padding:0 12px; height:34px; border-radius:17px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.6rem; font-weight:800; transition:all 0.2s; letter-spacing:0.5px; flex-shrink:0; margin:0;" onmouseover="this.style.background='rgba(65, 112, 118, 0.35)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(65, 112, 118, 0.2)'; this.style.color='var(--juniper)'">Imagen</button>
+          <input type="text" id="ia-chat-input" placeholder="Pregúntame algo..." onkeydown="if(event.key==='Enter') sendIaChatMessage()" style="flex:1; margin:0;">
+          <button class="ia-chat-send-btn" onclick="sendIaChatMessage()" style="flex-shrink:0; margin:0; width:auto; padding:0 16px; height:34px; border-radius:17px; font-size:0.6rem; font-weight:800; letter-spacing:0.5px;">Enviar</button>
         </div>
       </div>
     </div>
@@ -3658,6 +3767,11 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
   const historyEl = document.getElementById('ia-chat-history');
   if (!historyEl) return;
 
+  // Copy active attachments and clear state
+  const attachments = [...(window.CURRENT_CHAT_ATTACHMENTS || [])];
+  window.CURRENT_CHAT_ATTACHMENTS = [];
+  window.renderIaAttachmentsPreview();
+
   // Helper function to render bold titles and structured bullets
   const formatMarkdownToHtml = (str) => {
     if (!str) return '';
@@ -3690,7 +3804,18 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
   if (!isAutoRequest) {
     const userBubble = document.createElement('div');
     userBubble.className = 'chat-bubble user';
-    userBubble.textContent = text;
+    
+    let bubbleHtml = `<div style="font-size:0.75rem; line-height:1.4; color:#fff;">${text}</div>`;
+    if (attachments.length > 0) {
+      bubbleHtml += `<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        ${attachments.map(att => `
+          <div style="width:48px; height:48px; border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.2); background:#000;">
+            <img src="${att.url}" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+        `).join('')}
+      </div>`;
+    }
+    userBubble.innerHTML = bubbleHtml;
     historyEl.appendChild(userBubble);
     historyEl.scrollTop = historyEl.scrollHeight;
   }
@@ -3742,19 +3867,19 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     - Observaciones internas del profesor: ${CURRENT_STUDENT_HEALTH_CONTEXT.observaciones}
     - Autorización/Consentimiento de responsabilidad: ${CURRENT_STUDENT_HEALTH_CONTEXT.autorizacion}`;
 
-    const hasImages = CURRENT_STUDENT_HEALTH_CONTEXT.imagenes && CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.length > 0;
+    const hasImages = attachments.length > 0;
     if (hasImages) {
-      systemPrompt += `\n\n- Imágenes posturales/clínicas adjuntas: Se te adjuntan ${CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.length} imagen(es) postural(es) de la alumna en el mensaje de usuario. Analiza estas fotos visualmente de forma obligatoria para identificar desviaciones posturales, desbalances musculares o problemas de alineación e integra ese análisis visual clínico con el historial escrito para dar tu diagnóstico, precauciones y recomendaciones en el Semáforo de Seguridad.`;
+      systemPrompt += `\n\n- OBLIGATORIO: Se te han adjuntado una o más imágenes de la alumna (pueden ser fotografías posturales de alineación o radiografías médicas/de columna). Analízalas visualmente con extremo detalle clínico y profesional (detecta desviaciones de columna, escoliosis, hipercifosis, inclinaciones de hombro/cadera, o imperfecciones en radiografías). Responde la pregunta del usuario uniendo tu diagnóstico visual con la información del historial clínico escrito para ofrecer las mejores sugerencias y precauciones en su práctica de Pilates.`;
     }
 
     let userContent = text;
     if (hasImages) {
       userContent = [{ type: "text", text: text }];
-      CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.forEach(imgUrl => {
+      attachments.forEach(att => {
         userContent.push({
           type: "image_url",
           image_url: {
-            url: imgUrl
+            url: att.url
           }
         });
       });
@@ -3766,7 +3891,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
       { role: "user", content: userContent }
     ];
 
-    const modelToUse = hasImages ? "llama-3.2-11b-vision-preview" : "llama-3.1-8b-instant";
+    const modelToUse = hasImages ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.1-8b-instant";
 
     let response;
     let fallbackUsed = false;
@@ -3831,7 +3956,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     // Remove loading bubble
     loadingBubble.remove();
 
-    // Save chat history
+    // Save chat history (save text content in local history to prevent blowing up tokens in later turns)
     CURRENT_CHAT_HISTORY.push({ role: "user", content: text });
     CURRENT_CHAT_HISTORY.push({ role: "assistant", content: reply });
 
@@ -3853,7 +3978,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
       <strong>Detalle técnico:</strong> <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:0.6rem; color: var(--danger); font-family: monospace;">${err.message || err}</code><br><br>
       <strong>Cómo solucionarlo en 2 segundos:</strong><br>
       1. Abre este enlace en otra pestaña: <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--juniper); text-decoration:underline; font-weight:bold;">Activar Acceso de IA temporal</a> y haz clic en el botón de activación.<br>
-      2. Una vez activado, escribe tu mensaje aquí de nuevo.<br><br>
+      2. Once activated, type your message here again.<br><br>
       <em>(Alternativamente, puedes usar una extensión de navegador como "Allow CORS" para desarrollo local).</em>
     `;
     historyEl.appendChild(errorBubble);
