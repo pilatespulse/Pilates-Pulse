@@ -250,6 +250,19 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       if(modalType==='db-form') setDatabaseFormUiHidden(false);
       if(root) root.remove();
       document.body.classList.remove('modal-open');
+      
+      // Restore footer and collapse search bar back to normal
+      const footer = document.querySelector('#app-content .footer-nav');
+      if (footer) footer.style.removeProperty('display');
+      
+      const searchChkbx = document.getElementById('search-checkbox-bottom');
+      if (searchChkbx) {
+        searchChkbx.checked = true;
+        const suggestionsEl = document.getElementById('search-suggestions-bottom');
+        if (suggestionsEl) suggestionsEl.style.display = 'none';
+        const input = document.getElementById('search-input-bottom');
+        if (input) input.value = '';
+      }
     }
 
     function initBokeh(){const c=document.querySelector('.bokeh-container');for(let i=0;i<15;i++){const b=document.createElement('div');b.className='bokeh';const s=Math.random()*150+50;b.style.width=`${s}px`;b.style.height=`${s}px`;b.style.left=`${Math.random()*100}%`;b.style.top=`${Math.random()*100+10}%`;b.style.animationDuration=`${Math.random()*20+15}s`;b.style.animationDelay=`${Math.random()*10}s`;c.appendChild(b);}}
@@ -3088,11 +3101,15 @@ function selectStudentBottom(id, name) {
 }
 
 function onSearchCheckboxChange(chk) {
+  const footer = document.querySelector('#app-content .footer-nav');
   if (chk.checked) {
     const suggestionsEl = document.getElementById('search-suggestions-bottom');
     if (suggestionsEl) suggestionsEl.style.display = 'none';
     const input = document.getElementById('search-input-bottom');
     if (input) input.value = '';
+    if (footer) footer.style.removeProperty('display');
+  } else {
+    if (footer) footer.style.setProperty('display', 'none', 'important');
   }
 }
 
@@ -3152,6 +3169,9 @@ function parseStudentContent(contenido) {
 }
 
 function openStudentInteractivePanel(id, name) {
+  const footer = document.querySelector('#app-content .footer-nav');
+  if (footer) footer.style.setProperty('display', 'none', 'important');
+
   const student = CACHE_ALUMNOS.find(a => String(a.id) === String(id));
   if (!student) {
     alert("No se encontró la información de la alumna.");
