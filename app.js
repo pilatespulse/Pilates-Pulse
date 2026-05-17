@@ -921,6 +921,148 @@ function renderCronograma(){
       return !!(info && info.isOneDay);
     }
 
+    let currentSlideIndex = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    window.handleCarouselTouchStart = function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    };
+    
+    window.handleCarouselTouchEnd = function(e, total) {
+      touchEndX = e.changedTouches[0].screenX;
+      const minSwipeDistance = 50;
+      if (touchEndX < touchStartX - minSwipeDistance) {
+        window.nextSlide(total);
+      } else if (touchEndX > touchStartX + minSwipeDistance) {
+        window.prevSlide(total);
+      }
+    };
+
+    window.showSlide = function(idx, total) {
+      currentSlideIndex = (idx + total) % total;
+      for (let i = 0; i < total; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        const dot = document.getElementById(`dot-${i}`);
+        if (slide) slide.style.opacity = i === currentSlideIndex ? '1' : '0';
+        if (dot) {
+          dot.style.background = i === currentSlideIndex ? '#fff' : 'rgba(255,255,255,0.3)';
+          dot.style.transform = i === currentSlideIndex ? 'scale(1.25)' : 'scale(1)';
+        }
+      }
+    };
+    window.nextSlide = function(total) {
+      window.showSlide(currentSlideIndex + 1, total);
+    };
+    window.prevSlide = function(total) {
+      window.showSlide(currentSlideIndex - 1, total);
+    };
+
+    window.closeStudentCarousel = function() {
+      const el = document.getElementById('app-carousel-overlay');
+      if (el) el.remove();
+    };
+
+    window.deleteStudentImageFromCarousel = async function(alumnoId, index) {
+      if (!alumnoId || alumnoId === 'null') return;
+      const ok = confirm("¿Deseas eliminar esta imagen permanentemente de la base de datos de la alumna?");
+      if (!ok) return;
+      
+      const alumno = CACHE_ALUMNOS.find(x => String(x.id) === String(alumnoId));
+      if (!alumno) return;
+      
+      const p = alumno.contenido.split('|');
+      p[index] = '';
+      const newContent = p.join('|');
+      
+      const { error } = await _sp.from('horarios').update({ contenido: newContent }).eq('id', alumnoId);
+      if (error) {
+        alert("Error al eliminar la imagen de la base de datos.");
+        return;
+      }
+      
+      alert("Imagen eliminada correctamente.");
+      window.closeStudentCarousel();
+      await updateAll();
+      
+      // Auto-refresh clinical interactive panel if it's currently open
+      const activeInteractiveModal = document.querySelector('[aria-label^="Perfil interactivo"]');
+      if (activeInteractiveModal) {
+        const updated = CACHE_ALUMNOS.find(x => String(x.id) === String(alumnoId));
+        if (updated) {
+          openStudentInteractivePanel(alumnoId, updated.contenido.split('|')[1]);
+        }
+      }
+    };
+
+    window.openStudentCarousel = function(alumnoId) {
+      const alumno = CACHE_ALUMNOS.find(x => String(x.id) === String(alumnoId));
+      if (!alumno) return;
+      const p = alumno.contenido.split('|').map(normalizeText);
+      
+      // Map images to their actual indexes in the p array (27, 28, or 29) to know which database index to clear
+      const imagesWithIndex = [];
+      if (p[27]) imagesWithIndex.push({ url: p[27], dbIndex: 27 });
+      if (p[28]) imagesWithIndex.push({ url: p[28], dbIndex: 28 });
+      if (p[29]) imagesWithIndex.push({ url: p[29], dbIndex: 29 });
+
+      if (imagesWithIndex.length === 0) {
+        alert("Este alumno no tiene imágenes cargadas.");
+        return;
+      }
+
+      currentSlideIndex = 0;
+      const title = `Imágenes de ${p[1] || 'Alumno'}`;
+      
+      let overlay = document.getElementById('app-carousel-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'app-carousel-overlay';
+        document.body.appendChild(overlay);
+      }
+      
+      const carouselHtml = `
+      <div class="app-modal-backdrop" onclick="if(event.target===this)closeStudentCarousel()" style="z-index: 10000; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="app-modal-panel" role="dialog" aria-modal="true" style="position: relative; width: 100%; max-width: 520px; background: rgba(25, 32, 34, 0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+          <button class="app-modal-close" onclick="closeStudentCarousel()" style="position: absolute; right: 18px; top: 18px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">&times;</button>
+          <div class="app-modal-title" style="font-size: 0.85rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--faded-jade); margin-bottom: 16px;">${title}</div>
+          
+          <div class="carousel-container" style="position:relative; width:100%; display:flex; flex-direction:column; align-items:center;">
+            <div class="carousel-slides" ontouchstart="window.handleCarouselTouchStart(event)" ontouchend="window.handleCarouselTouchEnd(event, ${imagesWithIndex.length})" style="position:relative; width:100%; height:420px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:18px; background:#08080a; border: 1px solid rgba(255,255,255,0.06); box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
+              ${imagesWithIndex.map((img, idx) => `
+                <div class="carousel-slide" id="slide-${idx}" style="position:absolute; inset:0; opacity:${idx === 0 ? 1 : 0}; transition:opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px;">
+                  <div style="flex:1; display:flex; align-items:center; justify-content:center; max-height:280px; width:100%;">
+                    <img src="${img.url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                  </div>
+                  <button type="button" onclick="window.deleteStudentImageFromCarousel('${alumnoId}', ${img.dbIndex})" style="background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239,68,68,0.25); color:#fc8181; padding:6px 12px; border-radius:12px; font-size:0.55rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:12px; transition:all 0.2s; z-index:20;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">
+                    <svg style="width:10px; height:10px; fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    Eliminar Imagen
+                  </button>
+                </div>
+              `).join('')}
+              
+              ${imagesWithIndex.length > 1 ? `
+                <button onclick="prevSlide(${imagesWithIndex.length})" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); background:rgba(15,15,15,0.75); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.18); color:#fff; width:40px; height:40px; border-radius:50%; cursor:pointer; font-weight:bold; font-size:1.4rem; display:flex; align-items:center; justify-content:center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index:10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.4)';" onmouseout="this.style.background='rgba(15,15,15,0.75)'; this.style.borderColor='rgba(255,255,255,0.18)';">&#8249;</button>
+                <button onclick="nextSlide(${imagesWithIndex.length})" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); background:rgba(15,15,15,0.75); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.18); color:#fff; width:40px; height:40px; border-radius:50%; cursor:pointer; font-weight:bold; font-size:1.4rem; display:flex; align-items:center; justify-content:center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index:10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.4)';" onmouseout="this.style.background='rgba(15,15,15,0.75)'; this.style.borderColor='rgba(255,255,255,0.18)';">&#8250;</button>
+              ` : ''}
+            </div>
+            
+            ${imagesWithIndex.length > 1 ? `
+              <div class="carousel-dots" style="display:flex; gap:8px; margin-top:14px;">
+                ${imagesWithIndex.map((_, idx) => `
+                  <span class="carousel-dot ${idx === 0 ? 'active' : ''}" id="dot-${idx}" onclick="showSlide(${idx}, ${imagesWithIndex.length})" style="width:8px; height:8px; border-radius:50%; background:${idx === 0 ? '#fff' : 'rgba(255,255,255,0.3)'}; cursor:pointer; transition: all 0.3s; transform:${idx === 0 ? 'scale(1.25)' : 'scale(1)'};"></span>
+                `).join('')}
+              </div>
+            ` : ''}
+            
+            <button class="btn-cancelar" style="margin-top:20px; width:auto; min-width:140px; padding:12px 24px; font-size:0.6rem; letter-spacing:1px; border-radius:30px;" onclick="closeStudentCarousel()">CERRAR</button>
+          </div>
+        </div>
+      </div>`;
+      
+      overlay.innerHTML = carouselHtml;
+    };
+
     function renderAlumnosList(lista){
       const container=document.getElementById('render-alumnos');
       if(!container) return;
@@ -937,7 +1079,12 @@ function renderCronograma(){
         const dolorLesion=`${p[16]||'N/A'}${p[17]?` - ${p[17]}`:''}`;
         const cirugia=`${p[18]||'N/A'}${p[19]?` - ${p[19]}`:''}`;
         const partos=`${p[22]||'N/A'}${p[22]==='Si'&&p[23]?` - ${p[23]}`:''}`;
-        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> &bull; ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
+        const hasImages=!!(p[27] || p[28] || p[29]);
+        const btnVerImagenes=hasImages 
+          ? `<button class="nav-btn" style="padding:10px 18px;font-size:.5rem;background:#2b4c50;border-color:#417076;color:#fff;letter-spacing:1px" onclick="openStudentCarousel('${a.id}')">VER IMÁGENES</button>` 
+          : '';
+
+        return `<div class="clase-box"><b style="font-size:.85rem" class="${estaVencido?'vence-alerta':''}">${p[1]||'SIN NOMBRE'}</b><br>${telefono}<br><small style="opacity:.5"><span style="color:${classColor(p[3])};font-weight:800">${p[3]||''}</span> &bull; ${p[4]||'Sin frecuencia'}</small><div id="extra-${a.id}" style="display:none;margin-top:12px;font-size:.68rem;line-height:1.6"><p><b>PROFESION:</b> ${p[13]||'N/A'}</p><p><b>TELEFONO:</b> ${p[2]||'N/A'}</p><p><b style="color:#ffd36a">MODALIDAD:</b> <span style="color:#ffd36a;font-weight:800">${p[5]||'N/A'}</span></p><p><b>VENCIMIENTO:</b> <span class="${estaVencido?'vence-alerta':''}">${p[10]||'N/A'}</span></p><hr style="opacity:.1;margin:10px 0"><p><b>SALUD:</b> ${p[6]||'Ninguna'}</p><p><b>VISITA:</b> ${p[7]||'N/A'}</p><p><b>ORIGEN:</b> ${p[8]||'N/A'}</p><p><b>REFERIDO:</b> ${p[9]||'N/A'}</p><hr style="opacity:.1;margin:10px 0"><p><b style="color:#9fe4c7">INFORMACION ADICIONAL</b></p><p><b>ACTIVIDAD FISICA:</b> ${actividadFisica}</p><p><b>DOLOR O LESION:</b> ${dolorLesion}</p><p><b>CIRUGIA:</b> ${cirugia}</p><p><b>TENSION:</b> ${p[20]||'N/A'}</p><p><b>EMBARAZO:</b> ${p[21]||'N/A'}</p><p><b>PARTOS O CESAREAS:</b> ${partos}</p><p><b>OBJETIVO:</b> ${p[24]||'N/A'}</p><p><b>OBSERVACIONES:</b> ${p[25]||'N/A'}</p><button class="btn-principal" style="padding:10px;font-size:.55rem;margin-top:15px;letter-spacing:1px" onclick="abrirFormNuevoAlumno('${a.id}','${contenidoSeguro}')">EDITAR</button></div><div style="margin-top:15px;display:flex;gap:10px;justify-content:space-between;align-items:center"><div style="display:flex;gap:6px;align-items:center"><button class="nav-btn" style="padding:10px 20px;font-size:.5rem;background:#1a1a1c;border-color:#333;letter-spacing:1px" onclick="toggleExtra('${a.id}')">DETALLES</button>${btnVerImagenes}</div><button style="background:transparent;border:none;color:var(--danger);font-size:.55rem;font-weight:900;cursor:pointer;opacity:.8" onclick="borrar('${a.id}')">BORRAR</button></div></div>`;
       }).join('');
       normalizeDomText(container);
     }
@@ -1450,8 +1597,62 @@ function processVencimientos(){
       el.style.display=el.style.display==='none'?'block':'none';
     }
 
+    const uploadImage = async (inputId, existingUrl) => {
+      const input = document.getElementById(inputId);
+      const file = input?.files?.[0];
+      if (!file) return existingUrl;
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const filePath = `alumnos/${fileName}`;
+      
+      const { data, error } = await _sp.storage
+        .from('alumno-imagenes')
+        .upload(filePath, file);
+        
+      if (error) {
+        console.error("Error uploading file: ", error);
+        alert(`Error al subir la imagen: ${error.message}`);
+        throw error;
+      }
+      
+      const { data: publicData } = _sp.storage
+        .from('alumno-imagenes')
+        .getPublicUrl(filePath);
+        
+      return publicData.publicUrl;
+    };
+
+    window.deleteStudentImage = async function(alumnoId, index) {
+      if (!alumnoId || alumnoId === 'null') return;
+      const ok = confirm("¿Deseas eliminar esta imagen?");
+      if (!ok) return;
+      
+      const alumno = CACHE_ALUMNOS.find(x => String(x.id) === String(alumnoId));
+      if (!alumno) return;
+      
+      const p = alumno.contenido.split('|');
+      p[index] = '';
+      const newContent = p.join('|');
+      
+      const { error } = await _sp.from('horarios').update({ contenido: newContent }).eq('id', alumnoId);
+      if (error) {
+        alert("Error al eliminar la imagen de la base de datos.");
+        return;
+      }
+      
+      alert("Imagen eliminada de la ficha del alumno.");
+      closeModal();
+      await updateAll();
+      
+      const updated = CACHE_ALUMNOS.find(x => String(x.id) === String(alumnoId));
+      if (updated) {
+        abrirFormNuevoAlumno(alumnoId, updated.contenido.replace(/'/g, '&#39;'));
+      }
+    };
+
     function abrirFormNuevoAlumno(editId=null,existingData=null){
-      const p=existingData?existingData.split('|'):Array(27).fill('');
+      const p=existingData?existingData.split('|'):Array(30).fill('');
       const get=(idx,def='')=>typeof p[idx]!=='undefined'?p[idx]:def;
 
       const nombre=get(1,'');
@@ -1483,6 +1684,10 @@ function processVencimientos(){
 
       const obs=get(25,get(9,''));
       const aut=get(26,'No')==='Si';
+
+      const foto1=get(27,'');
+      const foto2=get(28,'');
+      const foto3=get(29,'');
 
       let nums='';
       for(let i=1;i<=100;i++) nums+=`<option ${String(partosCuantos)===String(i)?'selected':''}>${i}</option>`;
@@ -1553,6 +1758,49 @@ function processVencimientos(){
           <label>Observaciones</label><textarea id="db-obs" rows="3">${obs}</textarea>
         </div>
 
+        <label style="color:#ffd36a; font-weight:800; margin-top:20px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:5px; font-size:0.6rem; letter-spacing:1px;">Imágenes y Documentos (Máx. 3)</label>
+        <div style="display:grid; grid-template-columns:1fr; gap:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); padding:14px; border-radius:16px; margin-bottom:15px;">
+          <div>
+            <label style="margin-left:0; font-size:0.5rem; color:#aaa; margin-bottom: 6px; display: block;">Imagen 1</label>
+            ${foto1 ? `
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1;">
+                  <img src="${foto1}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">
+                  <span style="font-size:0.55rem; color:#eee; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Imagen cargada</span>
+                </div>
+                <button type="button" onclick="deleteStudentImage('${editId}', 27)" style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239,68,68,0.3); color:#fc8181; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.8rem; font-weight:bold; transition:all 0.2s; margin:0;" onmouseover="this.style.background='rgba(239,68,68,0.35)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.15)'; this.style.color='#fc8181;'" title="Eliminar Imagen">&times;</button>
+              </div>
+            ` : ''}
+            <input type="file" id="db-foto-1" accept="image/*" style="margin-bottom:8px; padding:10px 14px; font-size:0.6rem; border-radius:12px;">
+          </div>
+          <div>
+            <label style="margin-left:0; font-size:0.5rem; color:#aaa; margin-bottom: 6px; display: block;">Imagen 2</label>
+            ${foto2 ? `
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1;">
+                  <img src="${foto2}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">
+                  <span style="font-size:0.55rem; color:#eee; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Imagen cargada</span>
+                </div>
+                <button type="button" onclick="deleteStudentImage('${editId}', 28)" style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239,68,68,0.3); color:#fc8181; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.8rem; font-weight:bold; transition:all 0.2s; margin:0;" onmouseover="this.style.background='rgba(239,68,68,0.35)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.15)'; this.style.color='#fc8181;'" title="Eliminar Imagen">&times;</button>
+              </div>
+            ` : ''}
+            <input type="file" id="db-foto-2" accept="image/*" style="margin-bottom:8px; padding:10px 14px; font-size:0.6rem; border-radius:12px;">
+          </div>
+          <div>
+            <label style="margin-left:0; font-size:0.5rem; color:#aaa; margin-bottom: 6px; display: block;">Imagen 3</label>
+            ${foto3 ? `
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1;">
+                  <img src="${foto3}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.15);">
+                  <span style="font-size:0.55rem; color:#eee; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Imagen cargada</span>
+                </div>
+                <button type="button" onclick="deleteStudentImage('${editId}', 29)" style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239,68,68,0.3); color:#fc8181; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.8rem; font-weight:bold; transition:all 0.2s; margin:0;" onmouseover="this.style.background='rgba(239,68,68,0.35)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.15)'; this.style.color='#fc8181;'" title="Eliminar Imagen">&times;</button>
+              </div>
+            ` : ''}
+            <input type="file" id="db-foto-3" accept="image/*" style="margin-bottom:8px; padding:10px 14px; font-size:0.6rem; border-radius:12px;">
+          </div>
+        </div>
+
         <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:.65rem;margin-left:0">
           <input type="checkbox" id="db-aut" ${aut?'checked':''} style="width:auto;margin:0"> Autorizo participar en las clases de Pilates Pulse bajo mi propia responsabilidad.
         </label>
@@ -1576,6 +1824,38 @@ function processVencimientos(){
     async function saveAlumno(editId="null"){
       const d=id=>document.getElementById(id)?.value||'';
       const ch=id=>document.getElementById(id)?.checked? 'Si':'No';
+
+      let fotoUrl1 = '';
+      let fotoUrl2 = '';
+      let fotoUrl3 = '';
+
+      if (editId !== "null") {
+        const found = CACHE_ALUMNOS.find(x => String(x.id) === String(editId));
+        if (found) {
+          const parts = found.contenido.split('|');
+          fotoUrl1 = parts[27] || '';
+          fotoUrl2 = parts[28] || '';
+          fotoUrl3 = parts[29] || '';
+        }
+      }
+
+      const saveBtn = document.querySelector('.modal-form-shell button[onclick^="saveAlumno"]');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'GUARDANDO...';
+      }
+
+      try {
+        fotoUrl1 = await uploadImage('db-foto-1', fotoUrl1);
+        fotoUrl2 = await uploadImage('db-foto-2', fotoUrl2);
+        fotoUrl3 = await uploadImage('db-foto-3', fotoUrl3);
+      } catch (err) {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerText = 'GUARDAR';
+        }
+        return;
+      }
 
       const nombre=d('db-nom').trim();
       const tel=d('db-tel').trim();
@@ -1629,7 +1909,10 @@ function processVencimientos(){
         safe(partos==='Si'?partosCuantos:''),
         safe(objetivo),
         safe(obs),
-        safe(autorizo)
+        safe(autorizo),
+        safe(fotoUrl1),
+        safe(fotoUrl2),
+        safe(fotoUrl3)
       ].join('|');
 
       if(editId!=="null") await _sp.from('horarios').update({contenido:content}).eq('id',editId);
@@ -3164,7 +3447,8 @@ function parseStudentContent(contenido) {
     partosCesareas: getField(22, 23),
     objetivo: p[24] || p[4] || 'Ninguno',
     observaciones: p[25] || p[9] || 'Ninguna',
-    autorizacion: p[26] || 'No registrada'
+    autorizacion: p[26] || 'No registrada',
+    imagenes: [p[27], p[28], p[29]].filter(Boolean)
   };
 }
 
@@ -3241,6 +3525,19 @@ function openStudentInteractivePanel(id, name) {
           <div class="history-card-header" style="color: var(--faded-jade) !important;">Autorización de Participación</div>
           <div class="history-card-body" style="font-size: .75rem;">¿Autorizó clases bajo su responsabilidad?: <strong>${history.autorizacion}</strong></div>
         </div>
+
+        ${history.imagenes && history.imagenes.length > 0 ? `
+          <div style="grid-column: 1 / -1; font-size: .65rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faded-jade); margin: 12px 0 4px 0; padding-left: 2px;">Imágenes y Ficha Postural</div>
+          <div class="history-card" style="grid-column: 1 / -1; background: rgba(255,255,255,0.01) !important; border-color: rgba(65,112,118,0.15) !important;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              ${history.imagenes.map((imgUrl, imgIdx) => `
+                <div style="position: relative; cursor: pointer; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 85px; height: 85px; transition: transform 0.2s;" onclick="openStudentCarousel('${id}')" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                  <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     </div>
 
@@ -3419,7 +3716,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     const apiKey = "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";
     
     // Highly tailored system prompt to enforce extreme brevity, structure, and bolding
-    const systemPrompt = `Eres un experto fisioterapeuta y maestro elite del método Pilates. Tu labor es dar soluciones, rutinas, precauciones y recomendaciones específicas de Pilates basadas en el perfil clínico y la base de datos de la alumna provista.
+    let systemPrompt = `Eres un experto fisioterapeuta y maestro elite del método Pilates. Tu labor es dar soluciones, rutinas, precauciones y recomendaciones específicas de Pilates basadas en el perfil clínico y la base de datos de la alumna provista.
     
     REGLAS DE FORMATO Y ESTILO (ESTRICTAS):
     1. Sé extremadamente DIRECTO, CONCISO y FÁCIL DE ENTENDER. Evita largas introducciones o rodeos retóricos.
@@ -3445,16 +3742,36 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     - Observaciones internas del profesor: ${CURRENT_STUDENT_HEALTH_CONTEXT.observaciones}
     - Autorización/Consentimiento de responsabilidad: ${CURRENT_STUDENT_HEALTH_CONTEXT.autorizacion}`;
 
+    const hasImages = CURRENT_STUDENT_HEALTH_CONTEXT.imagenes && CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.length > 0;
+    if (hasImages) {
+      systemPrompt += `\n\n- Imágenes posturales/clínicas adjuntas: Se te adjuntan ${CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.length} imagen(es) postural(es) de la alumna en el mensaje de usuario. Analiza estas fotos visualmente de forma obligatoria para identificar desviaciones posturales, desbalances musculares o problemas de alineación e integra ese análisis visual clínico con el historial escrito para dar tu diagnóstico, precauciones y recomendaciones en el Semáforo de Seguridad.`;
+    }
+
+    let userContent = text;
+    if (hasImages) {
+      userContent = [{ type: "text", text: text }];
+      CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.forEach(imgUrl => {
+        userContent.push({
+          type: "image_url",
+          image_url: {
+            url: imgUrl
+          }
+        });
+      });
+    }
+
     const messages = [
       { role: "system", content: systemPrompt },
       ...apiHistory,
-      { role: "user", content: text }
+      { role: "user", content: userContent }
     ];
+
+    const modelToUse = hasImages ? "llama-3.2-11b-vision-preview" : "llama-3.1-8b-instant";
 
     let response;
     let fallbackUsed = false;
 
-    // Dual-proxy mechanism to handle CORS in browser environments reliably
+    // Triple-proxy mechanism to handle CORS in browser environments reliably
     try {
       response = await fetch("https://corsproxy.io/?url=https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -3463,33 +3780,51 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: modelToUse,
           messages: messages,
           temperature: 0.7,
           max_tokens: 800
         })
       });
-      if (!response.ok) throw new Error("CORSProxy failed or unauthorized.");
+      if (!response.ok) throw new Error(`CORSProxy returned status ${response.status}`);
     } catch (proxyError) {
-      console.warn("Primary corsproxy.io failed, attempting fallback to cors-anywhere...");
-      fallbackUsed = true;
-      response = await fetch("https://cors-anywhere.herokuapp.com/https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "x-requested-with": "XMLHttpRequest"
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 800
-        })
-      });
+      console.warn("Primary corsproxy.io failed, attempting fallback to allorigins...");
+      try {
+        response = await fetch("https://api.allorigins.win/raw?url=https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 800
+          })
+        });
+        if (!response.ok) throw new Error(`AllOrigins returned status ${response.status}`);
+      } catch (allOriginsError) {
+        console.warn("AllOrigins failed, attempting fallback to cors-anywhere...");
+        fallbackUsed = true;
+        response = await fetch("https://cors-anywhere.herokuapp.com/https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "x-requested-with": "XMLHttpRequest"
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 800
+          })
+        });
+      }
     }
 
-    if (!response.ok) throw new Error("API call failed on both proxies.");
+    if (!response || !response.ok) throw new Error(`API call failed on all three proxies. Status: ${response ? response.status : 'No response'}`);
     const data = await response.json();
     const reply = data.choices[0].message.content;
 
@@ -3515,6 +3850,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     errorBubble.style.borderColor = 'var(--danger)';
     errorBubble.innerHTML = `
       Lo siento, ha ocurrido un error al conectar con el Asistente de IA.<br><br>
+      <strong>Detalle técnico:</strong> <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:0.6rem; color: var(--danger); font-family: monospace;">${err.message || err}</code><br><br>
       <strong>Cómo solucionarlo en 2 segundos:</strong><br>
       1. Abre este enlace en otra pestaña: <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--juniper); text-decoration:underline; font-weight:bold;">Activar Acceso de IA temporal</a> y haz clic en el botón de activación.<br>
       2. Una vez activado, escribe tu mensaje aquí de nuevo.<br><br>
