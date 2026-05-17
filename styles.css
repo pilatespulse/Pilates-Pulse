@@ -3442,7 +3442,7 @@ body::before{
 /* From Uiverse.io by vnuny */ 
 #app-content .container {
   position: fixed !important;
-  bottom: 155px !important;
+  bottom: 180px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   z-index: 1000 !important;
