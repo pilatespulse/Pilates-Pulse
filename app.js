@@ -4023,7 +4023,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
   }));
 
   try {
-    const apiKey = "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";
+    const apiKey = "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";
     
     // Highly tailored system prompt to enforce extreme brevity, structure, and bolding
     let systemPrompt = `Eres un experto fisioterapeuta y maestro elite del método Pilates. Tu labor es dar soluciones, rutinas, precauciones y recomendaciones específicas de Pilates basadas en el perfil clínico y la base de datos de la alumna provista.
@@ -4057,37 +4057,26 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
       systemPrompt += `\n\n- OBLIGATORIO: Se te han adjuntado una o más imágenes de la alumna (pueden ser fotografías posturales de alineación o radiografías médicas/de columna). Analízalas visualmente con extremo detalle clínico y profesional (detecta desviaciones de columna, escoliosis, hipercifosis, inclinaciones de hombro/cadera, o imperfecciones en radiografías). Responde la pregunta del usuario uniendo tu diagnóstico visual con la información del historial clínico escrito para ofrecer las mejores sugerencias y precauciones en su práctica de Pilates.`;
     }
 
-    let userContent = text;
-    if (hasImages) {
-      userContent = [{ type: "text", text: text }];
-      attachments.forEach(att => {
-        userContent.push({
-          type: "image_url",
-          image_url: {
-            url: att.url
-          }
-        });
-      });
-    }
-
     const messages = [
       { role: "system", content: systemPrompt },
       ...apiHistory,
-      { role: "user", content: userContent }
+      { role: "user", content: text }
     ];
 
-    const modelToUse = hasImages ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.1-8b-instant";
+    const modelToUse = hasImages ? "meta-llama/llama-3.2-11b-vision-instruct:free" : "openai/gpt-oss-20b:free";
 
     let response;
-    let fallbackUsed = false;
 
-    // Triple-proxy mechanism to handle CORS in browser environments reliably
+    // Call Supabase Edge Function
+    const edgeFunctionUrl = "https://iodtfnclwwgcczxgbmbq.supabase.co/functions/v1/ai-proxy";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZHRmbmNsd3dnY2N6eGdibWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNTM1MjcsImV4cCI6MjA4NzYyOTUyN30.DAM5wlMCEjdbSow1y8PDH_7FgHh-LHJ6z5Aq6KqZajo";
+    
     try {
-      response = await fetch("https://corsproxy.io/?url=https://api.groq.com/openai/v1/chat/completions", {
+      response = await fetch(edgeFunctionUrl, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey}`
         },
         body: JSON.stringify({
           model: modelToUse,
@@ -4096,46 +4085,22 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
           max_tokens: 800
         })
       });
-      if (!response.ok) throw new Error(`CORSProxy returned status ${response.status}`);
-    } catch (proxyError) {
-      console.warn("Primary corsproxy.io failed, attempting fallback to allorigins...");
-      try {
-        response = await fetch("https://api.allorigins.win/raw?url=https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: modelToUse,
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 800
-          })
-        });
-        if (!response.ok) throw new Error(`AllOrigins returned status ${response.status}`);
-      } catch (allOriginsError) {
-        console.warn("AllOrigins failed, attempting fallback to cors-anywhere...");
-        fallbackUsed = true;
-        response = await fetch("https://cors-anywhere.herokuapp.com/https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "x-requested-with": "XMLHttpRequest"
-          },
-          body: JSON.stringify({
-            model: modelToUse,
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 800
-          })
-        });
-      }
+    } catch (err) {
+      throw new Error(`Failed to connect to Edge Function: ${err.message}`);
     }
 
-    if (!response || !response.ok) throw new Error(`API call failed on all three proxies. Status: ${response ? response.status : 'No response'}`);
+    if (!response || !response.ok) {
+      const errorText = await response.text();
+      console.error("Edge Function Error:", errorText);
+      throw new Error(`Edge Function failed. Status: ${response ? response.status : 'No response'}. Response: ${errorText}`);
+    }
     const data = await response.json();
+    console.log("Edge Function Response:", data);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid response format from Edge Function. Response: ${JSON.stringify(data)}`);
+    }
+    
     const reply = data.choices[0].message.content;
 
     // Remove loading bubble
@@ -4161,10 +4126,10 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     errorBubble.innerHTML = `
       Lo siento, ha ocurrido un error al conectar con el Asistente de IA.<br><br>
       <strong>Detalle técnico:</strong> <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:0.6rem; color: var(--danger); font-family: monospace;">${err.message || err}</code><br><br>
-      <strong>Cómo solucionarlo en 2 segundos:</strong><br>
-      1. Abre este enlace en otra pestaña: <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--juniper); text-decoration:underline; font-weight:bold;">Activar Acceso de IA temporal</a> y haz clic en el botón de activación.<br>
-      2. Once activated, type your message here again.<br><br>
-      <em>(Alternativamente, puedes usar una extensión de navegador como "Allow CORS" para desarrollo local).</em>
+      <strong>Cómo solucionarlo:</strong><br>
+      1. Intenta enviar tu mensaje nuevamente (los proxies pueden estar temporalmente saturados)<br>
+      2. Si el problema persiste, usa una extensión de navegador como "Allow CORS" para desarrollo local<br>
+      3. Para producción, considera implementar un Edge Function en Supabase
     `;
     historyEl.appendChild(errorBubble);
     historyEl.scrollTop = historyEl.scrollHeight;
