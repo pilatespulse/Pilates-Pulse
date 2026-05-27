@@ -4077,10 +4077,28 @@ Historial Clínico:
       systemPrompt += `\n\n- OBLIGATORIO: Se te han adjuntado imágenes de la alumna (fotografías posturales o radiografías). Analízalas con detalle clínico (detecta desviaciones de columna, escoliosis, hipercifosis, inclinaciones de hombro/cadera). Une tu diagnóstico visual con el historial clínico para ofrecer sugerencias y precauciones específicas en su práctica de Pilates.`;
     }
 
+    // Build messages array with proper format for vision model
+    let userContent;
+    if (hasImages) {
+      userContent = [
+        { type: "text", text: text }
+      ];
+      attachments.forEach(att => {
+        userContent.push({
+          type: "image_url",
+          image_url: {
+            url: att.url
+          }
+        });
+      });
+    } else {
+      userContent = text;
+    }
+
     const messages = [
       { role: "system", content: systemPrompt },
       ...apiHistory,
-      { role: "user", content: text }
+      { role: "user", content: userContent }
     ];
 
     const modelToUse = hasImages ? "llava-v1.5-7b-4096-preview" : "llama-3.1-8b-instant";
