@@ -4023,8 +4023,6 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
   }));
 
   try {
-    const apiKey = "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";
-    
     // Highly tailored system prompt to enforce extreme brevity, structure, and bolding
     let systemPrompt = `Eres un experto fisioterapeuta y maestro elite del método Pilates. Tu labor es dar soluciones, rutinas, precauciones y recomendaciones específicas de Pilates basadas en el perfil clínico y la base de datos de la alumna provista.
     
@@ -4063,44 +4061,51 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
       { role: "user", content: text }
     ];
 
-    const modelToUse = hasImages ? "meta-llama/llama-3.2-11b-vision-instruct:free" : "openai/gpt-oss-20b:free";
+    const modelToUse = hasImages ? "llava-v1.5-7b-4096-preview" : "llama-3.1-8b-instant";
 
     let response;
 
-    // Call Supabase Edge Function
-    const edgeFunctionUrl = "https://iodtfnclwwgcczxgbmbq.supabase.co/functions/v1/ai-proxy";
-    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZHRmbmNsd3dnY2N6eGdibWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNTM1MjcsImV4cCI6MjA4NzYyOTUyN30.DAM5wlMCEjdbSow1y8PDH_7FgHh-LHJ6z5Aq6KqZajo";
-    
-    try {
-      response = await fetch(edgeFunctionUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 800
-        })
-      });
-    } catch (err) {
-      throw new Error(`Failed to connect to Edge Function: ${err.message}`);
+    // Try multiple Groq models in order until one works
+    const models = [
+      modelToUse,
+      "llama-3.1-70b-versatile",
+      "mixtral-8x7b-32768",
+      "gemma2-9b-it"
+    ];
+
+    const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
+    const cloudflareWorkerUrl = "https://groq-proxy.longible.workers.dev";
+
+    for (const currentModel of models) {
+      try {
+        response = await fetch(cloudflareWorkerUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: currentModel,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 800
+          })
+        });
+
+        if (response.ok) {
+          break;
+        }
+
+        console.warn(`Model ${currentModel} returned status ${response.status}, trying next...`);
+      } catch (err) {
+        console.warn(`Model ${currentModel} failed: ${err.message}, trying next...`);
+      }
     }
 
     if (!response || !response.ok) {
-      const errorText = await response.text();
-      console.error("Edge Function Error:", errorText);
-      throw new Error(`Edge Function failed. Status: ${response ? response.status : 'No response'}. Response: ${errorText}`);
+      throw new Error(`All Groq models failed. Last status: ${response ? response.status : 'No response'}`);
     }
+
     const data = await response.json();
-    console.log("Edge Function Response:", data);
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error(`Invalid response format from Edge Function. Response: ${JSON.stringify(data)}`);
-    }
-    
     const reply = data.choices[0].message.content;
 
     // Remove loading bubble
@@ -4118,7 +4123,7 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
     historyEl.scrollTop = historyEl.scrollHeight;
 
   } catch (err) {
-    console.error("Groq chat error:", err);
+    console.error("AI chat error:", err);
     loadingBubble.remove();
     const errorBubble = document.createElement('div');
     errorBubble.className = 'chat-bubble assistant';
@@ -4127,9 +4132,8 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
       Lo siento, ha ocurrido un error al conectar con el Asistente de IA.<br><br>
       <strong>Detalle técnico:</strong> <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:0.6rem; color: var(--danger); font-family: monospace;">${err.message || err}</code><br><br>
       <strong>Cómo solucionarlo:</strong><br>
-      1. Intenta enviar tu mensaje nuevamente (los proxies pueden estar temporalmente saturados)<br>
-      2. Si el problema persiste, usa una extensión de navegador como "Allow CORS" para desarrollo local<br>
-      3. Para producción, considera implementar un Edge Function en Supabase
+      1. Intenta enviar tu mensaje nuevamente (se probarán otros modelos automáticamente)<br>
+      2. Si el problema persiste, verifica tu conexión a internet
     `;
     historyEl.appendChild(errorBubble);
     historyEl.scrollTop = historyEl.scrollHeight;
