@@ -4120,11 +4120,19 @@ Historial Clínico:
     const data = await response.json();
     console.log("Cloudflare Worker Response:", data);
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    // Handle different response formats
+    let reply;
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      reply = data.choices[0].message.content;
+    } else if (data.message) {
+      reply = data.message;
+    } else if (data.content) {
+      reply = data.content;
+    } else if (typeof data === 'string') {
+      reply = data;
+    } else {
       throw new Error(`Invalid response format from Cloudflare Worker. Response: ${JSON.stringify(data)}`);
     }
-    
-    const reply = data.choices[0].message.content;
 
     // Remove loading bubble
     loadingBubble.remove();
