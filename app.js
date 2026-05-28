@@ -4065,28 +4065,10 @@ Historial Clínico:
       systemPrompt += `\n\n- OBLIGATORIO: Se te han adjuntado imágenes de la alumna (fotografías posturales o radiografías). Analízalas con detalle clínico (detecta desviaciones de columna, escoliosis, hipercifosis, inclinaciones de hombro/cadera). Une tu diagnóstico visual con el historial clínico para ofrecer sugerencias y precauciones específicas en su práctica de Pilates.`;
     }
 
-    // Build messages array with proper format for vision model
-    let userContent;
-    if (hasImages) {
-      userContent = [
-        { type: "text", text: text }
-      ];
-      attachments.forEach(att => {
-        userContent.push({
-          type: "image_url",
-          image_url: {
-            url: att.url
-          }
-        });
-      });
-    } else {
-      userContent = text;
-    }
-
     const messages = [
       { role: "system", content: systemPrompt },
       ...apiHistory,
-      { role: "user", content: userContent }
+      { role: "user", content: text }
     ];
 
     const modelToUse = hasImages ? "llava-v1.5-7b-4096-preview" : "llama-3.1-8b-instant";
@@ -4130,10 +4112,18 @@ Historial Clínico:
     }
 
     if (!response || !response.ok) {
-      throw new Error(`All Groq models failed. Last status: ${response ? response.status : 'No response'}`);
+      const errorText = await response.text();
+      console.error("Cloudflare Worker Error:", errorText);
+      throw new Error(`Cloudflare Worker failed. Status: ${response ? response.status : 'No response'}. Response: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("Cloudflare Worker Response:", data);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error(`Invalid response format from Cloudflare Worker. Response: ${JSON.stringify(data)}`);
+    }
+    
     const reply = data.choices[0].message.content;
 
     // Remove loading bubble
