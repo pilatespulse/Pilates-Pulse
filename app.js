@@ -3957,18 +3957,6 @@ async function sendIaChatMessage(overrideText = '', isAutoRequest = false) {
   window.CURRENT_CHAT_ATTACHMENTS = [];
   window.renderIaAttachmentsPreview();
 
-  // Automatically include student's database images if available
-  if (CURRENT_STUDENT_HEALTH_CONTEXT && CURRENT_STUDENT_HEALTH_CONTEXT.imagenes && CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.length > 0) {
-    CURRENT_STUDENT_HEALTH_CONTEXT.imagenes.forEach((imgUrl, idx) => {
-      if (imgUrl && !attachments.some(att => att.url === imgUrl)) {
-        attachments.push({
-          url: imgUrl,
-          name: `Foto DB ${idx + 1}`
-        });
-      }
-    });
-  }
-
   // Helper function to render bold titles and structured bullets
   const formatMarkdownToHtml = (str) => {
     if (!str) return '';
