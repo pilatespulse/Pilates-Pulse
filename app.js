@@ -60,6 +60,7 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
       usdt:'USDT',
       sin_metodo:'Sin metodo'
     };
+    const CONTADURIA_GANANCIA_PERSONAS=['Isabel','Dalia'];
     const CONTADURIA_TABLE='contabilidad_movimientos';
     const WS_ICON_URL="https://i.postimg.cc/9M0NRgcD/Whats-App-svg.webp";
     const CELDA_DB="DB_ENTRY",CELDA_SOLICITUD="SOLICITUD_WEB",CELDA_RESET_META="SYS_WEEK_RESET",CELDA_NOTIF_STATE="SYS_NOTIF_STATE";
@@ -263,6 +264,51 @@ const _sp=supabase.createClient("https://iodtfnclwwgcczxgbmbq.supabase.co","sb_p
         const input = document.getElementById('search-input-bottom');
         if (input) input.value = '';
       }
+    }
+
+    function openGananciaEditor(id){
+      const item=CONTADURIA_GANANCIAS_BY_ID[id];
+      if(!item){ alert('No se encontro el registro.'); return; }
+      const persona=(item.persona||'Ganancia').trim();
+      const monto=(parseFloat(item.monto)||0).toFixed(2);
+      const fecha=item.fecha?String(item.fecha).slice(0,10):'';
+      const bodyHtml=
+        '<div class="modal-form-shell contaduria-edit-modal">'+
+          '<div style="font-weight:800;margin-bottom:8px">'+persona+'</div>'+
+          '<label>Fecha</label>'+
+          '<input id="edit-ganancia-fecha" type="date" value="'+fecha+'">'+
+          '<label style="margin-top:12px">Monto (EUR)</label>'+
+          '<input id="edit-ganancia-total" type="number" min="0" step="0.01" value="'+monto+'">'+
+          '<div style="display:flex;gap:10px;margin-top:14px">'+
+            '<button class="btn-principal" onclick="saveGananciaEditor('+id+')">Guardar cambios</button>'+
+            '<button class="btn-cancelar" onclick="closeModal()">Cancelar</button>'+
+          '</div>'+
+        '</div>';
+      openModal('Editar registro', bodyHtml);
+    }
+
+    async function saveGananciaEditor(id){
+      const item=CONTADURIA_GANANCIAS_BY_ID[id];
+      if(!item){ alert('No se encontro el registro.'); return; }
+      const fecha=document.getElementById('edit-ganancia-fecha')?.value||'';
+      const total=parseFloat(document.getElementById('edit-ganancia-total')?.value||'0');
+      if(!fecha||!Number.isFinite(total)||total<=0){
+        alert('Completa fecha y monto valido.');
+        return;
+      }
+      const meta=parseContaduriaCategoria(item.categoria);
+      const metodo=meta.metodo||'efectivo';
+      const metaActualizada=await buildEgresoMeta(metodo,total);
+      const categoriaPrefix=isContaduriaGananciaRow(item)?'ganancia':'sueldo';
+      const payload={
+        monto:metaActualizada.montoUsd,
+        categoria:categoriaPrefix+'|'+metaActualizada.metaExtra,
+        fecha:new Date(fecha+'T00:00:00').toISOString()
+      };
+      const res=await _sp.from(CONTADURIA_TABLE).update(payload).eq('id', id);
+      if(res.error){ alert('No se pudo actualizar: '+(res.error.message||JSON.stringify(res.error))); return; }
+      closeModal();
+      await refreshContaduriaRealtime();
     }
 
     function initBokeh(){const c=document.querySelector('.bokeh-container');for(let i=0;i<15;i++){const b=document.createElement('div');b.className='bokeh';const s=Math.random()*150+50;b.style.width=`${s}px`;b.style.height=`${s}px`;b.style.left=`${Math.random()*100}%`;b.style.top=`${Math.random()*100+10}%`;b.style.animationDuration=`${Math.random()*20+15}s`;b.style.animationDelay=`${Math.random()*10}s`;c.appendChild(b);}}
@@ -2119,25 +2165,25 @@ function processVencimientos(){
       const egresos=document.getElementById('contaduria-egresos');
       const retiro=document.getElementById('contaduria-retiro');
       const info=document.getElementById('contaduria-info');
-      const saldo=document.getElementById('contaduria-saldo');
+      const ganancias=document.getElementById('contaduria-ganancias');
       setContaduriaTabActive(view);
       const showIngresos=view==='ingresos';
       const showEgresos=view==='egresos';
       const showInfo=view==='info';
-      const showSaldo=view==='saldo';
+      const showGanancias=view==='ganancias';
       animateContaduriaShell(ingresos, showIngresos);
       animateContaduriaShell(egresos, showEgresos);
       animateContaduriaShell(retiro, showEgresos);
       animateContaduriaShell(info, showInfo);
-      animateContaduriaShell(saldo, showSaldo);
+      animateContaduriaShell(ganancias, showGanancias);
       const infoTotal=document.getElementById('contaduria-info-total');
       if(infoTotal) infoTotal.style.display=showInfo?'block':'none';
       if(showInfo){
         loadContaduriaInfo();
         startContaduriaRateAutoRefresh();
       }
-      if(showSaldo){
-        loadContaduriaSaldo();
+      if(showGanancias){
+        loadContaduriaGanancias();
       }
     }
 
@@ -2158,15 +2204,29 @@ function processVencimientos(){
     function refreshContaduriaInfoIfVisible(){
       const info=document.getElementById('contaduria-info');
       if(info && info.style.display!=='none') loadContaduriaInfo();
-      const saldo=document.getElementById('contaduria-saldo');
-      if(saldo && saldo.style.display!=='none') loadContaduriaSaldo();
+      const ganancias=document.getElementById('contaduria-ganancias');
+      if(ganancias && ganancias.style.display!=='none') loadContaduriaGanancias();
+    }
+
+    let CONTADURIA_REFRESHING_REALTIME=false;
+    async function refreshContaduriaRealtime(){
+      if(CONTADURIA_REFRESHING_REALTIME) return;
+      CONTADURIA_REFRESHING_REALTIME=true;
+      try{
+        await loadContaduriaInfo();
+        await loadContaduriaGanancias();
+      }finally{
+        CONTADURIA_REFRESHING_REALTIME=false;
+      }
     }
 
     function startContaduriaRateAutoRefresh(){
       if(CONTADURIA_RATE_TIMER) clearInterval(CONTADURIA_RATE_TIMER);
       CONTADURIA_RATE_TIMER=setInterval(()=>{
         const info=document.getElementById('contaduria-info');
+        const ganancias=document.getElementById('contaduria-ganancias');
         if(info && info.style.display!=='none') loadContaduriaInfo();
+        else if(ganancias && ganancias.style.display!=='none') loadContaduriaGanancias();
       },25*60*1000);
     }
 
@@ -2569,6 +2629,7 @@ function processVencimientos(){
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el ingreso: '+(res.error.message||JSON.stringify(res.error))); if(btn){btn.disabled=false;} CONTADURIA_INGRESO_SAVING=false; return; }
       alert('Ingreso registrado.');
+      await refreshContaduriaRealtime();
       switchContaduriaView('info');
       if(btn){btn.disabled=false;}
       CONTADURIA_INGRESO_SAVING=false;
@@ -2594,10 +2655,11 @@ function processVencimientos(){
       if(!fecha||!metodo||!Number.isFinite(monto)||monto<=0){ alert('Completa fecha, metodo y monto.'); return; }
       const fechaIso=new Date(fecha+'T00:00:00').toISOString();
       const meta=await buildEgresoMeta(metodo,monto);
-      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:'Tatiana',categoria:'sueldo|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
+      const payload={tipo:'egreso',estudiante:null,plan_nivel:null,plan:null,persona:'Tatiana',categoria:'gasto_suelto|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el pago.'); return; }
       alert('Pago registrado.');
+      await refreshContaduriaRealtime();
       switchContaduriaView('info');
     }
 
@@ -2624,7 +2686,7 @@ function processVencimientos(){
     let CONTADURIA_INGRESO_SAVING=false;
     let CONTADURIA_INGRESOS_BY_ID={};
     let CONTADURIA_EGRESOS_BY_ID={};
-    let CONTADURIA_SALDO_ACTIVE='EUR';
+    let CONTADURIA_GANANCIAS_BY_ID={};
     let CONTADURIA_VES_RATE_CACHE={rate:null,ts:0};
     const CONTADURIA_VES_RATE_FALLBACK=510;
 
@@ -2758,12 +2820,17 @@ function processVencimientos(){
     function moveContaduriaMonth(delta){
       const base=getContaduriaMonthCursor();
       CONTADURIA_MONTH_CURSOR=new Date(base.getFullYear(), base.getMonth()+delta, 1);
-      const saldo=document.getElementById('contaduria-saldo');
-      if(saldo && saldo.style.display!=='none'){
-        loadContaduriaSaldo();
-      }else{
+      const info=document.getElementById('contaduria-info');
+      const ganancias=document.getElementById('contaduria-ganancias');
+      if(info && info.style.display!=='none'){
         loadContaduriaInfo();
+        return;
       }
+      if(ganancias && ganancias.style.display!=='none'){
+        loadContaduriaGanancias();
+        return;
+      }
+      loadContaduriaInfo();
     }
     async function printContaduriaMonth(){
       if(!CONTADURIA_INFO_CACHE.rowsMonth){
@@ -2865,19 +2932,33 @@ function processVencimientos(){
       CONTADURIA_INFO_CACHE.rowsMonth=rowsMonth;
       updateContaduriaMonthTitle();
       let ingresos=rowsMonth.filter(r=>r.tipo==='ingreso');
-      const egresos=rowsMonth.filter(r=>r.tipo==='egreso');
+      const ganancias=rowsMonth.filter(isContaduriaGananciaRow);
+      const egresos=rowsMonth.filter(r=>r.tipo==='egreso' && !isContaduriaGananciaRow(r));
+      const sueldosMes=egresos.filter(e=>parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase()==='sueldo');
+      const tatianaGastos=egresos.filter(e=>{
+        const persona=(e.persona||'').trim().toLowerCase();
+        const cat=parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase();
+        return cat==='gasto_suelto' && persona==='tatiana';
+      });
+      const totalSueldosBase=sueldosMes.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalTatiana=tatianaGastos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalSueldos=totalSueldosBase+totalTatiana;
       const totalIngresos=ingresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalEgresos=egresos.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalGanancias=ganancias.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalDeduccionesMes=totalEgresos+totalGanancias;
 
       const rowsToDate=rowsFinal.filter(r=>{
         const raw=String(r.fecha||'');
         return raw.slice(0,7)<=monthKey;
       });
       const ingresosToDate=rowsToDate.filter(r=>r.tipo==='ingreso');
-      const egresosToDate=rowsToDate.filter(r=>r.tipo==='egreso');
+      const gananciasToDate=rowsToDate.filter(isContaduriaGananciaRow);
+      const egresosToDate=rowsToDate.filter(r=>r.tipo==='egreso' && !isContaduriaGananciaRow(r));
       const totalIngresosToDate=ingresosToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalEgresosToDate=egresosToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
-      const totalActivo=totalIngresosToDate-totalEgresosToDate;
+      const totalGananciasToDate=gananciasToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+      const totalActivo=totalIngresosToDate-(totalEgresosToDate+totalGananciasToDate);
 
       if(totalEl){
         const rate=await fetchEuroVesRate();
@@ -2888,19 +2969,25 @@ function processVencimientos(){
 
         const ingresosBs=rate?ingresos.reduce((s,r)=>{const meta=getIngresoMeta(r); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
         const egresosBs=rate?egresos.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const gananciasBs=rate?ganancias.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const sueldosBsBase=rate?sueldosMes.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const tatianaBs=rate?tatianaGastos.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const sueldosBs=sueldosBsBase+tatianaBs;
         const ingresosBsToDate=rate?ingresosToDate.reduce((s,r)=>{const meta=getIngresoMeta(r); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
         const egresosBsToDate=rate?egresosToDate.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
+        const gananciasBsToDate=rate?gananciasToDate.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
 
-        const bsActivo=rate?formatVes(ingresosBsToDate-egresosBsToDate):'N/D';
+        const bsActivo=rate?formatVes(ingresosBsToDate-(egresosBsToDate+gananciasBsToDate)):'N/D';
         const bsIngresos=rate?formatVes(ingresosBs):'N/D';
-        const bsEgresos=rate?formatVes(egresosBs):'N/D';
+        const bsDeducciones=rate?formatVes(egresosBs+gananciasBs):'N/D';
 
         if(monthIncomeEl){
-          const ingresosUsdLabel='EUR '+totalIngresos.toFixed(2);
-          const ingresosBsLabel=rate?formatVes(ingresosBs):'N/D';
+          const ingresosNetos=totalIngresos-(totalGanancias+totalSueldos);
+          const ingresosBsNet=rate?formatVes(ingresosBs-(gananciasBs+sueldosBs)):'N/D';
+          const ingresosUsdLabel='EUR '+ingresosNetos.toFixed(2);
           monthIncomeEl.innerHTML='<div style="font-size:.65rem;opacity:.7;letter-spacing:1px">INGRESOS DEL MES</div>'+
             '<div style="font-size:1.1rem;font-weight:900">'+ingresosUsdLabel+'</div>'+
-            '<div style="font-size:.75rem;opacity:.75">'+ingresosBsLabel+' Bs.</div>';
+            '<div style="font-size:.75rem;opacity:.75">'+ingresosBsNet+' Bs.</div>';
         }
         if(tasaBox){
           tasaBox.innerHTML='<div class="conta-rate-label">Tasa del dia</div><div class="conta-rate-value">'+tasaLabel+'</div><div class="conta-rate-sub">EUR/VES</div>';
@@ -2908,11 +2995,11 @@ function processVencimientos(){
         totalEl.innerHTML=
           '<div class="conta-total-row">'+
             '<span class="conta-total-activo">Total activo: EUR '+totalActivo.toFixed(2)+'</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: EUR '+totalIngresos.toFixed(2)+'</span> | Egresos mes: EUR '+totalEgresos.toFixed(2)+'</span>'+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: EUR '+totalIngresos.toFixed(2)+'</span> | Deducciones mes (egresos + ganancias): EUR '+totalDeduccionesMes.toFixed(2)+'</span>'+
           '</div>'+
           '<div class="conta-total-row conta-total-ves">'+
             '<span class="conta-total-activo">Total activo: '+bsActivo+' Bs.</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: '+bsIngresos+' Bs.</span> | Egresos mes: '+bsEgresos+' Bs.</span>'+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: '+bsIngresos+' Bs.</span> | Deducciones mes: '+bsDeducciones+' Bs.</span>'+
           '</div>';
       }
       const rateForCards=CONTADURIA_LAST_RATE||0;
@@ -2942,11 +3029,11 @@ function processVencimientos(){
               '<div style="margin-top:4px;font-size:.7rem;opacity:.78;line-height:1.1">'+fecha+'</div>'+
             '</div>'+
             '<button class="btn-cancelar contaduria-ingreso-btn" onclick="event.stopPropagation();openIngresoEditor('+item.id+')" title="Editar">Editar</button>'+
-            '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--icon" onclick="event.stopPropagation();eliminarIngresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+            '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--danger" onclick="event.stopPropagation();openContaduriaDeleteConfirm(\'ingreso\','+item.id+')" title="Eliminar registro">Eliminar registro</button>'+
           '</div>'+
         '</div>';
       }).join('');
-      const sueldos=egresos.filter(e=>parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase()==='sueldo');
+      const sueldos=sueldosMes;
       const gastosSueltos=egresos.filter(e=>parseContaduriaCategoria(e.categoria).categoriaBase.toLowerCase()==='gasto_suelto');
       const sueldosCards=sueldos.map(item=>{
         const quien=(item.persona||'Sueldo').trim();
@@ -2966,7 +3053,7 @@ function processVencimientos(){
               '<div style="font-size:.74rem;font-weight:800;line-height:1.1;color:#ffd3d3">'+metodo+'</div>'+
               '<div style="margin-top:6px;font-size:.72rem;opacity:.78;line-height:1.1">'+fecha+'</div>'+
             '</div>'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+            '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--danger" style="padding:8px 12px" onclick="event.stopPropagation();openContaduriaDeleteConfirm(\'egreso\','+item.id+')" title="Eliminar registro">Eliminar registro</button>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -2988,7 +3075,7 @@ function processVencimientos(){
               '<div style="font-size:.74rem;font-weight:800;line-height:1.1;color:#ffd3d3">'+metodo+'</div>'+
               '<div style="margin-top:6px;font-size:.72rem;opacity:.78;line-height:1.1">'+fecha+'</div>'+
             '</div>'+
-            '<button class="btn-cancelar" style="padding:8px 10px" onclick="event.stopPropagation();eliminarEgresoContaduria('+item.id+')" title="Eliminar">X</button>'+
+            '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--danger" style="padding:8px 12px" onclick="event.stopPropagation();openContaduriaDeleteConfirm(\'egreso\','+item.id+')" title="Eliminar registro">Eliminar registro</button>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -3038,153 +3125,111 @@ function processVencimientos(){
       return 'EUR '+val.toFixed(2);
     }
 
-    function buildContaduriaSaldoMovements(rows, rate){
-      const out={EUR:[],USDT:[],VES:[]};
+    function isContaduriaGananciaRow(row){
+      if(!row) return false;
+      const persona=String(row.persona||'').trim();
+      if(!persona) return false;
+      const match=CONTADURIA_GANANCIA_PERSONAS.find(name=>name.toLowerCase()===persona.toLowerCase());
+      if(!match) return false;
+      const tipo=String(row.tipo||'').toLowerCase();
+      if(tipo==='ganancia') return true;
+      const base=parseContaduriaCategoria(row.categoria||'');
+      return String(base.categoriaBase||'').toLowerCase()==='ganancia';
+    }
+
+    function buildContaduriaGananciaGroups(rows, rate){
+      const groups={};
+      CONTADURIA_GANANCIA_PERSONAS.forEach(name=>{
+        groups[name]={ entries:[], totalEur:0, totalBs:0 };
+      });
       (rows||[]).forEach(row=>{
-        if(row.tipo==='ingreso'){
-          const meta=getIngresoMeta(row);
-          const currency=getContaduriaCurrency(meta, String(row.persona||'')+'|'+String(row.categoria||''));
-          const amount=getContaduriaCurrencyAmount(row,meta,currency,rate);
-          const baseName=(row.estudiante||'Ingreso').trim()||'Ingreso';
-          const level=(row.plan_nivel||'').trim();
-          const concept=level? (baseName+' - '+level) : baseName;
-          out[currency].push({
-            id:row.id,
-            type:'ingreso',
-            amount:amount,
-            concept:concept,
-            dateLabel:row.fecha?new Date(row.fecha).toLocaleDateString('es-VE'):'Sin fecha'
-          });
-          return;
-        }
-        if(row.tipo==='egreso'){
-          const meta=parseContaduriaCategoria(row.categoria);
-          const currency=getContaduriaCurrency(meta, String(row.categoria||'')+'|'+String(row.persona||''));
-          const amount=getContaduriaCurrencyAmount(row,meta,currency,rate);
-          const cat=(meta.categoriaBase||'egreso').replace(/_/g,' ');
-          const person=(row.persona||'Egreso').trim()||'Egreso';
-          out[currency].push({
-            id:row.id,
-            type:'egreso',
-            amount:amount,
-            concept:person+' - '+cat,
-            dateLabel:row.fecha?new Date(row.fecha).toLocaleDateString('es-VE'):'Sin fecha'
-          });
-        }
+        const persona=(row.persona||'').trim();
+        if(!persona) return;
+        const match=CONTADURIA_GANANCIA_PERSONAS.find(p=>p.toLowerCase()===persona.toLowerCase());
+        if(!match) return;
+        const meta=parseContaduriaCategoria(row.categoria);
+        const currency=getContaduriaCurrency(meta, String(row.categoria||'')+'|'+persona);
+        const primaryAmount=getContaduriaCurrencyAmount(row,meta,currency,rate);
+        const eurAmount=parseFloat(row.monto)||0;
+        const bsAmount=rate?((meta.montoVes||0)>0?(meta.montoVes||0):(eurAmount*rate)):0;
+        groups[match].totalEur+=eurAmount;
+        groups[match].totalBs+=Number.isFinite(bsAmount)?bsAmount:0;
+        groups[match].entries.push({
+          id:row.id,
+          amountLabel:formatContaduriaCurrencyValue(currency,primaryAmount),
+          dateLabel:row.fecha?new Date(row.fecha).toLocaleDateString('es-VE'):'Sin fecha',
+          rawDate:row.fecha||''
+        });
       });
-      return out;
-    }
-
-    function renderContaduriaSaldoDetail(movementsByCurrency, currency){
-      const detail=document.getElementById('contaduria-saldo-detail');
-      if(!detail) return;
-      const list=(movementsByCurrency&&movementsByCurrency[currency])?movementsByCurrency[currency]:[];
-      const ingresos=list.filter(item=>item.type==='ingreso');
-      const egresos=list.filter(item=>item.type==='egreso');
-      const block=(title,items,isExpense)=>{
-        if(!items.length){
-          return '<div class="conta-saldo-empty">Sin '+(isExpense?'gastos':'ingresos')+' en esta moneda.</div>';
-        }
-        return items.map(item=>{
-          const amountText=formatContaduriaCurrencyValue(currency,item.amount);
-          const amountClass=isExpense?'conta-saldo-item-amount conta-saldo-item-amount--expense':'conta-saldo-item-amount';
-          const prefix=isExpense?'- ':'+ ';
-          return '<div class="conta-saldo-item">'+
-            '<div class="conta-saldo-item-main">'+
-              '<div class="conta-saldo-item-concept">'+item.concept+'</div>'+
-              '<div class="conta-saldo-item-date">'+item.dateLabel+'</div>'+
-            '</div>'+
-            '<div class="conta-saldo-item-actions">'+
-              '<div class="'+amountClass+'">'+prefix+amountText+'</div>'+
-              '<button type="button" class="btn-cancelar conta-saldo-item-btn" onclick="deleteContaduriaSaldoMovement('+item.id+',\''+item.type+'\')">Quitar</button>'+
-            '</div>'+
-          '</div>';
-        }).join('');
-      };
-      detail.innerHTML=
-        '<div class="conta-saldo-detail-title">Movimientos '+(currency==='VES'?'BS':currency)+'</div>'+
-        '<div class="conta-saldo-detail-group">'+
-          '<div class="conta-saldo-detail-sub">Ingresos</div>'+
-          block('Ingresos', ingresos, false)+
-        '</div>'+
-        '<div class="conta-saldo-detail-group">'+
-          '<div class="conta-saldo-detail-sub">Gastos</div>'+
-          block('Gastos', egresos, true)+
-        '</div>';
-    }
-
-    async function deleteContaduriaSaldoMovement(id,type){
-      if(type==='ingreso'){
-        await eliminarIngresoContaduria(id);
-      }else{
-        await eliminarEgresoContaduria(id);
-      }
-      const saldo=document.getElementById('contaduria-saldo');
-      if(saldo && saldo.style.display!=='none'){
-        await loadContaduriaSaldo();
-      }
-    }
-
-    function openContaduriaSaldoCurrency(currency){
-      CONTADURIA_SALDO_ACTIVE=currency;
-      const buttons=document.querySelectorAll('.conta-saldo-card');
-      buttons.forEach(btn=>{
-        const active=btn.getAttribute('data-currency')===currency;
-        btn.classList.toggle('active',active);
+      Object.values(groups).forEach(group=>{
+        group.entries.sort((a,b)=>{
+          const da=new Date(a.rawDate||0).getTime();
+          const db=new Date(b.rawDate||0).getTime();
+          return db-da;
+        });
       });
-      renderContaduriaSaldoDetail(CONTADURIA_INFO_CACHE.saldoMovements||{EUR:[],USDT:[],VES:[]}, currency);
+      return groups;
     }
 
-    async function loadContaduriaSaldo(){
-      const grid=document.getElementById('contaduria-saldo-grid');
-      const detail=document.getElementById('contaduria-saldo-detail');
-      if(!grid || !detail) return;
+    function updateContaduriaGananciasTitle(){
+      const el=document.getElementById('contaduria-ganancias-month-title');
+      if(!el) return;
+      const cursor=getContaduriaMonthCursor();
+      const monthLabel=formatContaduriaMonthTitle(cursor).replace('CONTADURIA DE ','');
+      el.textContent='GANANCIAS DE '+monthLabel;
+    }
+
+    async function loadContaduriaGanancias(){
+      const list=document.getElementById('contaduria-ganancias-list');
+      if(!list) return;
       if(!CONTADURIA_INFO_CACHE.rows){
         await loadContaduriaInfo();
       }
       const allRows=CONTADURIA_INFO_CACHE.rows||[];
-      const monthCursor=getContaduriaMonthCursor();
-      const monthKey=monthCursor.getFullYear()+'-'+String(monthCursor.getMonth()+1).padStart(2,'0');
+      const cursor=getContaduriaMonthCursor();
+      const monthKey=cursor.getFullYear()+'-'+String(cursor.getMonth()+1).padStart(2,'0');
       const rows=allRows.filter(r=>{
         const raw=String(r.fecha||'');
-        return raw.slice(0,7)===monthKey;
+        return isContaduriaGananciaRow(r) && raw.slice(0,7)===monthKey;
       });
+      CONTADURIA_GANANCIAS_BY_ID={};
+      rows.forEach(r=>{ CONTADURIA_GANANCIAS_BY_ID[r.id]=r; });
+      updateContaduriaGananciasTitle();
       const rate=CONTADURIA_LAST_RATE || await fetchEuroVesRate();
       CONTADURIA_LAST_RATE=rate;
-      const movementsByCurrency=buildContaduriaSaldoMovements(rows, rate);
-      CONTADURIA_INFO_CACHE.saldoMovements=movementsByCurrency;
-
-      const currencies=['USDT','EUR','VES'];
-      const balances={EUR:0,USDT:0,VES:0};
-      const incomes={EUR:0,USDT:0,VES:0};
-      const expenses={EUR:0,USDT:0,VES:0};
-      currencies.forEach(cur=>{
-        const list=movementsByCurrency[cur]||[];
-        list.forEach(item=>{
-          if(item.type==='ingreso'){
-            incomes[cur]+=item.amount;
-            balances[cur]+=item.amount;
-          }else{
-            expenses[cur]+=item.amount;
-            balances[cur]-=item.amount;
-          }
-        });
-      });
-      grid.innerHTML=
-        '<div class="conta-saldo-grid">'+
-          currencies.map(cur=>{
-            const label=(cur==='VES'?'BS':cur);
-            const activeClass=CONTADURIA_SALDO_ACTIVE===cur?' active':'';
-            return '<button type="button" class="conta-saldo-card'+activeClass+'" data-currency="'+cur+'" onclick="openContaduriaSaldoCurrency(\''+cur+'\')">'+
-              '<div class="conta-saldo-card-label">'+label+'</div>'+
-              '<div class="conta-saldo-card-amount">'+formatContaduriaCurrencyValue(cur, balances[cur])+'</div>'+
-              '<div class="conta-saldo-card-meta">Ingreso: '+formatContaduriaCurrencyValue(cur, incomes[cur])+'</div>'+
-              '<div class="conta-saldo-card-meta">Gasto: '+formatContaduriaCurrencyValue(cur, expenses[cur])+'</div>'+
-            '</button>';
-          }).join('')+
+      const groups=buildContaduriaGananciaGroups(rows, rate);
+      const totalEur=CONTADURIA_GANANCIA_PERSONAS.reduce((sum,name)=>sum+(groups[name]?.totalEur||0),0);
+      const totalBs=CONTADURIA_GANANCIA_PERSONAS.reduce((sum,name)=>sum+(groups[name]?.totalBs||0),0);
+      const totalEl=document.getElementById('contaduria-ganancias-income');
+      const totalBsEl=document.getElementById('contaduria-ganancias-income-bolivares');
+      if(totalEl) totalEl.textContent='EUR '+totalEur.toFixed(2);
+      if(totalBsEl) totalBsEl.textContent=rate?formatVes(totalBs)+' Bs.':'N/D Bs.';
+      const sections=CONTADURIA_GANANCIA_PERSONAS.map(name=>{
+        const group=groups[name];
+        const entries=(group?.entries||[]);
+        const subtotalLabel='Subtotal: EUR '+(group?.totalEur||0).toFixed(2);
+        const entriesHtml=entries.length?entries.map(item=>
+          '<div class="clase-box contaduria-ingreso-card contaduria-ganancia-card">'+
+            '<div class="contaduria-ingreso-main">'+
+              '<div class="contaduria-ganancia-name">'+name+'</div>'+
+              '<div class="contaduria-ganancia-amount">'+item.amountLabel+'</div>'+
+            '</div>'+
+            '<div class="contaduria-ingreso-actions contaduria-ganancia-actions">'+
+              '<div class="contaduria-ingreso-meta">'+
+                '<div class="contaduria-ganancia-label">Fecha</div>'+
+                '<div class="contaduria-ganancia-date">'+item.dateLabel+'</div>'+
+              '</div>'+
+              '<button class="btn-cancelar contaduria-ingreso-btn" onclick="event.stopPropagation();openGananciaEditor('+item.id+')">Editar</button>'+
+              '<button class="btn-cancelar contaduria-ingreso-btn contaduria-ingreso-btn--danger" onclick="event.stopPropagation();openContaduriaDeleteConfirm(\'egreso\','+item.id+')">Eliminar registro</button>'+
+            '</div>'+
+          '</div>'
+        ).join(''):'<div class="conta-saldo-empty">Sin registros.</div>';
+        return '<div class="contaduria-ganancia-section">'+
+          '<div class="contaduria-ganancia-total">'+subtotalLabel+'</div>'+
+          entriesHtml+
         '</div>';
-      if(!currencies.includes(CONTADURIA_SALDO_ACTIVE)) CONTADURIA_SALDO_ACTIVE='EUR';
-      openContaduriaSaldoCurrency(CONTADURIA_SALDO_ACTIVE);
+      }).join('');
+      list.innerHTML=rows.length?sections:'<div class="conta-saldo-empty">Sin registros para este mes.</div>';
     }
 
     function buildContaduriaNivelOptions(selected){
@@ -3283,6 +3328,37 @@ function processVencimientos(){
         });
       }
     }
+
+    function openContaduriaDeleteConfirm(tipo,id){
+      const resumen=tipo==='egreso'
+        ? 'Este gasto se eliminará del historial y dejará de descontarse del mes.'
+        : 'Este ingreso se eliminará del historial y dejará de sumarse al mes.';
+      const bodyHtml=
+        '<div class="modal-form-shell contaduria-delete-modal">'+
+          '<div class="contaduria-delete-warning">CUIDADO!</div>'+
+          '<p class="contaduria-delete-text">Este dato que estas eliminando afectara el ingreso del mes dependiendo del monto.</p>'+
+          '<p class="contaduria-delete-text contaduria-delete-text--sub" style="margin-top:6px">'+resumen+'</p>'+
+          '<div class="contaduria-delete-actions">'+
+            '<button id="contaduria-delete-confirm-btn" class="btn-principal" onclick="confirmContaduriaDelete(\''+tipo+'\','+id+')">Eliminar registro</button>'+
+            '<button class="btn-cancelar" type="button" onclick="closeModal()">Cancelar</button>'+
+          '</div>'+
+        '</div>';
+      openModal('Eliminar registro', bodyHtml);
+    }
+
+    async function confirmContaduriaDelete(tipo,id){
+      const btn=document.getElementById('contaduria-delete-confirm-btn');
+      if(btn) btn.disabled=true;
+      let success=false;
+      if(tipo==='ingreso') success=await eliminarIngresoContaduria(id);
+      else if(tipo==='egreso') success=await eliminarEgresoContaduria(id);
+      if(success){
+        closeModal();
+      }else if(btn){
+        btn.disabled=false;
+      }
+    }
+
     function openIngresoEditor(id){
       const item=CONTADURIA_INGRESOS_BY_ID[id];
       if(!item){ alert('No se encontro el ingreso.'); return; }
@@ -3332,58 +3408,54 @@ function processVencimientos(){
       const res=await _sp.from(CONTADURIA_TABLE).update({plan_nivel:nivel,plan:plan,monto:total}).eq('id', id);
       if(res.error){ alert('No se pudo actualizar.'); return; }
       closeModal();
-      loadContaduriaInfo();
+      await refreshContaduriaRealtime();
     }
 
         async function eliminarIngresoContaduria(id){
-      const ok=confirm('Estas seguro de esto?');
-      if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('id', id);
       if(res.error){
-        // Fallback: marcar como eliminado si delete no esta permitido
         const item=CONTADURIA_INGRESOS_BY_ID[id];
         if(item){
           const base=String(item.categoria||'clase');
           const next=base.includes('eliminado')?base:(base+'|estado=eliminado');
           const res2=await _sp.from(CONTADURIA_TABLE).update({categoria:next}).eq('id', id);
-          if(!res2.error){
-            loadContaduriaInfo();
-            return;
+              if(!res2.error){
+            await refreshContaduriaRealtime();
+            return true;
           }
         }
         alert('No se pudo eliminar: '+(res.error.message||JSON.stringify(res.error)));
-        return;
+        return false;
       }
-      loadContaduriaInfo();
+      await refreshContaduriaRealtime();
+      return true;
     }
 
         async function eliminarEgresoContaduria(id){
-      const ok=confirm('Estas seguro de esto?');
-      if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('id', id);
       if(res.error){
-        // Fallback: marcar como eliminado si delete no esta permitido
         const item=(await _sp.from(CONTADURIA_TABLE).select('categoria').eq('id', id).maybeSingle()).data;
         if(item){
           const base=String(item.categoria||'egreso');
           const next=base.includes('eliminado')?base:(base+'|estado=eliminado');
           const res2=await _sp.from(CONTADURIA_TABLE).update({categoria:next}).eq('id', id);
           if(!res2.error){
-            loadContaduriaInfo();
-            return;
+            await refreshContaduriaRealtime();
+            return true;
           }
         }
         alert('No se pudo eliminar: '+(res.error.message||JSON.stringify(res.error)));
-        return;
+        return false;
       }
-      loadContaduriaInfo();
+      await refreshContaduriaRealtime();
+      return true;
     }
 async function vaciarIngresosContaduria(){
       const ok=confirm('Estas seguro de esto?');
       if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('tipo','ingreso');
       if(res.error){ alert('No se pudo vaciar el registro.'); return; }
-      loadContaduriaInfo();
+      await refreshContaduriaRealtime();
     }
 
     async function vaciarEgresosContaduria(){
@@ -3391,26 +3463,29 @@ async function vaciarIngresosContaduria(){
       if(!ok) return;
       const res=await _sp.from(CONTADURIA_TABLE).delete().eq('tipo','egreso');
       if(res.error){ alert('No se pudo vaciar el registro.'); return; }
-      loadContaduriaInfo();
+      await refreshContaduriaRealtime();
     }
 
     async function retirarPagoVariable(){
-      const persona=document.getElementById('contad-persona-variable')?.value||'';
+      const personaRaw=document.getElementById('contad-persona-variable')?.value||'';
       const fecha=document.getElementById('contad-variable-fecha')?.value||'';
       const metodo=document.getElementById('contad-retiro-metodo')?.value||'';
       const montoRaw=document.getElementById('contad-variable-monto')?.value||'';
       const monto=parseMontoInput(montoRaw);
-      if(!persona||!fecha||!metodo||!Number.isFinite(monto)||monto<=0){
+      if(!personaRaw||!fecha||!metodo||!Number.isFinite(monto)||monto<=0){
         alert('Selecciona persona, fecha, metodo y cantidad valida.');
         return;
       }
+      const persona=personaRaw.trim();
       const fechaIso=new Date(fecha+'T00:00:00').toISOString();
       const meta=await buildEgresoMeta(metodo,monto);
-      const payload={tipo:'egreso',persona:persona,categoria:'sueldo|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
+      const isGanancia=CONTADURIA_GANANCIA_PERSONAS.some(name=>name.toLowerCase()===persona.toLowerCase());
+      const categoriaPrefix=isGanancia?'ganancia':'sueldo';
+      const payload={tipo:'egreso',persona:persona,categoria:categoriaPrefix+'|'+meta.metaExtra,monto:meta.montoUsd,fecha:fechaIso};
       const res=await _sp.from(CONTADURIA_TABLE).insert([payload]);
       if(res.error){ alert('No se pudo registrar el retiro.'); return; }
       alert('Retiro registrado.');
-      refreshContaduriaInfoIfVisible();
+      await refreshContaduriaRealtime();
     }
 
 function buildMiniCalendar(dateObj){

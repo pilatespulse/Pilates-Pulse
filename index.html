@@ -184,8 +184,8 @@
           onclick="switchContaduriaView('egresos')">Precios fijos y retirar pago</button>
         <button class="btn-cancelar contaduria-tab" data-view="info" style="flex:1"
           onclick="switchContaduriaView('info')">Informacion</button>
-        <button class="btn-cancelar contaduria-tab" data-view="saldo" style="flex:1"
-          onclick="switchContaduriaView('saldo')">Saldo</button>
+        <button class="btn-cancelar contaduria-tab" data-view="ganancias" style="flex:1"
+          onclick="switchContaduriaView('ganancias')">Ganancias</button>
       </div>
 
       <div id="contaduria-ingresos" class="contaduria-shell" style="margin-bottom:24px">
@@ -382,10 +382,25 @@
         <div id="contaduria-info-list" style="margin-top:12px"></div>
       </div>
 
-      <div id="contaduria-saldo" class="contaduria-shell" style="display:none">
-        <h3 style="letter-spacing:1px;font-size:.85rem;text-transform:uppercase;margin:0 0 12px">Saldo por moneda</h3>
-        <div id="contaduria-saldo-grid"></div>
-        <div id="contaduria-saldo-detail" style="margin-top:12px"></div>
+      <div id="contaduria-ganancias" class="contaduria-shell" style="display:none">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase;margin:0">Ganancias</h3>
+          <div class="conta-month-income-box">
+            <div style="font-size:.65rem;opacity:.7;letter-spacing:1px">INGRESOS DEL MES</div>
+            <div id="contaduria-ganancias-income" style="font-size:1.1rem;font-weight:900">EUR 0.00</div>
+            <div id="contaduria-ganancias-income-bolivares" style="font-size:.75rem;opacity:.75">0.00 Bs.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+          <div id="contaduria-ganancias-month-title" style="font-size:1.05rem;font-weight:800;letter-spacing:1px">GANANCIAS</div>
+          <div class="conta-month-nav">
+            <div class="conta-month-switch">
+              <button class="conta-month-btn" onclick="moveContaduriaMonth(-1)">MES ANTERIOR</button>
+              <button class="conta-month-btn" onclick="moveContaduriaMonth(1)">SIGUIENTE MES</button>
+            </div>
+          </div>
+        </div>
+        <div id="contaduria-ganancias-list" style="margin-top:12px"></div>
       </div>
 
       <div id="contaduria-info-total" style="margin-top:10px;color:#73b8ff;font-weight:800">Total: EUR 0.00</div>

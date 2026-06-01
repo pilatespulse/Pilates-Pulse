@@ -2312,6 +2312,63 @@ textarea {
   gap: 6px;
   color: #241d17 !important;
 }
+@keyframes contaduria-alert-wiggle{
+  0%,100%{transform:translateX(0);text-shadow:0 0 8px rgba(255,69,69,.9);} 
+  20%{transform:translateX(-2px);} 
+  40%{transform:translateX(2px);} 
+  60%{transform:translateX(-1px);} 
+  80%{transform:translateX(1px);} 
+}
+
+.contaduria-delete-modal{
+  background:linear-gradient(180deg,#f4ebe0,#ead9c9);
+  color:#140c07;
+  padding:24px 26px;
+  border-radius:24px;
+  border:1px solid rgba(20,12,7,.12);
+  box-shadow:0 20px 45px rgba(0,0,0,.35);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.contaduria-delete-text{
+  margin:0;
+  color:#000;
+  line-height:1.45;
+}
+.contaduria-delete-text--sub{
+  opacity:.85;
+}
+.contaduria-delete-warning{
+  font-size:1rem;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:#ff4448;
+  animation:contaduria-alert-wiggle 1.2s ease-in-out infinite;
+}
+.contaduria-delete-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.contaduria-delete-modal .btn-principal{
+  width:100%;
+  background:#cb3c3f;
+  border-color:#ff6b70;
+  color:#fff;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.contaduria-delete-modal .btn-principal:hover{
+  background:#e04f53;
+}
+.contaduria-delete-modal .btn-cancelar{
+  width:100%;
+  background:rgba(0,0,0,.05);
+  color:#2f1f13;
+  border-color:rgba(20,12,7,.18);
+}
 @media (max-width: 560px){
   .contaduria-detail-grid{
     grid-template-columns: 1fr;
@@ -2953,6 +3010,42 @@ textarea {
   min-width: 0;
 }
 
+.contaduria-ganancia-section{
+  margin-top:16px;
+}
+.contaduria-ganancia-total{
+  font-weight:800;
+  letter-spacing:.5px;
+  margin-bottom:8px;
+  color:#f3e9d6;
+}
+.contaduria-ganancia-card{
+  margin-bottom:10px;
+}
+.contaduria-ganancia-name{
+  font-size:.78rem;
+  font-weight:700;
+}
+.contaduria-ganancia-amount{
+  margin-top:6px;
+  font-weight:900;
+}
+.contaduria-ganancia-actions{
+  min-width:140px;
+  justify-content:flex-end;
+}
+.contaduria-ganancia-label{
+  font-size:.65rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  opacity:.7;
+}
+.contaduria-ganancia-date{
+  margin-top:4px;
+  font-size:.75rem;
+  font-weight:700;
+}
+
 #modulo-contaduria .contaduria-ingreso-actions{
   flex: 0 0 auto;
   display: flex;
@@ -2978,10 +3071,15 @@ textarea {
   line-height: 1.05;
 }
 
-#modulo-contaduria .contaduria-ingreso-btn--icon{
-  min-width: 40px;
-  padding-left: 10px !important;
-  padding-right: 10px !important;
+#modulo-contaduria .contaduria-ingreso-btn--danger{
+  border-color: rgba(255,99,132,.4);
+  color: #ff99aa;
+  background: rgba(255,99,132,.05);
+}
+
+#modulo-contaduria .contaduria-ingreso-btn--danger:hover{
+  background: rgba(255,99,132,.12);
+  color: #ffb5c3;
 }
 
 @media (max-width: 640px){
