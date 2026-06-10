@@ -2918,7 +2918,7 @@ function processVencimientos(){
       if(!list) return;
       const res=await _sp.from(CONTADURIA_TABLE)
         .select('id,estudiante,plan,plan_nivel,monto,tipo,persona,categoria,fecha')
-        .order('id',{ascending:false}).limit(600);
+        .order('id',{ascending:false}).limit(10000);
       if(res.error){ list.textContent='No se pudo cargar la informacion.'; if(totalEl) totalEl.textContent='Total: EUR 0.00'; return; }
       const rows=res.data||[];
       const rowsFinal = rows.filter(r=>!isContaduriaEliminado(r));
@@ -2950,7 +2950,7 @@ function processVencimientos(){
 
       const rowsToDate=rowsFinal.filter(r=>{
         const raw=String(r.fecha||'');
-        return raw.slice(0,7)<=monthKey;
+        return raw.slice(0,7)===monthKey;
       });
       const ingresosToDate=rowsToDate.filter(r=>r.tipo==='ingreso');
       const gananciasToDate=rowsToDate.filter(isContaduriaGananciaRow);
@@ -2959,6 +2959,16 @@ function processVencimientos(){
       const totalEgresosToDate=egresosToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalGananciasToDate=gananciasToDate.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
       const totalActivo=totalIngresosToDate-(totalEgresosToDate+totalGananciasToDate);
+
+      window.CURRENT_CONTADURIA_MONTH_KEY = monthKey;
+      let ovId = null;
+      let ovData = null;
+      const ovRes = await _sp.from('horarios').select('id,contenido').eq('celda_id', 'CONTADURIA_OVERRIDE_'+monthKey);
+      if(ovRes && ovRes.data && ovRes.data.length>0){
+        ovId = ovRes.data[0].id;
+        try { ovData = JSON.parse(ovRes.data[0].contenido); } catch(e){}
+      }
+      window.CURRENT_CONTADURIA_OVERRIDE_ID = ovId;
 
       if(totalEl){
         const rate=await fetchEuroVesRate();
@@ -2977,30 +2987,63 @@ function processVencimientos(){
         const egresosBsToDate=rate?egresosToDate.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
         const gananciasBsToDate=rate?gananciasToDate.reduce((s,r)=>{const meta=parseContaduriaCategoria(r.categoria); if(meta.moneda==='VES' || meta.metodo==='pago_movil' || (meta.montoVes||0)>0) return s+(meta.montoVes||0); return s+(parseFloat(r.monto)||0)*rate;},0):0;
 
-        const bsActivo=rate?formatVes(ingresosBsToDate-(egresosBsToDate+gananciasBsToDate)):'N/D';
-        const bsIngresos=rate?formatVes(ingresosBs):'N/D';
-        const bsDeducciones=rate?formatVes(egresosBs+gananciasBs):'N/D';
+        let baseBsActivo = ingresosBsToDate-(egresosBsToDate+gananciasBsToDate);
+        let baseBsIngresos = ingresosBs;
+        let baseBsDeducciones = egresosBs+gananciasBs;
+        
+        window.CURRENT_MATH_TOTALS = {
+          activo: totalActivo,
+          ingresos: totalIngresos,
+          deducciones: totalDeduccionesMes,
+          bsActivo: baseBsActivo,
+          bsIngresos: baseBsIngresos,
+          bsDeducciones: baseBsDeducciones
+        };
+
+        window.CURRENT_CONTADURIA_OFFSETS = ovData || { offsetActivo:0, offsetIngresos:0, offsetDeducciones:0 };
+
+        let offsetActivo = 0, offsetIngresos = 0, offsetDeducciones = 0;
+        if (ovData) {
+          offsetActivo = ovData.offsetActivo || 0;
+          offsetIngresos = ovData.offsetIngresos || 0;
+          offsetDeducciones = ovData.offsetDeducciones || 0;
+        }
+        
+        let offsetBsActivo = rate ? offsetActivo * rate : offsetActivo;
+        let offsetBsIngresos = rate ? offsetIngresos * rate : offsetIngresos;
+        let offsetBsDeducciones = rate ? offsetDeducciones * rate : offsetDeducciones;
+
+        let finalTotalActivo = totalActivo + offsetActivo;
+        let finalTotalIngresos = totalIngresos + offsetIngresos;
+        let finalTotalDeduccionesMes = totalDeduccionesMes + offsetDeducciones;
+        
+        let finalBsActivoCalc = baseBsActivo + offsetBsActivo;
+        let finalBsIngresos = baseBsIngresos + offsetBsIngresos;
+        let finalBsDeducciones = baseBsDeducciones + offsetBsDeducciones;
+
+        const bsActivo=rate?formatVes(finalBsActivoCalc):'N/D';
+        const bsIngresos=rate?formatVes(finalBsIngresos):'N/D';
+        const bsDeducciones=rate?formatVes(finalBsDeducciones):'N/D';
 
         if(monthIncomeEl){
-          const ingresosNetos=totalIngresos-(totalGanancias+totalSueldos);
-          const ingresosBsNet=rate?formatVes(ingresosBs-(gananciasBs+sueldosBs)):'N/D';
-          const ingresosUsdLabel='EUR '+ingresosNetos.toFixed(2);
+          const ingresosUsdLabel='EUR '+finalTotalIngresos.toFixed(2);
           monthIncomeEl.innerHTML='<div style="font-size:.65rem;opacity:.7;letter-spacing:1px">INGRESOS DEL MES</div>'+
             '<div style="font-size:1.1rem;font-weight:900">'+ingresosUsdLabel+'</div>'+
-            '<div style="font-size:.75rem;opacity:.75">'+ingresosBsNet+' Bs.</div>';
+            '<div style="font-size:.75rem;opacity:.75">'+bsIngresos+' Bs.</div>';
         }
         if(tasaBox){
           tasaBox.innerHTML='<div class="conta-rate-label">Tasa del dia</div><div class="conta-rate-value">'+tasaLabel+'</div><div class="conta-rate-sub">EUR/VES</div>';
         }
         totalEl.innerHTML=
           '<div class="conta-total-row">'+
-            '<span class="conta-total-activo">Total activo: EUR '+totalActivo.toFixed(2)+'</span> '+
-            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: EUR '+totalIngresos.toFixed(2)+'</span> | Deducciones mes (egresos + ganancias): EUR '+totalDeduccionesMes.toFixed(2)+'</span>'+
+            '<span class="conta-total-activo">Total activo: EUR '+finalTotalActivo.toFixed(2)+'</span> '+
+            '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: EUR '+finalTotalIngresos.toFixed(2)+'</span> | Deducciones mes (egresos + ganancias): EUR '+finalTotalDeduccionesMes.toFixed(2)+'</span>'+
           '</div>'+
           '<div class="conta-total-row conta-total-ves">'+
             '<span class="conta-total-activo">Total activo: '+bsActivo+' Bs.</span> '+
             '<span class="conta-total-breakdown"><span class="conta-total-ingresos">Ingresos mes: '+bsIngresos+' Bs.</span> | Deducciones mes: '+bsDeducciones+' Bs.</span>'+
-          '</div>';
+          '</div>'+
+          '<button class="btn-cancelar" style="margin-top:12px;font-size:0.75rem;padding:6px 12px;cursor:pointer;border-radius:6px" onclick="document.getElementById(\'co-modal-backdrop\').style.display=\'block\';document.getElementById(\'contaduria-override-modal\').style.display=\'block\'">Modificar Totales</button>';
       }
       const rateForCards=CONTADURIA_LAST_RATE||0;
       CONTADURIA_INGRESOS_BY_ID={};
@@ -4240,6 +4283,80 @@ Historial Clínico:
     historyEl.appendChild(errorBubble);
     historyEl.scrollTop = historyEl.scrollHeight;
   }
+}
+
+async function confirmarContaduriaOverride() {
+  const moneda = document.getElementById('co-modal-moneda').value;
+  const activoVal = document.getElementById('co-modal-activo').value.trim();
+  const ingresosVal = document.getElementById('co-modal-ingresos').value.trim();
+  const deduccionesVal = document.getElementById('co-modal-deducciones').value.trim();
+
+  let payload = "";
+  const celda_id = 'CONTADURIA_OVERRIDE_' + window.CURRENT_CONTADURIA_MONTH_KEY;
+
+  if (activoVal === "" && ingresosVal === "" && deduccionesVal === "") {
+     if (!confirm("¿Deseas borrar los ajustes manuales de este mes y restaurar el calculo matematico automático?")) return;
+     payload = null; 
+  } else {
+     if (!confirm("¿Estás seguro de que quieres aplicar esta modificación manual? Este valor actuará como un 'ajuste' base, de modo que las nuevas transacciones que agregues en el futuro se seguirán sumando o restando correctamente sobre este número.")) return;
+     
+     const rate = CONTADURIA_LAST_RATE || 1;
+     const mathBase = window.CURRENT_MATH_TOTALS || { activo:0, ingresos:0, deducciones:0, bsActivo:0, bsIngresos:0, bsDeducciones:0 };
+     let existing = window.CURRENT_CONTADURIA_OFFSETS || { offsetActivo:0, offsetIngresos:0, offsetDeducciones:0 };
+     
+     let newOffsets = {
+       offsetActivo: existing.offsetActivo || 0,
+       offsetIngresos: existing.offsetIngresos || 0,
+       offsetDeducciones: existing.offsetDeducciones || 0
+     };
+
+     if (moneda === 'BS') {
+       if (activoVal !== "") {
+         let targetEur = rate ? parseFloat(activoVal) / rate : parseFloat(activoVal);
+         newOffsets.offsetActivo = targetEur - mathBase.activo;
+       }
+       if (ingresosVal !== "") {
+         let targetEur = rate ? parseFloat(ingresosVal) / rate : parseFloat(ingresosVal);
+         newOffsets.offsetIngresos = targetEur - mathBase.ingresos;
+       }
+       if (deduccionesVal !== "") {
+         let targetEur = rate ? parseFloat(deduccionesVal) / rate : parseFloat(deduccionesVal);
+         newOffsets.offsetDeducciones = targetEur - mathBase.deducciones;
+       }
+     } else {
+       if (activoVal !== "") newOffsets.offsetActivo = parseFloat(activoVal) - mathBase.activo;
+       if (ingresosVal !== "") newOffsets.offsetIngresos = parseFloat(ingresosVal) - mathBase.ingresos;
+       if (deduccionesVal !== "") newOffsets.offsetDeducciones = parseFloat(deduccionesVal) - mathBase.deducciones;
+     }
+     
+     payload = JSON.stringify(newOffsets);
+  }
+
+  if (window.CURRENT_CONTADURIA_OVERRIDE_ID) {
+     if (payload === null) {
+       const { error } = await _sp.from('horarios').delete().eq('id', window.CURRENT_CONTADURIA_OVERRIDE_ID);
+       if (error) { alert('Error al borrar: ' + error.message); return; }
+     } else {
+       const { error } = await _sp.from('horarios').update({ contenido: payload }).eq('id', window.CURRENT_CONTADURIA_OVERRIDE_ID);
+       if (error) { alert('Error al guardar: ' + error.message); return; }
+     }
+  } else {
+     if (payload !== null) {
+       const { error } = await _sp.from('horarios').insert([{ celda_id: celda_id, contenido: payload }]);
+       if (error) { alert('Error al guardar: ' + error.message); return; }
+     }
+  }
+
+  document.getElementById('contaduria-override-modal').style.display='none';
+  document.getElementById('co-modal-backdrop').style.display='none';
+  
+  // Limpiar campos para la próxima vez
+  document.getElementById('co-modal-activo').value = "";
+  document.getElementById('co-modal-ingresos').value = "";
+  document.getElementById('co-modal-deducciones').value = "";
+
+  // Recargar para aplicar los cambios
+  loadContaduriaInfo();
 }
 
 

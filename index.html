@@ -407,7 +407,36 @@
       <button class="back-btn" style="margin-top:16px" onclick="switchModulo('modulo-agenda')">Volver</button>
     </div>
   </div>
-  <script src="app.js"></script>
+  <div id="contaduria-override-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background:var(--bg-main, #141b1d); color:#fff; padding:20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.8); width:90%; max-width:400px; border:1px solid rgba(255,255,255,0.1)">
+    <h3 style="letter-spacing: 1px; font-size:.85rem; text-transform:uppercase; margin-top:0">Modificar Totales del Mes</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+      <div style="width:100%;box-sizing:border-box;overflow:hidden">
+        <label>Moneda a editar</label>
+        <select id="co-modal-moneda" style="width:100%;box-sizing:border-box">
+          <option value="BS">Bolivares (BS)</option>
+          <option value="EUR">Dolares/Euros (EUR)</option>
+        </select>
+      </div>
+      <div style="width:100%;box-sizing:border-box;overflow:hidden">
+        <label>Total Activo</label>
+        <input type="number" id="co-modal-activo" step="0.01" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="width:100%;box-sizing:border-box;overflow:hidden">
+        <label>Ingresos del mes</label>
+        <input type="number" id="co-modal-ingresos" step="0.01" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="width:100%;box-sizing:border-box;overflow:hidden">
+        <label>Deducciones mes (egresos)</label>
+        <input type="number" id="co-modal-deducciones" step="0.01" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:10px">
+        <button class="btn-principal" style="flex:1" onclick="confirmarContaduriaOverride()">Confirmar</button>
+        <button class="btn-cancelar" style="flex:1" onclick="document.getElementById('contaduria-override-modal').style.display='none'; document.getElementById('co-modal-backdrop').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <div id="co-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9998" onclick="document.getElementById('contaduria-override-modal').style.display='none'; this.style.display='none'"></div>
+  <script src="app.js?v=1.1"></script>
 </body>
 
 </html>

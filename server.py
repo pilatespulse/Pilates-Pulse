@@ -5,7 +5,7 @@ import webbrowser
 import os
 
 PORT = 5500
-DIRECTORY = "c:\\Users\\ghost\\OneDrive\\Documentos\\Pilates-Pulse"
+DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
